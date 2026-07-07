@@ -1,0 +1,246 @@
+{
+  "domain": "fridge",
+  "sensor_position": "unknown",
+  "frequency_hz": 5,
+  "duration_s": 11911.615,
+  "jitter_std_ms": 33.37788812695671,
+  "gap_probability": 0.007585377263917664,
+  "rhythm": {
+    "phases": [
+      {
+        "name": "phase_on",
+        "duration_mean": 639.3908333333335,
+        "duration_std": 319.69541666666674
+      },
+      {
+        "name": "phase_off",
+        "duration_mean": 1345.878333333333,
+        "duration_std": 672.9391666666666
+      }
+    ],
+    "_detection_info": {
+      "detected_on_column": "acceleration_z",
+      "on_noise_level": 0.031217295606685454,
+      "off_noise_level": 0.01787807438693185,
+      "threshold": 0.02382824447791595,
+      "n_on_cycles": 6,
+      "n_off_cycles": 6,
+      "bimodality_ratio": 1.7461218001694778
+    }
+  },
+  "gated_logging": {
+    "enabled": true,
+    "keep_lead_s": 45.0,
+    "keep_tail_s": 45.0,
+    "_gap_fraction": 0.449
+  },
+  "anomalies": [],
+  "columns": {
+    "temperature": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 16832.6,
+        "target_by_state": {
+          "normal": 28467.346433678584,
+          "phase_on": 29630.821077046443,
+          "phase_off": 29630.821077046443
+        },
+        "rate_by_state": {
+          "normal": 0.9767564208277875,
+          "phase_on": 0.9767564208277875,
+          "phase_off": 0.9767564208277875
+        },
+        "noise_std": 43.98972631982762,
+        "default_target": 28467.346433678584,
+        "default_rate": 0.9767564208277875,
+        "stickiness": 0.0,
+        "quantization_step": 0.0
+      },
+      "realism": {
+        "quantization_step": 10,
+        "settling_samples": 10,
+        "settling_noise_factor": 1153.270315081076
+      }
+    },
+    "light": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 2800.0,
+        "target_by_state": {
+          "normal": 2362.178416304711,
+          "phase_on": 2318.396257935182,
+          "phase_off": 2405.96057467424
+        },
+        "rate_by_state": {
+          "normal": 0.03675585415540118,
+          "phase_on": 0.03675585415540118,
+          "phase_off": 0.03675585415540118
+        },
+        "noise_std": 46.80567878630118,
+        "default_target": 2362.178416304711,
+        "default_rate": 0.03675585415540118,
+        "stickiness": 0.0,
+        "quantization_step": 0.0,
+        "drift_slope": -0.023576463924887003,
+        "drift_floor": 1924.21052631579,
+        "ou_noise_scale": 3.0,
+        "ou_tau_s": 900.0
+      },
+      "realism": {
+        "quantization_step": 2880,
+        "clip_min": 0
+      }
+    },
+    "humidity": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 51.24,
+        "target_by_state": {
+          "normal": 24.744737721349818,
+          "phase_on": 22.0952114934848,
+          "phase_off": 22.0952114934848
+        },
+        "rate_by_state": {
+          "normal": 0.0022243215784467666,
+          "phase_on": 0.0022243215784467666,
+          "phase_off": 0.0022243215784467666
+        },
+        "noise_std": 0.26153380333594434,
+        "default_target": 24.744737721349818,
+        "default_rate": 0.0022243215784467666,
+        "stickiness": 0.9104457662233509,
+        "quantization_step": 1.0
+      },
+      "realism": {
+        "quantization_step": 1,
+        "clip_min": 0,
+        "clip_max": 100
+      }
+    },
+    "pressure": {
+      "engine": "sinusoidal_drift",
+      "params": {
+        "base_value": 99995.89237967915,
+        "daily_amplitude": 41.90842245989188,
+        "daily_period_s": 86400.0,
+        "phase_offset_s": 41427.001,
+        "noise_std": 0.3
+      },
+      "realism": {
+        "quantization_step": 1
+      }
+    },
+    "orientation_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "acceleration_x": {
+      "engine": "event_spike",
+      "params": {
+        "baseline": 3.34246941640484e-06,
+        "baseline_noise_std": 0.0005781312736210389,
+        "events": [
+          {
+            "t_start": 608.799,
+            "duration": 0.8999999999999773,
+            "magnitude": 0.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5799.734,
+            "duration": 1.069999999999709,
+            "magnitude": 0.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9280.526,
+            "duration": 0.7039999999997235,
+            "magnitude": 0.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          }
+        ]
+      },
+      "realism": {
+        "quantization_step": 0.1,
+        "clip_min": 0.0,
+        "clip_max": 0.1
+      }
+    },
+    "acceleration_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "acceleration_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.9923112908076319,
+        "noise_std_by_state": {
+          "phase_on": 0.030923672174131802,
+          "phase_off": 0.018657690945692636
+        },
+        "default_noise_std": 0.026641221259394318,
+        "noise_ramp_by_state": {
+          "phase_on": 0.0071002361824105305
+        }
+      },
+      "realism": {
+        "quantization_step": 0.09999999999999998,
+        "clip_min": 0.9,
+        "clip_max": 1.0
+      }
+    },
+    "rolling_std": {
+      "engine": "cycling",
+      "params": {
+        "value_by_state": {
+          "phase_on": 0.030219917574946874,
+          "phase_off": 0.017839042571190858
+        },
+        "noise_std_by_state": {
+          "phase_on": 0.005771045191730611,
+          "phase_off": 0.005505807655308416
+        },
+        "default_value": 0.024950588710615656,
+        "default_noise_std": 0.008336968421477011,
+        "ramp_by_state": {
+          "phase_on": 0.006963403939520045
+        }
+      },
+      "realism": {
+        "clip_min": 0
+      }
+    }
+  },
+  "sensor_id": 4
+}

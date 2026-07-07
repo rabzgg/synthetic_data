@@ -1,0 +1,380 @@
+{
+  "domain": "robot_arm",
+  "sensor_position": "unknown",
+  "frequency_hz": 10,
+  "duration_s": 23444.958108154296,
+  "jitter_std_ms": 19.795430834779854,
+  "gap_probability": 0.0031137085000366065,
+  "rhythm": null,
+  "anomalies": [],
+  "columns": {
+    "temperature": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "light": {
+      "engine": "event_spike",
+      "params": {
+        "baseline": 2237.0403902439025,
+        "baseline_noise_std": 2621.499578621002,
+        "events": [
+          {
+            "t_start": 104.60363330078125,
+            "duration": 19.70007885742187,
+            "magnitude": 2880.0,
+            "level_shift": 2880.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 126.31117700195313,
+            "duration": 57.696673339843755,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1033.1510021972656,
+            "duration": 3.796024902343788,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1068.9390102539062,
+            "duration": 14.505800048828178,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1087.6398403320313,
+            "duration": 0.5997937011718477,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1108.3403930664062,
+            "duration": 24.212247070312515,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1134.4562951660157,
+            "duration": 1.3953371582031195,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1138.5368581542969,
+            "duration": 0.6042568359375764,
+            "magnitude": 2880.0,
+            "level_shift": -144.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1140.7412919921876,
+            "duration": 31.500156249999918,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1176.6422231445313,
+            "duration": 35.50148388671869,
+            "magnitude": 2880.0,
+            "level_shift": -2736.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1213.7432612304688,
+            "duration": 0.5999270019531195,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1228.6435561523438,
+            "duration": 12.499357177734282,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1246.5527580566406,
+            "duration": 0.5926579589843186,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1273.041208251953,
+            "duration": 1.8038798828124527,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1277.6451052246093,
+            "duration": 0.600103759765716,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5864.994512207031,
+            "duration": 0.5,
+            "magnitude": 2880.0,
+            "level_shift": -2880.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11252.27109008789,
+            "duration": 0.7931970214849571,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11259.864622314453,
+            "duration": 4.700008789062849,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11266.688783203124,
+            "duration": 0.5,
+            "magnitude": 2880.0,
+            "level_shift": -2880.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11270.764723144532,
+            "duration": 1.8111369628895773,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11280.765786376953,
+            "duration": 1.0996657714840694,
+            "magnitude": 2880.0,
+            "level_shift": 2880.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11547.47376513672,
+            "duration": 0.5998210449215549,
+            "magnitude": 2880.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11551.474216064453,
+            "duration": 6.399826171875247,
+            "magnitude": 2880.0,
+            "level_shift": -2448.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11559.474154052734,
+            "duration": 0.5,
+            "magnitude": 2880.0,
+            "level_shift": 2880.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11562.179794189453,
+            "duration": 1.9943181152339093,
+            "magnitude": 2880.0,
+            "level_shift": -576.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11565.671166259766,
+            "duration": 1.0087119140625873,
+            "magnitude": 2736.0,
+            "level_shift": 144.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 11579.673634277344,
+            "duration": 8.40172583007734,
+            "magnitude": 2880.0,
+            "level_shift": -2880.0,
+            "type": "decaying"
+          }
+        ]
+      },
+      "realism": {
+        "quantization_step": 2880,
+        "clip_min": 0
+      }
+    },
+    "humidity": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 48.0,
+        "target_by_state": {
+          "normal": 53.70594315245478
+        },
+        "rate_by_state": {
+          "normal": 7.555443593388335e-05
+        },
+        "noise_std": 0.05,
+        "default_target": 53.70594315245478,
+        "default_rate": 7.555443593388335e-05
+      },
+      "realism": {
+        "quantization_step": 1,
+        "clip_min": 0,
+        "clip_max": 100
+      }
+    },
+    "pressure": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 99468.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 1.920643736225968
+      },
+      "realism": {
+        "quantization_step": 1
+      }
+    },
+    "orientation_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.01119,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.694323,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0017,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_w": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.719575,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "acceleration_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -0.996,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0021359022459414125
+      }
+    },
+    "acceleration_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.02,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0029346644784707266
+      }
+    },
+    "acceleration_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.035,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.004473337760931438
+      }
+    },
+    "mag_x": {
+      "engine": "periodic_motion",
+      "params": {
+        "resting_value": 24.999999999999925,
+        "active_low": 24.0,
+        "active_high": 29.0,
+        "period_s": 507.06537303682546,
+        "period_jitter_s": 50.70653730368255,
+        "motion_duration_s": 177.4728805628889,
+        "rest_duration_s": 329.59249247393655,
+        "quaternion_flip": true,
+        "noise_std": 0.0005,
+        "noise_std_active": 0.5152645838327795,
+        "drift_rate": 4.3124011271244555e-18,
+        "drift_direction": 0.0,
+        "plateau_fraction": 0.04781431198265784,
+        "step_value_fraction": 0.5025000000000001
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -41.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.8509002851284595
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_z": {
+      "engine": "periodic_motion",
+      "params": {
+        "resting_value": -9.468473501064286,
+        "active_low": -11.0,
+        "active_high": -4.0,
+        "period_s": 614.4961888295738,
+        "period_jitter_s": 61.44961888295739,
+        "motion_duration_s": 215.07366609035083,
+        "rest_duration_s": 399.42252273922304,
+        "quaternion_flip": false,
+        "noise_std": 0.41829582670750914,
+        "noise_std_active": 0.6509090402329105,
+        "drift_rate": 6.8915791192132e-06,
+        "drift_direction": 0.0,
+        "plateau_fraction": 0.2528217976824303,
+        "step_value_fraction": 0.39250000000000007
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_res": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 6360.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 40.09963233462978
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    }
+  }
+}

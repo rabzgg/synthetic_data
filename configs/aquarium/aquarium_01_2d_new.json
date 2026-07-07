@@ -1,0 +1,180 @@
+{
+  "domain": "robot_arm",
+  "sensor_position": "unknown",
+  "frequency_hz": 10,
+  "duration_s": 46753.56563208008,
+  "jitter_std_ms": 16.11438117653416,
+  "gap_probability": 0.002624796249921945,
+  "rhythm": null,
+  "anomalies": [],
+  "columns": {
+    "temperature": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "light": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 2880.0,
+        "target_by_state": {
+          "normal": 0.0
+        },
+        "rate_by_state": {
+          "normal": 0.0001623245163689053
+        },
+        "noise_std": 12.202169349176625,
+        "default_target": 0.0,
+        "default_rate": 0.0001623245163689053
+      },
+      "realism": {
+        "quantization_step": 2880,
+        "clip_min": 0
+      }
+    },
+    "humidity": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 60.9,
+        "target_by_state": {
+          "normal": 67.9495892955174
+        },
+        "rate_by_state": {
+          "normal": 0.00040460079885612515
+        },
+        "noise_std": 0.19973426768027544,
+        "default_target": 67.9495892955174,
+        "default_rate": 0.00040460079885612515
+      },
+      "realism": {
+        "quantization_step": 1,
+        "clip_min": 0,
+        "clip_max": 100
+      }
+    },
+    "pressure": {
+      "engine": "gradual_curve",
+      "params": {
+        "initial_value": 99565.78066794427,
+        "target_by_state": {
+          "normal": 96271.87885909276
+        },
+        "rate_by_state": {
+          "normal": 2.138874300773859e-06
+        },
+        "noise_std": 9.546488015692313,
+        "default_target": 96271.87885909276,
+        "default_rate": 2.138874300773859e-06
+      },
+      "realism": {
+        "quantization_step": 1
+      }
+    },
+    "orientation_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.032311,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.001274604046139333
+      }
+    },
+    "orientation_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.736196,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -0.000706,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.001389814328367302
+      }
+    },
+    "orientation_w": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.67594,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "acceleration_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -0.99,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.001420826031640763
+      }
+    },
+    "acceleration_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.036,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.006097520284281761
+      }
+    },
+    "acceleration_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -0.085,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.003552595476035141
+      }
+    },
+    "mag_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -61.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 1.6937427967432104
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -65.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 2.4397411896727066
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -35.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.9920935771176147
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_res": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 6202.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 41.20451950981446
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    }
+  }
+}

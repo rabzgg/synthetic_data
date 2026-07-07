@@ -1,0 +1,4949 @@
+{
+  "domain": "robot_arm",
+  "sensor_position": "unknown",
+  "frequency_hz": 13,
+  "duration_s": 10194.844,
+  "jitter_std_ms": 31.06313291869395,
+  "gap_probability": 0.0044132012280212116,
+  "rhythm": null,
+  "anomalies": [],
+  "columns": {
+    "temperature": {
+      "engine": "sinusoidal_drift",
+      "params": {
+        "base_value": 25477.810013956732,
+        "daily_amplitude": 2268.7744242847166,
+        "daily_period_s": 86400.0,
+        "phase_offset_s": -3427.038,
+        "noise_std": 4.0
+      },
+      "realism": {
+        "quantization_step": 10.0,
+        "settling_samples": 10,
+        "settling_noise_factor": 659.1850017428395
+      }
+    },
+    "light": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 17280.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 7033.9222672307715
+      },
+      "realism": {
+        "quantization_step": 2880,
+        "clip_min": 0
+      }
+    },
+    "humidity": {
+      "engine": "sinusoidal_drift",
+      "params": {
+        "base_value": 22.003140265177947,
+        "daily_amplitude": 1.996859734822051,
+        "daily_period_s": 86400.0,
+        "phase_offset_s": 40232.552,
+        "noise_std": 0.4
+      },
+      "realism": {
+        "quantization_step": 1,
+        "clip_min": 0,
+        "clip_max": 100
+      }
+    },
+    "pressure": {
+      "engine": "sinusoidal_drift",
+      "params": {
+        "base_value": 98023.30992672715,
+        "daily_amplitude": 24.22723307745764,
+        "daily_period_s": 86400.0,
+        "phase_offset_s": -7171.909,
+        "noise_std": 0.4
+      },
+      "realism": {
+        "quantization_step": 1
+      }
+    },
+    "orientation_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -0.694058,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -0.02544,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.00056,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "orientation_w": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.71947,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0,
+        "stickiness": 0.99
+      }
+    },
+    "acceleration_x": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.036,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0010946102688920761
+      }
+    },
+    "acceleration_y": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": -1.003,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.001284309706527217
+      }
+    },
+    "acceleration_z": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 0.036,
+        "noise_std_by_state": {},
+        "default_noise_std": 0.0014403405440690344
+      }
+    },
+    "mag_x": {
+      "engine": "event_spike",
+      "params": {
+        "baseline": 18.6462281874503,
+        "baseline_noise_std": 109.1790420458433,
+        "events": [
+          {
+            "t_start": 71.914,
+            "duration": 0.5,
+            "magnitude": 234.9,
+            "level_shift": -218.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 104.15,
+            "duration": 0.5,
+            "magnitude": 239.35,
+            "level_shift": -105.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 137.565,
+            "duration": 0.5,
+            "magnitude": 221.85,
+            "level_shift": -218.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 169.45,
+            "duration": 0.5,
+            "magnitude": 269.1,
+            "level_shift": -69.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 202.125,
+            "duration": 0.5,
+            "magnitude": 251.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 235.005,
+            "duration": 0.5,
+            "magnitude": 165.8,
+            "level_shift": -198.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 267.533,
+            "duration": 0.5,
+            "magnitude": 288.3,
+            "level_shift": 130.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 365.605,
+            "duration": 0.5,
+            "magnitude": 203.8,
+            "level_shift": 236.64999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 398.264,
+            "duration": 0.5,
+            "magnitude": 245.25,
+            "level_shift": 254.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 431.169,
+            "duration": 0.5,
+            "magnitude": 169.3,
+            "level_shift": 77.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 463.25,
+            "duration": 0.5,
+            "magnitude": 184.7,
+            "level_shift": 203.60000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 495.9,
+            "duration": 0.5,
+            "magnitude": 286.7,
+            "level_shift": -195.89999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 529.264,
+            "duration": 0.5,
+            "magnitude": 89.6,
+            "level_shift": 155.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 561.224,
+            "duration": 0.5,
+            "magnitude": 151.4,
+            "level_shift": -206.10000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 691.879,
+            "duration": 0.5,
+            "magnitude": 281.8,
+            "level_shift": 169.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 757.42,
+            "duration": 0.5,
+            "magnitude": 130.2,
+            "level_shift": -157.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 789.65,
+            "duration": 0.5,
+            "magnitude": 236.7,
+            "level_shift": -237.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 823.059,
+            "duration": 0.5,
+            "magnitude": 155.35,
+            "level_shift": -199.64999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 854.95,
+            "duration": 0.5,
+            "magnitude": 248.5,
+            "level_shift": 261.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 920.594,
+            "duration": 0.5,
+            "magnitude": 144.4,
+            "level_shift": -115.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 952.85,
+            "duration": 0.5,
+            "magnitude": 297.55,
+            "level_shift": -238.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 985.5,
+            "duration": 0.5,
+            "magnitude": 262.5,
+            "level_shift": 223.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1018.28,
+            "duration": 0.5,
+            "magnitude": 287.7,
+            "level_shift": -278.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1084.062,
+            "duration": 0.5,
+            "magnitude": 113.75,
+            "level_shift": -174.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1116.08,
+            "duration": 0.5,
+            "magnitude": 295.2,
+            "level_shift": -269.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1148.939,
+            "duration": 0.5,
+            "magnitude": 299.3,
+            "level_shift": -220.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1181.974,
+            "duration": 0.5,
+            "magnitude": 105.6,
+            "level_shift": 163.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1257.865,
+            "duration": 0.5,
+            "magnitude": 185.1,
+            "level_shift": 165.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1322.75,
+            "duration": 2.2100000000000364,
+            "magnitude": 246.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1388.584,
+            "duration": 1.4349999999999454,
+            "magnitude": 171.1,
+            "level_shift": -89.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1442.4,
+            "duration": 1.0649999999998272,
+            "magnitude": 274.95,
+            "level_shift": -154.54999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1497.414,
+            "duration": 0.5,
+            "magnitude": 171.8,
+            "level_shift": -123.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1551.768,
+            "duration": 0.5,
+            "magnitude": 161.15,
+            "level_shift": 126.29999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1592.841,
+            "duration": 0.5,
+            "magnitude": 280.25,
+            "level_shift": 91.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1633.9,
+            "duration": 0.5,
+            "magnitude": 296.95,
+            "level_shift": 171.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1675.199,
+            "duration": 0.5,
+            "magnitude": 145.05,
+            "level_shift": -131.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1839.15,
+            "duration": 0.5,
+            "magnitude": 282.35,
+            "level_shift": 95.89999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1921.649,
+            "duration": 0.5,
+            "magnitude": 261.05,
+            "level_shift": -85.10000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1963.139,
+            "duration": 0.5,
+            "magnitude": 283.0,
+            "level_shift": 127.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2045.695,
+            "duration": 0.5,
+            "magnitude": 235.6,
+            "level_shift": 65.64999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2170.333,
+            "duration": 0.5,
+            "magnitude": 263.55,
+            "level_shift": -92.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2253.785,
+            "duration": 0.5,
+            "magnitude": 167.5,
+            "level_shift": 77.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2295.295,
+            "duration": 0.5,
+            "magnitude": 256.15,
+            "level_shift": 60.050000000000004,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2337.075,
+            "duration": 0.5,
+            "magnitude": 239.9,
+            "level_shift": -117.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2378.98,
+            "duration": 0.5,
+            "magnitude": 251.9,
+            "level_shift": 50.300000000000004,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2420.88,
+            "duration": 0.5,
+            "magnitude": 279.45,
+            "level_shift": -167.79999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2505.204,
+            "duration": 0.5,
+            "magnitude": 263.75,
+            "level_shift": -141.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2547.899,
+            "duration": 0.5,
+            "magnitude": 152.1,
+            "level_shift": -105.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2590.17,
+            "duration": 0.5,
+            "magnitude": 225.45,
+            "level_shift": -119.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2631.488,
+            "duration": 1.5010000000002037,
+            "magnitude": 228.4,
+            "level_shift": 143.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2674.909,
+            "duration": 0.5,
+            "magnitude": 162.9,
+            "level_shift": -131.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2717.279,
+            "duration": 0.5,
+            "magnitude": 151.15,
+            "level_shift": 73.04999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2758.508,
+            "duration": 0.5,
+            "magnitude": 246.05,
+            "level_shift": 124.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2800.91,
+            "duration": 0.5,
+            "magnitude": 238.95,
+            "level_shift": 94.05000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2843.295,
+            "duration": 0.5,
+            "magnitude": 282.15,
+            "level_shift": 119.85000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2885.745,
+            "duration": 0.5,
+            "magnitude": 158.0,
+            "level_shift": 97.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3209.419,
+            "duration": 0.5,
+            "magnitude": 138.55,
+            "level_shift": -81.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3244.409,
+            "duration": 0.5,
+            "magnitude": 191.1,
+            "level_shift": 148.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3277.778,
+            "duration": 0.5,
+            "magnitude": 168.7,
+            "level_shift": 173.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3311.838,
+            "duration": 0.5,
+            "magnitude": 291.05,
+            "level_shift": 207.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3346.33,
+            "duration": 0.5,
+            "magnitude": 227.65,
+            "level_shift": -180.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3380.624,
+            "duration": 0.5,
+            "magnitude": 251.4,
+            "level_shift": 217.10000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3415.073,
+            "duration": 0.5,
+            "magnitude": 119.25,
+            "level_shift": -142.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3449.284,
+            "duration": 0.5,
+            "magnitude": 287.75,
+            "level_shift": -139.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3483.735,
+            "duration": 0.5,
+            "magnitude": 264.4,
+            "level_shift": 189.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3518.072,
+            "duration": 0.5,
+            "magnitude": 278.45,
+            "level_shift": -156.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3587.258,
+            "duration": 0.5,
+            "magnitude": 274.4,
+            "level_shift": 58.650000000000006,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3656.558,
+            "duration": 0.5,
+            "magnitude": 281.05,
+            "level_shift": -86.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3691.765,
+            "duration": 0.5,
+            "magnitude": 208.15,
+            "level_shift": -57.699999999999996,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3726.329,
+            "duration": 0.5,
+            "magnitude": 259.35,
+            "level_shift": -57.099999999999994,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3761.765,
+            "duration": 0.5,
+            "magnitude": 201.5,
+            "level_shift": 83.94999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3831.543,
+            "duration": 0.5,
+            "magnitude": 151.95,
+            "level_shift": 100.64999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3901.264,
+            "duration": 0.5,
+            "magnitude": 146.2,
+            "level_shift": -133.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3935.845,
+            "duration": 0.5,
+            "magnitude": 130.85,
+            "level_shift": -137.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4041.423,
+            "duration": 0.5,
+            "magnitude": 245.05,
+            "level_shift": 191.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4076.159,
+            "duration": 0.5,
+            "magnitude": 283.15,
+            "level_shift": -105.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4146.223,
+            "duration": 0.5,
+            "magnitude": 281.15,
+            "level_shift": -100.10000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4179.928,
+            "duration": 0.5,
+            "magnitude": 168.9,
+            "level_shift": -58.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4212.378,
+            "duration": 0.5,
+            "magnitude": 269.35,
+            "level_shift": 76.19999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4244.628,
+            "duration": 0.5,
+            "magnitude": 138.85,
+            "level_shift": 109.69999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4349.545,
+            "duration": 0.5,
+            "magnitude": 168.5,
+            "level_shift": -84.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4422.028,
+            "duration": 0.5,
+            "magnitude": 166.35,
+            "level_shift": 87.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4446.279,
+            "duration": 0.5,
+            "magnitude": 145.6,
+            "level_shift": -127.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4470.945,
+            "duration": 0.5,
+            "magnitude": 132.2,
+            "level_shift": -133.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4543.05,
+            "duration": 0.5,
+            "magnitude": 265.45,
+            "level_shift": -59.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4567.289,
+            "duration": 0.5,
+            "magnitude": 244.5,
+            "level_shift": 119.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4591.668,
+            "duration": 0.5,
+            "magnitude": 159.65,
+            "level_shift": -132.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4615.7,
+            "duration": 0.5,
+            "magnitude": 141.85,
+            "level_shift": 106.14999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4640.11,
+            "duration": 0.5,
+            "magnitude": 158.55,
+            "level_shift": -108.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4664.188,
+            "duration": 0.5,
+            "magnitude": 124.85,
+            "level_shift": 123.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4688.494,
+            "duration": 0.5,
+            "magnitude": 172.05,
+            "level_shift": 168.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4712.779,
+            "duration": 0.5,
+            "magnitude": 191.25,
+            "level_shift": -102.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4761.343,
+            "duration": 0.5,
+            "magnitude": 262.7,
+            "level_shift": 78.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4809.921,
+            "duration": 0.5,
+            "magnitude": 202.4,
+            "level_shift": -159.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4834.104,
+            "duration": 0.5,
+            "magnitude": 153.15,
+            "level_shift": 84.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4858.914,
+            "duration": 0.5,
+            "magnitude": 153.5,
+            "level_shift": -112.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4882.878,
+            "duration": 0.5,
+            "magnitude": 191.0,
+            "level_shift": 111.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4907.235,
+            "duration": 0.5,
+            "magnitude": 244.1,
+            "level_shift": -90.89999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4931.72,
+            "duration": 0.5,
+            "magnitude": 225.75,
+            "level_shift": 143.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4955.959,
+            "duration": 0.5,
+            "magnitude": 138.3,
+            "level_shift": -150.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4980.383,
+            "duration": 0.5,
+            "magnitude": 171.0,
+            "level_shift": -142.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5053.799,
+            "duration": 0.5,
+            "magnitude": 134.25,
+            "level_shift": 142.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5102.814,
+            "duration": 0.5,
+            "magnitude": 152.75,
+            "level_shift": -170.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5200.869,
+            "duration": 0.5,
+            "magnitude": 256.1,
+            "level_shift": -151.79999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5225.449,
+            "duration": 0.5,
+            "magnitude": 260.9,
+            "level_shift": 181.10000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5249.988,
+            "duration": 0.5,
+            "magnitude": 279.8,
+            "level_shift": -142.45000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5446.734,
+            "duration": 0.5,
+            "magnitude": 151.0,
+            "level_shift": -107.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5520.853,
+            "duration": 0.5,
+            "magnitude": 265.65,
+            "level_shift": -100.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5545.684,
+            "duration": 0.5,
+            "magnitude": 191.7,
+            "level_shift": 77.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5594.924,
+            "duration": 0.5,
+            "magnitude": 142.45,
+            "level_shift": -103.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5619.619,
+            "duration": 0.5,
+            "magnitude": 230.15,
+            "level_shift": 59.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5644.358,
+            "duration": 0.5,
+            "magnitude": 175.4,
+            "level_shift": 77.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5668.945,
+            "duration": 0.5,
+            "magnitude": 167.95,
+            "level_shift": 41.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5693.623,
+            "duration": 0.5,
+            "magnitude": 243.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5767.813,
+            "duration": 0.5,
+            "magnitude": 170.0,
+            "level_shift": -101.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5792.542,
+            "duration": 0.5,
+            "magnitude": 178.1,
+            "level_shift": -82.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5916.218,
+            "duration": 0.5,
+            "magnitude": 164.2,
+            "level_shift": -98.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5941.032,
+            "duration": 0.5,
+            "magnitude": 171.45,
+            "level_shift": 112.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5990.97,
+            "duration": 0.5,
+            "magnitude": 159.6,
+            "level_shift": 105.05000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6040.185,
+            "duration": 0.5,
+            "magnitude": 250.4,
+            "level_shift": -104.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6089.713,
+            "duration": 0.5,
+            "magnitude": 242.0,
+            "level_shift": 113.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6139.37,
+            "duration": 0.5,
+            "magnitude": 229.3,
+            "level_shift": 157.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6164.178,
+            "duration": 0.5,
+            "magnitude": 260.95,
+            "level_shift": 115.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6288.158,
+            "duration": 0.5,
+            "magnitude": 190.55,
+            "level_shift": 112.39999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6312.958,
+            "duration": 0.5,
+            "magnitude": 229.15,
+            "level_shift": -155.35000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6362.638,
+            "duration": 0.5,
+            "magnitude": 149.6,
+            "level_shift": 143.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6387.505,
+            "duration": 0.5,
+            "magnitude": 145.25,
+            "level_shift": -98.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6461.489,
+            "duration": 0.5,
+            "magnitude": 218.8,
+            "level_shift": 113.69999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6486.284,
+            "duration": 0.5,
+            "magnitude": 126.5,
+            "level_shift": -108.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6510.92,
+            "duration": 0.5,
+            "magnitude": 252.1,
+            "level_shift": 74.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6635.06,
+            "duration": 0.5,
+            "magnitude": 164.45,
+            "level_shift": -52.650000000000006,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6660.124,
+            "duration": 0.5,
+            "magnitude": 169.95,
+            "level_shift": -60.099999999999994,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6709.774,
+            "duration": 0.5,
+            "magnitude": 237.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6734.653,
+            "duration": 0.5,
+            "magnitude": 152.0,
+            "level_shift": -50.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6759.493,
+            "duration": 0.5,
+            "magnitude": 256.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6809.155,
+            "duration": 0.5,
+            "magnitude": 137.35,
+            "level_shift": -86.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6834.534,
+            "duration": 0.5,
+            "magnitude": 117.1,
+            "level_shift": -54.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6859.049,
+            "duration": 0.5,
+            "magnitude": 163.9,
+            "level_shift": -86.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6958.76,
+            "duration": 0.5,
+            "magnitude": 131.1,
+            "level_shift": 121.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7008.624,
+            "duration": 0.5,
+            "magnitude": 238.35,
+            "level_shift": -110.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7058.823,
+            "duration": 0.5,
+            "magnitude": 258.7,
+            "level_shift": 110.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7134.434,
+            "duration": 0.5,
+            "magnitude": 215.75,
+            "level_shift": 118.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7159.089,
+            "duration": 0.5,
+            "magnitude": 170.65,
+            "level_shift": -90.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7184.129,
+            "duration": 0.5,
+            "magnitude": 258.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7234.494,
+            "duration": 0.5,
+            "magnitude": 240.15,
+            "level_shift": -51.050000000000004,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7259.83,
+            "duration": 0.5,
+            "magnitude": 222.95,
+            "level_shift": -64.05000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7285.599,
+            "duration": 0.5,
+            "magnitude": 194.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7360.45,
+            "duration": 0.5,
+            "magnitude": 233.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7385.61,
+            "duration": 0.5,
+            "magnitude": 154.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7411.189,
+            "duration": 0.5,
+            "magnitude": 162.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7436.129,
+            "duration": 0.5,
+            "magnitude": 146.9,
+            "level_shift": -48.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7461.383,
+            "duration": 0.5,
+            "magnitude": 179.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7511.949,
+            "duration": 0.5,
+            "magnitude": 236.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7537.365,
+            "duration": 0.5,
+            "magnitude": 197.9,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7587.783,
+            "duration": 0.5,
+            "magnitude": 228.0,
+            "level_shift": 60.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7613.044,
+            "duration": 0.5,
+            "magnitude": 207.3,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7638.513,
+            "duration": 0.5,
+            "magnitude": 223.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7663.819,
+            "duration": 0.5,
+            "magnitude": 137.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7714.279,
+            "duration": 0.5,
+            "magnitude": 186.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7764.893,
+            "duration": 0.5,
+            "magnitude": 165.4,
+            "level_shift": -70.14999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7815.454,
+            "duration": 0.5,
+            "magnitude": 219.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7866.313,
+            "duration": 0.5,
+            "magnitude": 178.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7891.599,
+            "duration": 0.5,
+            "magnitude": 178.85,
+            "level_shift": -60.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7916.929,
+            "duration": 0.5,
+            "magnitude": 263.25,
+            "level_shift": 47.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7942.495,
+            "duration": 0.5,
+            "magnitude": 266.8,
+            "level_shift": 146.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8089.969,
+            "duration": 0.5,
+            "magnitude": 180.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8113.899,
+            "duration": 0.5,
+            "magnitude": 198.3,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8137.785,
+            "duration": 0.5,
+            "magnitude": 212.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8185.823,
+            "duration": 0.5,
+            "magnitude": 206.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8209.645,
+            "duration": 0.5,
+            "magnitude": 218.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8376.385,
+            "duration": 0.5,
+            "magnitude": 177.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8424.528,
+            "duration": 0.5,
+            "magnitude": 181.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8447.969,
+            "duration": 0.5,
+            "magnitude": 196.4,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8471.929,
+            "duration": 0.5,
+            "magnitude": 187.45,
+            "level_shift": 43.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8567.718,
+            "duration": 0.5,
+            "magnitude": 145.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8591.613,
+            "duration": 0.5,
+            "magnitude": 224.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8807.205,
+            "duration": 0.5,
+            "magnitude": 118.25,
+            "level_shift": -45.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8831.095,
+            "duration": 0.5,
+            "magnitude": 230.3,
+            "level_shift": -49.349999999999994,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8855.005,
+            "duration": 0.5,
+            "magnitude": 137.6,
+            "level_shift": -71.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8950.844,
+            "duration": 0.5,
+            "magnitude": 190.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8998.893,
+            "duration": 0.5,
+            "magnitude": 188.05,
+            "level_shift": 43.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9071.22,
+            "duration": 0.5,
+            "magnitude": 200.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9143.774,
+            "duration": 0.5,
+            "magnitude": 140.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9167.673,
+            "duration": 0.5,
+            "magnitude": 198.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9215.955,
+            "duration": 0.5,
+            "magnitude": 140.9,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9240.053,
+            "duration": 0.5,
+            "magnitude": 212.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9264.215,
+            "duration": 0.5,
+            "magnitude": 157.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9288.118,
+            "duration": 0.5,
+            "magnitude": 175.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9336.513,
+            "duration": 0.5,
+            "magnitude": 191.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9408.632,
+            "duration": 0.5,
+            "magnitude": 199.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9457.129,
+            "duration": 0.5,
+            "magnitude": 153.3,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9505.439,
+            "duration": 0.5,
+            "magnitude": 200.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9529.849,
+            "duration": 0.5,
+            "magnitude": 154.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9578.114,
+            "duration": 0.5,
+            "magnitude": 194.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9626.458,
+            "duration": 0.5,
+            "magnitude": 185.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9650.988,
+            "duration": 0.5,
+            "magnitude": 134.95,
+            "level_shift": 58.900000000000006,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9747.752,
+            "duration": 0.5,
+            "magnitude": 221.0,
+            "level_shift": 52.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9796.249,
+            "duration": 0.5,
+            "magnitude": 193.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9820.478,
+            "duration": 0.5,
+            "magnitude": 169.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9893.575,
+            "duration": 0.5,
+            "magnitude": 176.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9917.63,
+            "duration": 0.5,
+            "magnitude": 200.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9941.888,
+            "duration": 0.5,
+            "magnitude": 199.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9966.184,
+            "duration": 0.5,
+            "magnitude": 178.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9990.453,
+            "duration": 0.5,
+            "magnitude": 196.75,
+            "level_shift": 51.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10039.142,
+            "duration": 0.5,
+            "magnitude": 188.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10063.558,
+            "duration": 0.5,
+            "magnitude": 143.35,
+            "level_shift": 42.199999999999996,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10087.844,
+            "duration": 0.5,
+            "magnitude": 175.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10136.869,
+            "duration": 0.5,
+            "magnitude": 179.2,
+            "level_shift": 52.65,
+            "type": "decaying"
+          }
+        ]
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_y": {
+      "engine": "event_spike",
+      "params": {
+        "baseline": 31.8045405273096,
+        "baseline_noise_std": 264.5375133927924,
+        "events": [
+          {
+            "t_start": 71.914,
+            "duration": 0.5,
+            "magnitude": 522.9,
+            "level_shift": -522.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 104.15,
+            "duration": 0.5,
+            "magnitude": 627.75,
+            "level_shift": -304.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 137.565,
+            "duration": 0.5,
+            "magnitude": 504.05,
+            "level_shift": -518.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 169.45,
+            "duration": 0.5,
+            "magnitude": 633.6,
+            "level_shift": -208.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 202.125,
+            "duration": 0.5,
+            "magnitude": 625.5,
+            "level_shift": -77.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 235.005,
+            "duration": 0.5,
+            "magnitude": 379.45,
+            "level_shift": -454.84999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 267.533,
+            "duration": 0.5,
+            "magnitude": 663.7,
+            "level_shift": 353.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 333.789,
+            "duration": 0.5,
+            "magnitude": 580.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 365.605,
+            "duration": 0.5,
+            "magnitude": 492.5,
+            "level_shift": 548.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 398.264,
+            "duration": 0.5,
+            "magnitude": 571.45,
+            "level_shift": 599.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 464.049,
+            "duration": 0.5,
+            "magnitude": 453.5,
+            "level_shift": 489.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 495.9,
+            "duration": 0.5,
+            "magnitude": 668.0,
+            "level_shift": -502.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 529.264,
+            "duration": 0.5,
+            "magnitude": 271.3,
+            "level_shift": 343.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 561.224,
+            "duration": 0.5,
+            "magnitude": 349.85,
+            "level_shift": -464.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 659.974,
+            "duration": 0.5,
+            "magnitude": 336.3,
+            "level_shift": -437.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 691.879,
+            "duration": 0.5,
+            "magnitude": 667.9,
+            "level_shift": 464.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 724.35,
+            "duration": 0.9189999999999827,
+            "magnitude": 689.5,
+            "level_shift": 480.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 757.42,
+            "duration": 0.5,
+            "magnitude": 312.7,
+            "level_shift": -338.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 789.65,
+            "duration": 1.2690000000000055,
+            "magnitude": 542.65,
+            "level_shift": -562.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 823.059,
+            "duration": 0.5,
+            "magnitude": 353.75,
+            "level_shift": -448.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 854.95,
+            "duration": 0.5,
+            "magnitude": 581.55,
+            "level_shift": 614.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 920.594,
+            "duration": 0.5,
+            "magnitude": 349.75,
+            "level_shift": -233.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 952.85,
+            "duration": 0.5,
+            "magnitude": 694.8,
+            "level_shift": -608.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 985.5,
+            "duration": 0.5,
+            "magnitude": 589.2,
+            "level_shift": 541.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1018.28,
+            "duration": 0.5,
+            "magnitude": 655.2,
+            "level_shift": -670.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1084.062,
+            "duration": 0.5,
+            "magnitude": 239.8,
+            "level_shift": -389.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1116.08,
+            "duration": 0.5,
+            "magnitude": 669.6,
+            "level_shift": -657.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1148.939,
+            "duration": 0.5,
+            "magnitude": 689.6,
+            "level_shift": -565.9000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1181.974,
+            "duration": 0.5,
+            "magnitude": 257.45,
+            "level_shift": 365.40000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1214.839,
+            "duration": 0.5,
+            "magnitude": 370.35,
+            "level_shift": 484.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1257.865,
+            "duration": 0.5,
+            "magnitude": 405.1,
+            "level_shift": 388.65000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1322.75,
+            "duration": 2.2100000000000364,
+            "magnitude": 635.8,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1389.519,
+            "duration": 0.5,
+            "magnitude": 293.3,
+            "level_shift": -236.40000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1442.4,
+            "duration": 1.0649999999998272,
+            "magnitude": 665.9,
+            "level_shift": -408.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1498.385,
+            "duration": 0.5,
+            "magnitude": 200.85,
+            "level_shift": -287.20000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1551.768,
+            "duration": 1.5059999999998581,
+            "magnitude": 391.95,
+            "level_shift": 264.40000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1592.841,
+            "duration": 0.5,
+            "magnitude": 679.25,
+            "level_shift": 242.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1633.9,
+            "duration": 0.5,
+            "magnitude": 690.0,
+            "level_shift": 447.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1675.199,
+            "duration": 0.5,
+            "magnitude": 353.4,
+            "level_shift": -275.15000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1715.76,
+            "duration": 0.5,
+            "magnitude": 671.95,
+            "level_shift": -294.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1756.958,
+            "duration": 0.5,
+            "magnitude": 639.9,
+            "level_shift": 269.04999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1839.15,
+            "duration": 0.5,
+            "magnitude": 671.65,
+            "level_shift": 259.59999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1921.649,
+            "duration": 0.5,
+            "magnitude": 641.85,
+            "level_shift": -224.10000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1963.139,
+            "duration": 0.5,
+            "magnitude": 647.45,
+            "level_shift": 326.54999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2004.312,
+            "duration": 0.5,
+            "magnitude": 670.65,
+            "level_shift": -229.34999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2045.695,
+            "duration": 0.5,
+            "magnitude": 606.3,
+            "level_shift": 187.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2087.358,
+            "duration": 1.8769999999999527,
+            "magnitude": 319.35,
+            "level_shift": 269.04999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2170.333,
+            "duration": 0.5,
+            "magnitude": 604.0,
+            "level_shift": -234.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2212.11,
+            "duration": 0.5,
+            "magnitude": 591.95,
+            "level_shift": 104.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2253.785,
+            "duration": 0.5,
+            "magnitude": 403.75,
+            "level_shift": 176.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2295.295,
+            "duration": 0.5,
+            "magnitude": 636.1,
+            "level_shift": 166.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2337.075,
+            "duration": 1.5390000000002146,
+            "magnitude": 538.4,
+            "level_shift": -258.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2378.98,
+            "duration": 0.5,
+            "magnitude": 584.85,
+            "level_shift": 131.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2420.88,
+            "duration": 0.5,
+            "magnitude": 632.4,
+            "level_shift": -424.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2505.204,
+            "duration": 0.5,
+            "magnitude": 593.25,
+            "level_shift": -354.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2547.899,
+            "duration": 0.5,
+            "magnitude": 328.25,
+            "level_shift": -246.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2590.17,
+            "duration": 0.5,
+            "magnitude": 485.8,
+            "level_shift": -290.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2631.488,
+            "duration": 1.5010000000002037,
+            "magnitude": 488.8,
+            "level_shift": 343.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2674.909,
+            "duration": 0.5,
+            "magnitude": 356.65,
+            "level_shift": -311.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2717.279,
+            "duration": 0.5,
+            "magnitude": 426.7,
+            "level_shift": 164.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2758.508,
+            "duration": 1.5310000000004038,
+            "magnitude": 561.1,
+            "level_shift": 275.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2800.91,
+            "duration": 0.5,
+            "magnitude": 526.4,
+            "level_shift": 226.60000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2843.295,
+            "duration": 0.5,
+            "magnitude": 649.2,
+            "level_shift": 309.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2885.745,
+            "duration": 0.5,
+            "magnitude": 336.4,
+            "level_shift": 226.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2928.305,
+            "duration": 0.5,
+            "magnitude": 527.25,
+            "level_shift": 87.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2971.024,
+            "duration": 0.5,
+            "magnitude": 526.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3039.063,
+            "duration": 0.5,
+            "magnitude": 642.7,
+            "level_shift": 160.29999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3073.098,
+            "duration": 0.5,
+            "magnitude": 606.25,
+            "level_shift": 85.19999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3107.148,
+            "duration": 1.0459999999998217,
+            "magnitude": 648.0,
+            "level_shift": 421.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3175.278,
+            "duration": 0.5,
+            "magnitude": 649.1,
+            "level_shift": 256.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3209.419,
+            "duration": 0.5,
+            "magnitude": 346.6,
+            "level_shift": -188.95000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3244.409,
+            "duration": 0.5,
+            "magnitude": 429.95,
+            "level_shift": 351.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3277.778,
+            "duration": 0.5,
+            "magnitude": 386.5,
+            "level_shift": 407.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3311.838,
+            "duration": 0.5,
+            "magnitude": 661.75,
+            "level_shift": 520.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3346.33,
+            "duration": 0.5,
+            "magnitude": 514.5,
+            "level_shift": -434.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3380.624,
+            "duration": 0.5,
+            "magnitude": 578.8,
+            "level_shift": 527.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3415.073,
+            "duration": 0.5,
+            "magnitude": 312.25,
+            "level_shift": -305.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3449.284,
+            "duration": 0.5,
+            "magnitude": 677.0,
+            "level_shift": -375.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3483.735,
+            "duration": 0.5,
+            "magnitude": 594.95,
+            "level_shift": 466.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3518.072,
+            "duration": 0.5,
+            "magnitude": 628.2,
+            "level_shift": -396.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3552.595,
+            "duration": 0.8340000000002874,
+            "magnitude": 677.2,
+            "level_shift": -243.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3587.258,
+            "duration": 0.5,
+            "magnitude": 661.85,
+            "level_shift": 175.60000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3621.783,
+            "duration": 0.5,
+            "magnitude": 630.7,
+            "level_shift": 181.54999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3656.558,
+            "duration": 0.5,
+            "magnitude": 664.05,
+            "level_shift": -232.70000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3691.765,
+            "duration": 0.5,
+            "magnitude": 501.2,
+            "level_shift": -121.65000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3726.329,
+            "duration": 0.5,
+            "magnitude": 651.05,
+            "level_shift": -171.10000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3761.765,
+            "duration": 0.5,
+            "magnitude": 485.3,
+            "level_shift": 176.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3831.543,
+            "duration": 0.5,
+            "magnitude": 414.25,
+            "level_shift": 228.89999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3901.264,
+            "duration": 0.5,
+            "magnitude": 327.3,
+            "level_shift": -313.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3935.845,
+            "duration": 0.5,
+            "magnitude": 316.55,
+            "level_shift": -310.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4041.423,
+            "duration": 0.5,
+            "magnitude": 562.45,
+            "level_shift": 466.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4076.159,
+            "duration": 0.5,
+            "magnitude": 674.0,
+            "level_shift": -288.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4111.132,
+            "duration": 0.5,
+            "magnitude": 648.2,
+            "level_shift": -172.14999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4146.223,
+            "duration": 0.5,
+            "magnitude": 677.9,
+            "level_shift": -274.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4179.928,
+            "duration": 0.5,
+            "magnitude": 418.75,
+            "level_shift": -139.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4212.378,
+            "duration": 0.5,
+            "magnitude": 636.4,
+            "level_shift": 221.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4244.628,
+            "duration": 0.5,
+            "magnitude": 320.4,
+            "level_shift": 246.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4325.374,
+            "duration": 0.5,
+            "magnitude": 602.0,
+            "level_shift": 170.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4422.028,
+            "duration": 0.5,
+            "magnitude": 386.7,
+            "level_shift": 201.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4446.279,
+            "duration": 0.5,
+            "magnitude": 326.85,
+            "level_shift": -295.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4470.945,
+            "duration": 0.5,
+            "magnitude": 287.35,
+            "level_shift": -308.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4518.92,
+            "duration": 0.5,
+            "magnitude": 604.9,
+            "level_shift": 174.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4543.05,
+            "duration": 0.5,
+            "magnitude": 619.9,
+            "level_shift": -170.39999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4567.289,
+            "duration": 0.5,
+            "magnitude": 553.35,
+            "level_shift": 295.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4591.668,
+            "duration": 0.5,
+            "magnitude": 361.2,
+            "level_shift": -304.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4615.7,
+            "duration": 1.2290000000002692,
+            "magnitude": 344.95,
+            "level_shift": 215.89999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4640.11,
+            "duration": 0.5,
+            "magnitude": 362.45,
+            "level_shift": -248.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4664.188,
+            "duration": 0.5,
+            "magnitude": 313.65,
+            "level_shift": 282.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4688.494,
+            "duration": 0.5,
+            "magnitude": 389.8,
+            "level_shift": 396.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4712.779,
+            "duration": 0.5,
+            "magnitude": 422.6,
+            "level_shift": -234.64999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4761.343,
+            "duration": 0.5,
+            "magnitude": 608.9,
+            "level_shift": 216.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4809.921,
+            "duration": 0.5,
+            "magnitude": 468.65,
+            "level_shift": -382.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4834.104,
+            "duration": 0.5,
+            "magnitude": 354.7,
+            "level_shift": 193.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4858.914,
+            "duration": 0.5,
+            "magnitude": 342.9,
+            "level_shift": -257.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4882.878,
+            "duration": 0.5,
+            "magnitude": 438.35,
+            "level_shift": 260.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4907.235,
+            "duration": 0.5,
+            "magnitude": 534.35,
+            "level_shift": -222.04999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4931.72,
+            "duration": 0.5,
+            "magnitude": 529.75,
+            "level_shift": 350.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4955.959,
+            "duration": 0.5,
+            "magnitude": 305.95,
+            "level_shift": -347.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4980.383,
+            "duration": 0.5,
+            "magnitude": 387.45,
+            "level_shift": -329.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5053.799,
+            "duration": 0.5,
+            "magnitude": 316.6,
+            "level_shift": 317.59999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5102.814,
+            "duration": 0.5,
+            "magnitude": 335.45,
+            "level_shift": -396.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5151.853,
+            "duration": 0.5,
+            "magnitude": 633.75,
+            "level_shift": 319.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5200.869,
+            "duration": 0.5,
+            "magnitude": 579.75,
+            "level_shift": -381.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5225.449,
+            "duration": 0.5,
+            "magnitude": 611.4,
+            "level_shift": 459.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5249.988,
+            "duration": 0.5,
+            "magnitude": 647.9,
+            "level_shift": -374.04999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5275.125,
+            "duration": 0.5,
+            "magnitude": 451.45,
+            "level_shift": 525.3499999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5422.758,
+            "duration": 0.5,
+            "magnitude": 355.8,
+            "level_shift": 309.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5446.734,
+            "duration": 0.5,
+            "magnitude": 358.9,
+            "level_shift": -245.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5471.46,
+            "duration": 0.5,
+            "magnitude": 626.0,
+            "level_shift": -145.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5496.103,
+            "duration": 0.5,
+            "magnitude": 600.85,
+            "level_shift": 86.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5520.853,
+            "duration": 0.5,
+            "magnitude": 618.45,
+            "level_shift": -269.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5545.684,
+            "duration": 0.5,
+            "magnitude": 415.25,
+            "level_shift": 174.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5594.924,
+            "duration": 0.5,
+            "magnitude": 313.6,
+            "level_shift": -239.04999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5619.619,
+            "duration": 0.5,
+            "magnitude": 504.45,
+            "level_shift": 149.39999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5644.358,
+            "duration": 0.5,
+            "magnitude": 400.4,
+            "level_shift": 184.24999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5668.945,
+            "duration": 0.5,
+            "magnitude": 397.95,
+            "level_shift": 93.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5693.623,
+            "duration": 0.5,
+            "magnitude": 559.2,
+            "level_shift": 101.39999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5718.223,
+            "duration": 1.0820000000003347,
+            "magnitude": 502.6,
+            "level_shift": 91.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5767.813,
+            "duration": 0.5,
+            "magnitude": 387.5,
+            "level_shift": -236.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5792.542,
+            "duration": 0.5,
+            "magnitude": 394.5,
+            "level_shift": -187.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5866.66,
+            "duration": 1.1739999999999782,
+            "magnitude": 474.15,
+            "level_shift": 340.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5891.463,
+            "duration": 0.5,
+            "magnitude": 622.55,
+            "level_shift": 191.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5916.218,
+            "duration": 0.5,
+            "magnitude": 363.85,
+            "level_shift": -222.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5941.032,
+            "duration": 0.5,
+            "magnitude": 392.85,
+            "level_shift": 262.54999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5965.783,
+            "duration": 0.5,
+            "magnitude": 613.15,
+            "level_shift": -75.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5990.97,
+            "duration": 0.5,
+            "magnitude": 398.15,
+            "level_shift": 241.29999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6015.395,
+            "duration": 0.5,
+            "magnitude": 624.35,
+            "level_shift": 195.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6040.185,
+            "duration": 0.5,
+            "magnitude": 554.9,
+            "level_shift": -254.95000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6089.713,
+            "duration": 0.5,
+            "magnitude": 548.05,
+            "level_shift": 277.70000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6114.659,
+            "duration": 0.5,
+            "magnitude": 633.65,
+            "level_shift": 313.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6139.37,
+            "duration": 0.5,
+            "magnitude": 519.3,
+            "level_shift": 379.95000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6164.178,
+            "duration": 0.5,
+            "magnitude": 597.4,
+            "level_shift": 298.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6263.275,
+            "duration": 0.9940000000005966,
+            "magnitude": 579.95,
+            "level_shift": -249.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6288.158,
+            "duration": 0.5,
+            "magnitude": 429.05,
+            "level_shift": 255.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6312.958,
+            "duration": 0.5,
+            "magnitude": 527.95,
+            "level_shift": -378.54999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6362.638,
+            "duration": 0.5,
+            "magnitude": 335.65,
+            "level_shift": 332.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6387.505,
+            "duration": 0.5,
+            "magnitude": 319.35,
+            "level_shift": -222.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6461.489,
+            "duration": 0.5,
+            "magnitude": 490.6,
+            "level_shift": 270.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6486.284,
+            "duration": 0.5,
+            "magnitude": 324.75,
+            "level_shift": -246.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6510.92,
+            "duration": 0.5,
+            "magnitude": 568.55,
+            "level_shift": 196.45000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6561.223,
+            "duration": 0.5,
+            "magnitude": 250.3,
+            "level_shift": -157.04999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6635.06,
+            "duration": 0.5,
+            "magnitude": 378.5,
+            "level_shift": -123.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6660.124,
+            "duration": 0.5,
+            "magnitude": 392.05,
+            "level_shift": -136.04999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6709.774,
+            "duration": 0.5,
+            "magnitude": 536.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6734.653,
+            "duration": 0.5,
+            "magnitude": 370.0,
+            "level_shift": -116.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6759.493,
+            "duration": 0.5,
+            "magnitude": 593.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6809.155,
+            "duration": 0.5,
+            "magnitude": 336.0,
+            "level_shift": -200.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6834.534,
+            "duration": 0.5,
+            "magnitude": 329.6,
+            "level_shift": -124.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6859.049,
+            "duration": 0.5,
+            "magnitude": 358.55,
+            "level_shift": -195.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6909.035,
+            "duration": 0.5,
+            "magnitude": 603.5,
+            "level_shift": 99.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6958.76,
+            "duration": 0.5,
+            "magnitude": 324.4,
+            "level_shift": 279.45000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7008.624,
+            "duration": 0.5,
+            "magnitude": 528.95,
+            "level_shift": -269.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7058.823,
+            "duration": 0.5,
+            "magnitude": 587.05,
+            "level_shift": 283.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7134.434,
+            "duration": 0.5,
+            "magnitude": 485.5,
+            "level_shift": 277.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7159.089,
+            "duration": 0.5,
+            "magnitude": 374.25,
+            "level_shift": -200.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7184.129,
+            "duration": 0.5,
+            "magnitude": 602.15,
+            "level_shift": 116.30000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7234.494,
+            "duration": 0.5,
+            "magnitude": 534.1,
+            "level_shift": -135.64999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7259.83,
+            "duration": 0.5,
+            "magnitude": 485.85,
+            "level_shift": -155.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7285.599,
+            "duration": 0.5,
+            "magnitude": 501.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7335.392,
+            "duration": 0.5,
+            "magnitude": 575.55,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7360.45,
+            "duration": 0.5,
+            "magnitude": 526.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7385.61,
+            "duration": 0.5,
+            "magnitude": 332.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7411.189,
+            "duration": 0.5,
+            "magnitude": 338.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7436.129,
+            "duration": 0.5,
+            "magnitude": 360.3,
+            "level_shift": -108.85000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7461.383,
+            "duration": 0.5,
+            "magnitude": 414.75,
+            "level_shift": -79.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7511.949,
+            "duration": 0.5,
+            "magnitude": 522.7,
+            "level_shift": 89.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7537.365,
+            "duration": 0.5,
+            "magnitude": 445.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7587.783,
+            "duration": 0.5,
+            "magnitude": 498.65,
+            "level_shift": 147.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7613.044,
+            "duration": 0.5,
+            "magnitude": 443.45,
+            "level_shift": 86.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7638.513,
+            "duration": 0.5,
+            "magnitude": 488.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7663.819,
+            "duration": 0.5,
+            "magnitude": 332.4,
+            "level_shift": 81.44999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7714.279,
+            "duration": 0.5,
+            "magnitude": 432.8,
+            "level_shift": -94.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7764.893,
+            "duration": 0.5,
+            "magnitude": 384.6,
+            "level_shift": -163.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7790.109,
+            "duration": 0.5,
+            "magnitude": 550.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7815.454,
+            "duration": 0.5,
+            "magnitude": 482.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7866.313,
+            "duration": 0.5,
+            "magnitude": 410.15,
+            "level_shift": -75.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7891.599,
+            "duration": 0.5,
+            "magnitude": 390.6,
+            "level_shift": -135.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7916.929,
+            "duration": 0.5,
+            "magnitude": 624.15,
+            "level_shift": 146.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7942.495,
+            "duration": 0.5,
+            "magnitude": 613.45,
+            "level_shift": 370.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7967.773,
+            "duration": 0.5,
+            "magnitude": 621.85,
+            "level_shift": 267.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8089.969,
+            "duration": 0.5,
+            "magnitude": 428.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8113.899,
+            "duration": 0.5,
+            "magnitude": 457.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8137.785,
+            "duration": 0.5,
+            "magnitude": 470.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8185.823,
+            "duration": 0.5,
+            "magnitude": 446.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8209.645,
+            "duration": 0.5,
+            "magnitude": 498.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8233.293,
+            "duration": 0.5,
+            "magnitude": 514.8,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8281.004,
+            "duration": 0.5,
+            "magnitude": 499.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8328.573,
+            "duration": 0.5,
+            "magnitude": 418.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8352.533,
+            "duration": 0.5,
+            "magnitude": 482.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8376.385,
+            "duration": 0.5,
+            "magnitude": 422.9,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8424.528,
+            "duration": 0.5,
+            "magnitude": 471.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8447.969,
+            "duration": 0.5,
+            "magnitude": 432.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8471.929,
+            "duration": 0.5,
+            "magnitude": 428.2,
+            "level_shift": 101.85000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8567.718,
+            "duration": 0.5,
+            "magnitude": 376.3,
+            "level_shift": 84.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8591.613,
+            "duration": 0.5,
+            "magnitude": 496.8,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8615.609,
+            "duration": 0.5,
+            "magnitude": 548.8,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8735.3,
+            "duration": 0.5,
+            "magnitude": 573.6,
+            "level_shift": 75.14999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8807.205,
+            "duration": 0.5,
+            "magnitude": 323.3,
+            "level_shift": -103.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8831.095,
+            "duration": 0.5,
+            "magnitude": 507.3,
+            "level_shift": -127.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8855.005,
+            "duration": 0.5,
+            "magnitude": 308.1,
+            "level_shift": -162.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8950.844,
+            "duration": 0.5,
+            "magnitude": 410.2,
+            "level_shift": -79.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8998.893,
+            "duration": 0.5,
+            "magnitude": 429.65,
+            "level_shift": 104.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9143.774,
+            "duration": 0.5,
+            "magnitude": 381.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9167.673,
+            "duration": 0.5,
+            "magnitude": 446.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9215.955,
+            "duration": 0.5,
+            "magnitude": 334.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9240.053,
+            "duration": 0.5,
+            "magnitude": 476.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9264.215,
+            "duration": 0.5,
+            "magnitude": 398.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9288.118,
+            "duration": 0.5,
+            "magnitude": 378.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9336.513,
+            "duration": 0.5,
+            "magnitude": 423.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9408.632,
+            "duration": 0.5,
+            "magnitude": 440.55,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9457.129,
+            "duration": 0.5,
+            "magnitude": 339.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9529.849,
+            "duration": 0.5,
+            "magnitude": 417.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9553.825,
+            "duration": 0.5,
+            "magnitude": 516.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9578.114,
+            "duration": 0.5,
+            "magnitude": 447.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9626.458,
+            "duration": 0.5,
+            "magnitude": 420.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9650.988,
+            "duration": 0.5,
+            "magnitude": 305.15,
+            "level_shift": 134.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9747.752,
+            "duration": 0.5,
+            "magnitude": 484.4,
+            "level_shift": 130.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9772.355,
+            "duration": 0.5,
+            "magnitude": 518.65,
+            "level_shift": 78.05000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9796.249,
+            "duration": 0.5,
+            "magnitude": 444.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9820.478,
+            "duration": 0.5,
+            "magnitude": 409.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9893.575,
+            "duration": 0.5,
+            "magnitude": 441.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9917.63,
+            "duration": 0.5,
+            "magnitude": 456.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9941.888,
+            "duration": 0.5,
+            "magnitude": 450.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9966.184,
+            "duration": 0.5,
+            "magnitude": 401.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9990.453,
+            "duration": 0.5,
+            "magnitude": 448.85,
+            "level_shift": 119.30000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10039.142,
+            "duration": 0.5,
+            "magnitude": 431.4,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10063.558,
+            "duration": 0.5,
+            "magnitude": 372.85,
+            "level_shift": 105.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10087.844,
+            "duration": 0.5,
+            "magnitude": 381.75,
+            "level_shift": 75.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10136.869,
+            "duration": 0.5,
+            "magnitude": 453.25,
+            "level_shift": 123.0,
+            "type": "decaying"
+          }
+        ]
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_z": {
+      "engine": "event_spike",
+      "params": {
+        "baseline": 7.178162878291342,
+        "baseline_noise_std": 409.4669386991831,
+        "events": [
+          {
+            "t_start": 6.499,
+            "duration": 0.5,
+            "magnitude": 1110.0,
+            "level_shift": -914.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 39.168,
+            "duration": 0.5,
+            "magnitude": 1023.45,
+            "level_shift": -903.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 104.805,
+            "duration": 0.5,
+            "magnitude": 833.1,
+            "level_shift": 883.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 136.8,
+            "duration": 0.5,
+            "magnitude": 949.1,
+            "level_shift": -172.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 169.45,
+            "duration": 0.5,
+            "magnitude": 881.3,
+            "level_shift": 845.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 202.125,
+            "duration": 0.5,
+            "magnitude": 969.8,
+            "level_shift": 802.6500000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 267.533,
+            "duration": 0.5,
+            "magnitude": 530.7,
+            "level_shift": -561.8499999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 300.321,
+            "duration": 0.5,
+            "magnitude": 1065.35,
+            "level_shift": 803.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 332.715,
+            "duration": 0.5,
+            "magnitude": 992.0,
+            "level_shift": -814.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 430.6,
+            "duration": 0.5,
+            "magnitude": 1081.65,
+            "level_shift": 917.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 463.25,
+            "duration": 0.5,
+            "magnitude": 995.05,
+            "level_shift": 266.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 496.765,
+            "duration": 0.5,
+            "magnitude": 485.25,
+            "level_shift": 420.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 528.55,
+            "duration": 0.5,
+            "magnitude": 1064.0,
+            "level_shift": 774.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 561.224,
+            "duration": 0.5,
+            "magnitude": 991.7,
+            "level_shift": -486.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 594.2,
+            "duration": 0.5,
+            "magnitude": 1010.6,
+            "level_shift": -989.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 626.983,
+            "duration": 0.5,
+            "magnitude": 964.55,
+            "level_shift": 994.0999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 659.1,
+            "duration": 0.5,
+            "magnitude": 1039.3,
+            "level_shift": -497.40000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 691.879,
+            "duration": 0.5,
+            "magnitude": 605.55,
+            "level_shift": -820.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 724.769,
+            "duration": 0.5,
+            "magnitude": 454.8,
+            "level_shift": -626.6999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 822.3,
+            "duration": 0.5,
+            "magnitude": 964.2,
+            "level_shift": -535.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 887.725,
+            "duration": 0.5,
+            "magnitude": 1072.8,
+            "level_shift": -1048.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 920.594,
+            "duration": 0.5,
+            "magnitude": 1084.75,
+            "level_shift": -811.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 953.469,
+            "duration": 0.5,
+            "magnitude": 389.9,
+            "level_shift": 667.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 986.384,
+            "duration": 0.5,
+            "magnitude": 702.3,
+            "level_shift": -213.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1051.175,
+            "duration": 0.5,
+            "magnitude": 1098.4,
+            "level_shift": -928.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1083.4,
+            "duration": 0.5,
+            "magnitude": 1023.3,
+            "level_shift": -734.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1148.939,
+            "duration": 0.5,
+            "magnitude": 496.1,
+            "level_shift": 523.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1181.3,
+            "duration": 0.5,
+            "magnitude": 1043.2,
+            "level_shift": 798.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1213.95,
+            "duration": 0.5,
+            "magnitude": 995.9,
+            "level_shift": 526.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1258.969,
+            "duration": 0.5,
+            "magnitude": 999.05,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1323.529,
+            "duration": 0.5,
+            "magnitude": 808.5,
+            "level_shift": -495.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1388.584,
+            "duration": 0.5,
+            "magnitude": 1096.7,
+            "level_shift": -174.50000000000006,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1443.914,
+            "duration": 0.5,
+            "magnitude": 503.9,
+            "level_shift": 594.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1497.414,
+            "duration": 0.5,
+            "magnitude": 1101.05,
+            "level_shift": -488.34999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1551.768,
+            "duration": 0.5,
+            "magnitude": 1107.4,
+            "level_shift": 581.4499999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1592.841,
+            "duration": 0.5,
+            "magnitude": 490.0,
+            "level_shift": -455.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1633.9,
+            "duration": 0.5,
+            "magnitude": 423.6,
+            "level_shift": -612.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1675.199,
+            "duration": 0.5,
+            "magnitude": 1078.9,
+            "level_shift": -646.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1716.589,
+            "duration": 0.5,
+            "magnitude": 744.05,
+            "level_shift": 770.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1757.894,
+            "duration": 0.5,
+            "magnitude": 807.95,
+            "level_shift": -788.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1798.044,
+            "duration": 0.5,
+            "magnitude": 1030.45,
+            "level_shift": 725.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1839.15,
+            "duration": 0.5,
+            "magnitude": 491.75,
+            "level_shift": -502.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1880.39,
+            "duration": 0.5,
+            "magnitude": 771.7,
+            "level_shift": 310.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1921.649,
+            "duration": 0.5,
+            "magnitude": 584.9,
+            "level_shift": 339.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 1963.139,
+            "duration": 0.5,
+            "magnitude": 621.75,
+            "level_shift": -373.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2004.895,
+            "duration": 0.5,
+            "magnitude": 609.15,
+            "level_shift": 552.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2046.633,
+            "duration": 0.5,
+            "magnitude": 668.7,
+            "level_shift": -497.84999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2087.358,
+            "duration": 0.5,
+            "magnitude": 1053.95,
+            "level_shift": 262.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2128.849,
+            "duration": 0.5,
+            "magnitude": 806.2,
+            "level_shift": -369.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2170.333,
+            "duration": 0.5,
+            "magnitude": 606.65,
+            "level_shift": 219.49999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2212.11,
+            "duration": 0.5,
+            "magnitude": 567.1,
+            "level_shift": -316.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2253.785,
+            "duration": 0.5,
+            "magnitude": 884.4,
+            "level_shift": 164.34999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2295.943,
+            "duration": 0.5,
+            "magnitude": 524.65,
+            "level_shift": -341.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2338.114,
+            "duration": 0.5,
+            "magnitude": 845.8,
+            "level_shift": 163.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2462.913,
+            "duration": 0.5,
+            "magnitude": 926.5,
+            "level_shift": 587.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2547.241,
+            "duration": 0.5,
+            "magnitude": 845.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2589.23,
+            "duration": 0.5,
+            "magnitude": 980.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2631.488,
+            "duration": 0.5,
+            "magnitude": 951.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2673.889,
+            "duration": 0.5,
+            "magnitude": 1016.45,
+            "level_shift": -167.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2716.204,
+            "duration": 0.5,
+            "magnitude": 912.7,
+            "level_shift": 239.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2759.539,
+            "duration": 0.5,
+            "magnitude": 815.3,
+            "level_shift": -202.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2802.13,
+            "duration": 0.5,
+            "magnitude": 734.6,
+            "level_shift": -171.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2843.295,
+            "duration": 0.5,
+            "magnitude": 571.3,
+            "level_shift": -373.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2928.749,
+            "duration": 0.5,
+            "magnitude": 734.6,
+            "level_shift": -370.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 2971.024,
+            "duration": 0.5,
+            "magnitude": 620.55,
+            "level_shift": 180.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3005.269,
+            "duration": 0.5,
+            "magnitude": 795.75,
+            "level_shift": -403.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3039.734,
+            "duration": 0.5,
+            "magnitude": 692.2,
+            "level_shift": -483.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3073.098,
+            "duration": 0.5,
+            "magnitude": 793.55,
+            "level_shift": -522.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3107.694,
+            "duration": 0.5,
+            "magnitude": 620.8,
+            "level_shift": -434.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3141.254,
+            "duration": 0.5,
+            "magnitude": 906.65,
+            "level_shift": 838.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3175.859,
+            "duration": 0.5,
+            "magnitude": 746.1,
+            "level_shift": -734.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3209.419,
+            "duration": 0.5,
+            "magnitude": 860.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3243.638,
+            "duration": 0.5,
+            "magnitude": 966.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3415.073,
+            "duration": 0.5,
+            "magnitude": 1048.05,
+            "level_shift": -536.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3552.929,
+            "duration": 0.5,
+            "magnitude": 554.7,
+            "level_shift": 597.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3587.258,
+            "duration": 0.5,
+            "magnitude": 625.9,
+            "level_shift": -512.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3622.359,
+            "duration": 0.5,
+            "magnitude": 701.75,
+            "level_shift": -541.3,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3656.558,
+            "duration": 0.5,
+            "magnitude": 569.0,
+            "level_shift": 389.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3691.765,
+            "duration": 0.5,
+            "magnitude": 981.95,
+            "level_shift": -373.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3726.329,
+            "duration": 0.5,
+            "magnitude": 694.3,
+            "level_shift": 585.4000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3761.089,
+            "duration": 0.5,
+            "magnitude": 1017.85,
+            "level_shift": 546.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3795.945,
+            "duration": 0.5,
+            "magnitude": 982.85,
+            "level_shift": -484.95000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3830.852,
+            "duration": 0.5,
+            "magnitude": 993.0,
+            "level_shift": 291.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3865.833,
+            "duration": 0.5,
+            "magnitude": 1001.1,
+            "level_shift": -459.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3900.668,
+            "duration": 0.5,
+            "magnitude": 914.4,
+            "level_shift": -209.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3935.845,
+            "duration": 0.5,
+            "magnitude": 980.8,
+            "level_shift": -319.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 3971.035,
+            "duration": 0.5,
+            "magnitude": 1044.45,
+            "level_shift": -576.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4005.938,
+            "duration": 0.5,
+            "magnitude": 940.75,
+            "level_shift": -657.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4076.159,
+            "duration": 0.5,
+            "magnitude": 520.5,
+            "level_shift": 647.2,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4111.719,
+            "duration": 0.5,
+            "magnitude": 756.7,
+            "level_shift": 582.0999999999999,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4146.223,
+            "duration": 0.5,
+            "magnitude": 530.6,
+            "level_shift": 593.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4179.928,
+            "duration": 0.5,
+            "magnitude": 948.4,
+            "level_shift": -149.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4212.378,
+            "duration": 0.5,
+            "magnitude": 506.75,
+            "level_shift": -474.5,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4277.3,
+            "duration": 0.5,
+            "magnitude": 861.2,
+            "level_shift": 333.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4301.488,
+            "duration": 0.5,
+            "magnitude": 872.9,
+            "level_shift": -292.54999999999995,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4349.545,
+            "duration": 0.5,
+            "magnitude": 955.35,
+            "level_shift": -227.50000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4373.63,
+            "duration": 0.5,
+            "magnitude": 927.0,
+            "level_shift": 405.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4397.893,
+            "duration": 0.5,
+            "magnitude": 557.1,
+            "level_shift": -456.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4494.628,
+            "duration": 0.5,
+            "magnitude": 719.45,
+            "level_shift": 452.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4518.92,
+            "duration": 0.5,
+            "magnitude": 423.0,
+            "level_shift": -498.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4543.05,
+            "duration": 0.5,
+            "magnitude": 567.1,
+            "level_shift": 335.59999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4761.343,
+            "duration": 0.5,
+            "magnitude": 573.2,
+            "level_shift": -358.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4785.62,
+            "duration": 0.5,
+            "magnitude": 974.05,
+            "level_shift": -478.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 4834.104,
+            "duration": 0.5,
+            "magnitude": 958.95,
+            "level_shift": 157.39999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5005.334,
+            "duration": 0.5,
+            "magnitude": 584.15,
+            "level_shift": 554.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5029.3,
+            "duration": 0.5,
+            "magnitude": 1028.05,
+            "level_shift": -706.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5053.799,
+            "duration": 0.5,
+            "magnitude": 979.05,
+            "level_shift": 364.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5078.334,
+            "duration": 0.5,
+            "magnitude": 1005.75,
+            "level_shift": 550.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5176.313,
+            "duration": 0.5,
+            "magnitude": 989.0,
+            "level_shift": 485.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5249.988,
+            "duration": 0.5,
+            "magnitude": 426.1,
+            "level_shift": 585.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5299.173,
+            "duration": 0.5,
+            "magnitude": 978.4,
+            "level_shift": -756.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5323.665,
+            "duration": 0.5,
+            "magnitude": 1015.8,
+            "level_shift": 566.1,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5348.253,
+            "duration": 0.5,
+            "magnitude": 985.35,
+            "level_shift": -732.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5372.888,
+            "duration": 0.5,
+            "magnitude": 980.8,
+            "level_shift": 419.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5397.623,
+            "duration": 0.5,
+            "magnitude": 744.75,
+            "level_shift": 450.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5446.734,
+            "duration": 0.5,
+            "magnitude": 976.15,
+            "level_shift": -249.39999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5471.46,
+            "duration": 0.5,
+            "magnitude": 476.65,
+            "level_shift": 382.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5496.103,
+            "duration": 0.5,
+            "magnitude": 608.75,
+            "level_shift": -431.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5570.129,
+            "duration": 0.5,
+            "magnitude": 792.7,
+            "level_shift": 174.89999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5644.358,
+            "duration": 0.5,
+            "magnitude": 962.85,
+            "level_shift": 192.90000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5693.623,
+            "duration": 0.5,
+            "magnitude": 705.45,
+            "level_shift": -156.60000000000002,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5742.99,
+            "duration": 0.5,
+            "magnitude": 948.75,
+            "level_shift": 209.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5817.26,
+            "duration": 0.5,
+            "magnitude": 822.7,
+            "level_shift": -351.65,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5842.244,
+            "duration": 0.5,
+            "magnitude": 952.2,
+            "level_shift": 359.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5891.463,
+            "duration": 0.5,
+            "magnitude": 427.35,
+            "level_shift": -488.45000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 5965.783,
+            "duration": 0.5,
+            "magnitude": 536.2,
+            "level_shift": 339.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6065.028,
+            "duration": 0.5,
+            "magnitude": 977.4,
+            "level_shift": 502.59999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6114.659,
+            "duration": 0.5,
+            "magnitude": 493.7,
+            "level_shift": -514.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6189.038,
+            "duration": 0.5,
+            "magnitude": 425.05,
+            "level_shift": -602.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6213.828,
+            "duration": 0.5,
+            "magnitude": 627.35,
+            "level_shift": -485.70000000000005,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6238.67,
+            "duration": 0.5,
+            "magnitude": 979.25,
+            "level_shift": -374.7,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6337.733,
+            "duration": 0.5,
+            "magnitude": 768.05,
+            "level_shift": 560.9000000000001,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6412.013,
+            "duration": 0.5,
+            "magnitude": 972.85,
+            "level_shift": 385.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6436.795,
+            "duration": 0.5,
+            "magnitude": 917.4,
+            "level_shift": -250.39999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6535.885,
+            "duration": 0.5,
+            "magnitude": 438.7,
+            "level_shift": 395.09999999999997,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6560.503,
+            "duration": 0.5,
+            "magnitude": 917.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6585.38,
+            "duration": 0.5,
+            "magnitude": 924.15,
+            "level_shift": -203.79999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6610.248,
+            "duration": 0.5,
+            "magnitude": 891.5,
+            "level_shift": -190.6,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6685.094,
+            "duration": 0.5,
+            "magnitude": 596.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6759.493,
+            "duration": 0.5,
+            "magnitude": 624.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6784.39,
+            "duration": 0.5,
+            "magnitude": 710.3,
+            "level_shift": 306.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6884.02,
+            "duration": 0.5,
+            "magnitude": 894.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6909.035,
+            "duration": 0.5,
+            "magnitude": 502.8,
+            "level_shift": -350.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6933.87,
+            "duration": 0.5,
+            "magnitude": 638.6,
+            "level_shift": 541.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 6984.005,
+            "duration": 0.5,
+            "magnitude": 764.55,
+            "level_shift": -445.75,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7033.864,
+            "duration": 0.5,
+            "magnitude": 696.35,
+            "level_shift": 622.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7083.924,
+            "duration": 0.5,
+            "magnitude": 935.35,
+            "level_shift": -456.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7108.948,
+            "duration": 0.5,
+            "magnitude": 819.25,
+            "level_shift": 447.9,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7184.129,
+            "duration": 0.5,
+            "magnitude": 607.6,
+            "level_shift": -248.00000000000003,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7209.353,
+            "duration": 0.5,
+            "magnitude": 858.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7284.893,
+            "duration": 0.5,
+            "magnitude": 807.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7310.213,
+            "duration": 0.5,
+            "magnitude": 845.55,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7335.392,
+            "duration": 0.5,
+            "magnitude": 506.75,
+            "level_shift": 156.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7360.45,
+            "duration": 0.5,
+            "magnitude": 695.05,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7461.383,
+            "duration": 0.5,
+            "magnitude": 910.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7486.633,
+            "duration": 0.5,
+            "magnitude": 631.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7537.365,
+            "duration": 0.5,
+            "magnitude": 794.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7562.333,
+            "duration": 0.5,
+            "magnitude": 673.9,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7688.918,
+            "duration": 0.5,
+            "magnitude": 761.75,
+            "level_shift": -152.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7714.279,
+            "duration": 0.5,
+            "magnitude": 896.45,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7739.484,
+            "duration": 0.5,
+            "magnitude": 900.95,
+            "level_shift": -157.29999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7764.893,
+            "duration": 0.5,
+            "magnitude": 935.8,
+            "level_shift": -158.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7790.109,
+            "duration": 0.5,
+            "magnitude": 628.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7840.794,
+            "duration": 0.5,
+            "magnitude": 693.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7866.313,
+            "duration": 0.5,
+            "magnitude": 879.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7916.929,
+            "duration": 0.5,
+            "magnitude": 504.75,
+            "level_shift": -382.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 7993.095,
+            "duration": 0.5,
+            "magnitude": 685.7,
+            "level_shift": -493.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8018.019,
+            "duration": 0.5,
+            "magnitude": 854.0,
+            "level_shift": -167.95,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8042.182,
+            "duration": 0.5,
+            "magnitude": 849.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8066.088,
+            "duration": 0.5,
+            "magnitude": 610.05,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8113.899,
+            "duration": 0.5,
+            "magnitude": 812.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8161.92,
+            "duration": 0.5,
+            "magnitude": 753.9,
+            "level_shift": 187.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8209.645,
+            "duration": 0.5,
+            "magnitude": 647.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8233.293,
+            "duration": 0.5,
+            "magnitude": 594.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8257.073,
+            "duration": 0.5,
+            "magnitude": 669.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8281.004,
+            "duration": 0.5,
+            "magnitude": 657.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8304.809,
+            "duration": 0.5,
+            "magnitude": 635.3,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8352.533,
+            "duration": 0.5,
+            "magnitude": 668.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8400.245,
+            "duration": 0.5,
+            "magnitude": 619.0,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8423.98,
+            "duration": 0.5,
+            "magnitude": 735.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8471.929,
+            "duration": 0.5,
+            "magnitude": 880.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8495.928,
+            "duration": 0.5,
+            "magnitude": 711.15,
+            "level_shift": 279.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8519.908,
+            "duration": 0.5,
+            "magnitude": 720.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8543.729,
+            "duration": 0.5,
+            "magnitude": 886.85,
+            "level_shift": 147.8,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8615.609,
+            "duration": 0.5,
+            "magnitude": 573.75,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8639.624,
+            "duration": 0.5,
+            "magnitude": 677.4,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8663.409,
+            "duration": 0.5,
+            "magnitude": 613.1,
+            "level_shift": -210.64999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8687.453,
+            "duration": 0.5,
+            "magnitude": 614.9,
+            "level_shift": -161.4,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8711.395,
+            "duration": 0.5,
+            "magnitude": 903.2,
+            "level_shift": -227.14999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8735.3,
+            "duration": 0.5,
+            "magnitude": 538.3,
+            "level_shift": -223.29999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8759.289,
+            "duration": 0.5,
+            "magnitude": 907.7,
+            "level_shift": 220.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8879.049,
+            "duration": 0.5,
+            "magnitude": 684.8,
+            "level_shift": -239.55,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8926.95,
+            "duration": 0.5,
+            "magnitude": 860.2,
+            "level_shift": -191.39999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8974.789,
+            "duration": 0.5,
+            "magnitude": 454.95,
+            "level_shift": 161.05,
+            "type": "decaying"
+          },
+          {
+            "t_start": 8998.893,
+            "duration": 0.5,
+            "magnitude": 856.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9023.228,
+            "duration": 0.5,
+            "magnitude": 801.3,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9047.118,
+            "duration": 0.5,
+            "magnitude": 805.95,
+            "level_shift": 186.04999999999998,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9071.22,
+            "duration": 0.5,
+            "magnitude": 809.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9095.375,
+            "duration": 0.5,
+            "magnitude": 773.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9119.484,
+            "duration": 0.5,
+            "magnitude": 535.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9167.673,
+            "duration": 0.5,
+            "magnitude": 726.4,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9191.748,
+            "duration": 0.5,
+            "magnitude": 763.15,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9312.293,
+            "duration": 0.5,
+            "magnitude": 669.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9360.575,
+            "duration": 0.5,
+            "magnitude": 702.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9384.718,
+            "duration": 0.5,
+            "magnitude": 731.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9432.92,
+            "duration": 0.5,
+            "magnitude": 597.05,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9481.299,
+            "duration": 0.5,
+            "magnitude": 642.25,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9505.439,
+            "duration": 0.5,
+            "magnitude": 747.1,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9553.825,
+            "duration": 0.5,
+            "magnitude": 582.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9602.324,
+            "duration": 0.5,
+            "magnitude": 803.85,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9626.458,
+            "duration": 0.5,
+            "magnitude": 867.55,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9674.828,
+            "duration": 0.5,
+            "magnitude": 829.6,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9699.103,
+            "duration": 0.5,
+            "magnitude": 626.1,
+            "level_shift": 316.35,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9723.432,
+            "duration": 0.5,
+            "magnitude": 917.55,
+            "level_shift": -200.15,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9796.249,
+            "duration": 0.5,
+            "magnitude": 785.65,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9844.633,
+            "duration": 0.5,
+            "magnitude": 623.35,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9869.013,
+            "duration": 0.5,
+            "magnitude": 714.7,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9917.63,
+            "duration": 0.5,
+            "magnitude": 791.95,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 9941.888,
+            "duration": 0.5,
+            "magnitude": 696.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10014.984,
+            "duration": 0.5,
+            "magnitude": 588.0,
+            "level_shift": -169.85,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10039.142,
+            "duration": 0.5,
+            "magnitude": 702.75,
+            "level_shift": 197.45,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10112.284,
+            "duration": 0.5,
+            "magnitude": 605.9,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10136.344,
+            "duration": 0.5,
+            "magnitude": 623.2,
+            "level_shift": 0.0,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10160.788,
+            "duration": 0.5,
+            "magnitude": 561.45,
+            "level_shift": -167.25,
+            "type": "decaying"
+          },
+          {
+            "t_start": 10185.128,
+            "duration": 0.5,
+            "magnitude": 591.5,
+            "level_shift": 0.0,
+            "type": "decaying"
+          }
+        ]
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    },
+    "mag_res": {
+      "engine": "constant_noise",
+      "params": {
+        "base_value": 6488.0,
+        "noise_std_by_state": {},
+        "default_noise_std": 37.81673506424882
+      },
+      "realism": {
+        "quantization_step": 1.0
+      }
+    }
+  },
+  "sensor_id": 2
+}
