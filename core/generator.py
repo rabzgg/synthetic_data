@@ -61,6 +61,12 @@ ANOMALY_TEMPLATES = {
         "pressure":      dict(noise_multiplier=1.0),
         "light":         dict(noise_multiplier=1.0),
     },
+    "power_off": {
+        # appliance unplugged: no column-level effects — the state machine
+        # truncates the current phase and locks the rhythm to phase_off, so
+        # every column follows its normal off-state behavior. The signature
+        # lives in cycle durations, not values.
+    },
 }
 
 def _col_category(col_name: str) -> str:
@@ -124,28 +130,43 @@ class StateMachine:
 
         t_start = timestamps[0]
         t_seconds = (timestamps - t_start) / 1000.0
-        micro_states = self._build_rhythm_timeline(t_seconds, rng)
+        power_off_windows = sorted(
+            (a["t_start"], a.get("t_end"))
+            for a in self.anomaly_schedule if a.get("type") == "power_off"
+        )
+        micro_states = self._build_rhythm_timeline(t_seconds, rng,
+                                                   power_off_windows)
 
         states = []
         for i, t in enumerate(t_seconds):
             macro = "normal"
+            forced_off = False
             for anomaly in self.anomaly_schedule:
                 a_start = anomaly["t_start"]
                 a_end = anomaly.get("t_end")
                 if t >= a_start and (a_end is None or t < a_end):
-                    macro = anomaly["state"]
+                    if anomaly.get("type") == "power_off":
+                        # Appliance dies but the sensor keeps logging: the
+                        # rhythm freezes in phase_off, macro stays normal so
+                        # columns render their ordinary off-state behavior.
+                        forced_off = True
+                    else:
+                        macro = anomaly["state"]
                     break
 
             micro = None
             if macro == "normal" and micro_states is not None:
                 micro = micro_states[i]
+            if forced_off:
+                micro = "phase_off"
 
             states.append({"macro": macro, "micro": micro})
 
         return states
 
     def _build_rhythm_timeline(self, t_seconds: np.ndarray,
-                               rng: np.random.Generator) -> Optional[list]:
+                               rng: np.random.Generator,
+                               power_off_windows: list = None) -> Optional[list]:
         if self.rhythm_config is None:
             return None
 
@@ -155,7 +176,10 @@ class StateMachine:
         current_time = 0.0
         phase_idx = 0
 
-        # Pre-generate phase sequence covering entire duration
+        # Pre-generate phase sequence covering entire duration. Always drawn
+        # the same way (same rng consumption) whether or not power_off windows
+        # exist, so an anomaly run stays sample-identical to its normal
+        # counterpart before the unplug.
         phase_segments = []
         while current_time < total_duration:
             phase = phases[phase_idx % len(phases)]
@@ -169,6 +193,11 @@ class StateMachine:
             current_time += duration
             phase_idx += 1
 
+        if power_off_windows:
+            phase_segments = self._reroute_power_off(
+                phase_segments, list(power_off_windows), phases,
+                total_duration, rng)
+
         seg_idx = 0
         for t in t_seconds:
             while (seg_idx < len(phase_segments) - 1 and
@@ -177,6 +206,58 @@ class StateMachine:
             timeline.append(phase_segments[seg_idx]["name"])
 
         return timeline
+
+    def _reroute_power_off(self, base_segments: list, windows: list,
+                           phases: list, total_duration: float,
+                           rng: np.random.Generator) -> list:
+        """
+        Rebuild the phase timeline around power_off windows: the running phase
+        is truncated at the unplug, the whole window is phase_off, and on
+        power restore the thermostat immediately calls for cooling, so cycles
+        restart at the ON phase — not wherever the old timeline happened to be.
+        Post-restore durations come from a spawned child rng so the shared
+        stream's consumption stays identical to a normal run.
+        """
+        child = rng.spawn(1)[0]
+        on_idx = next((i for i, p in enumerate(phases)
+                       if "on" in p["name"].lower()), 0)
+        windows = sorted(windows)
+
+        segments = []
+        first_start = windows[0][0]
+        for seg in base_segments:
+            if seg["end"] <= first_start:
+                segments.append(seg)
+            else:
+                if seg["start"] < first_start:
+                    segments.append({**seg, "end": first_start})
+                break
+
+        while windows:
+            w_start, w_end = windows.pop(0)
+            if w_start >= total_duration:
+                break
+            w_end = total_duration if w_end is None else min(w_end, total_duration)
+            segments.append({"name": "phase_off", "start": w_start, "end": w_end})
+
+            current_time = w_end
+            phase_idx = on_idx
+            next_stop = windows[0][0] if windows else total_duration
+            while current_time < next_stop:
+                phase = phases[phase_idx % len(phases)]
+                duration = max(10, child.normal(phase["duration_mean"],
+                                                phase["duration_std"]))
+                if windows:  # land exactly on the next unplug
+                    duration = min(duration, next_stop - current_time)
+                segments.append({
+                    "name": phase["name"],
+                    "start": current_time,
+                    "end": current_time + duration
+                })
+                current_time += duration
+                phase_idx += 1
+
+        return segments
 
 # COMPONENT 3: COLUMN ENGINES
 
@@ -838,6 +919,7 @@ class SyntheticXDKGenerator:
                 "t_start": spec["t_start"],
                 "t_end":   spec.get("t_end"),
                 "state":   f"cli_anomaly_{i}_{spec['type']}",
+                "type":    spec["type"],
             })
         sm = StateMachine(
             rhythm_config=s.get("rhythm"),
@@ -901,7 +983,8 @@ class SyntheticXDKGenerator:
             for run_start, run_end in off_runs:
                 seg_t = t_sec[run_start:run_end]
                 keep[run_start:run_end] |= (seg_t - seg_t[0]) < keep_tail_s
-                keep[run_start:run_end] |= (seg_t[-1] - seg_t) < keep_lead_s
+                if run_end < len(micro):  # no lead when no ON phase follows
+                    keep[run_start:run_end] |= (seg_t[-1] - seg_t) < keep_lead_s
 
             df = df[keep].reset_index(drop=True)
 
@@ -917,6 +1000,8 @@ class SyntheticXDKGenerator:
         params = col_config.get("params", {})
 
         for i, spec in enumerate(self.anomaly_specs):
+            if spec["type"] == "power_off":
+                continue  # handled entirely by the state machine
             state_key = f"cli_anomaly_{i}_{spec['type']}"
             template = ANOMALY_TEMPLATES.get(spec["type"], {})
             effects = template.get(category, {})
@@ -973,6 +1058,8 @@ class SyntheticXDKGenerator:
         """Build per-state effects for SinusoidalDriftEngine from anomaly specs."""
         effects = {}
         for i, spec in enumerate(self.anomaly_specs):
+            if spec["type"] == "power_off":
+                continue  # handled entirely by the state machine
             state_key = f"cli_anomaly_{i}_{spec['type']}"
             template = ANOMALY_TEMPLATES.get(spec["type"], {})
             cat_effects = template.get(category, {})
@@ -1332,8 +1419,32 @@ class AutoFitter:
         if len(on_durations) < 3 or len(off_durations) < 3:
             return None
 
-        on_mean = np.mean(on_durations)
-        off_mean = np.mean(off_durations)
+        # Robust duration stats. The measured lists carry two kinds of
+        # pollution: short threshold-chatter fragments (a flickering label
+        # splits one real phase into pieces) and rare very long outliers (an
+        # idle stretch at session start, a leftover anomaly at the tail).
+        # Plain mean/std blow duration_std up to the 0.5*mean cap and the
+        # synthetic rhythm turns chaotic, while the real thermostat-driven
+        # appliance cycles almost like clockwork (measured OFF gaps:
+        # 740s +/- 49). Two-step defense: (1) iteratively drop fragments
+        # shorter than a quarter of the surviving median — each pass removes
+        # the shortest chatter, which lifts the median toward the true cycle
+        # length; (2) median + MAD on the survivors absorb the long outliers.
+        # The 0.05*median floor keeps a bit of natural jitter when the few
+        # measured cycles happen to be near-identical.
+        def _robust_stats(durations):
+            arr = np.asarray(durations, dtype=float)
+            for _ in range(5):
+                kept = arr[arr >= 0.25 * np.median(arr)]
+                if len(kept) == len(arr):
+                    break
+                arr = kept
+            med = float(np.median(arr))
+            mad_std = 1.4826 * float(np.median(np.abs(arr - med)))
+            return med, max(mad_std, 0.05 * med)
+
+        on_mean, on_std = _robust_stats(on_durations)
+        off_mean, off_std = _robust_stats(off_durations)
         duration_ratio = max(on_mean, off_mean) / (min(on_mean, off_mean) + 1e-10)
         if duration_ratio > 10:
             return None
@@ -1347,12 +1458,12 @@ class AutoFitter:
                 {
                     "name": "phase_on",
                     "duration_mean": float(on_mean),
-                    "duration_std": float(min(np.std(on_durations), on_mean * 0.5)),
+                    "duration_std": float(min(on_std, on_mean * 0.5)),
                 },
                 {
                     "name": "phase_off",
                     "duration_mean": float(off_mean),
-                    "duration_std": float(min(np.std(off_durations), off_mean * 0.5)),
+                    "duration_std": float(min(off_std, off_mean * 0.5)),
                 },
             ],
             "_detection_info": {
@@ -1478,6 +1589,20 @@ class AutoFitter:
                 }
             }
 
+        # --- Check 0b: few-level event column (e.g. room light switching off once) ---
+        # A column that sits on a handful of discrete levels and switches rarely
+        # is a level-shift EVENT column. Every other route misreads it: trending
+        # fits a slow ramp between the levels, and the per-state route sees
+        # different means per phase (the rare switch happens to land inside some
+        # phases) plus a huge residual "noise" that then thrashes across the
+        # quantization grid (the chaotic 0/2880/5760 light output).
+        clean = data[~np.isnan(data)]
+        levels = np.unique(clean)
+        if 2 <= len(levels) <= 3:
+            transitions = int(np.count_nonzero(np.diff(clean) != 0))
+            if transitions <= 5:
+                return self._fit_level_event(col, clean, len(levels), transitions)
+
         # --- Check 0c: Environmental sinusoidal (day/night U-shape or ∩-shape) ---
         # Require ≥18h of data: shorter windows can't distinguish a true daily cycle
         # from fast-rise-then-plateau (which triggers false ∩-shape reversal detection).
@@ -1507,6 +1632,35 @@ class AutoFitter:
 
         # --- Default: constant_noise ---
         return self._fit_constant_noise(col, data, cycling_states)
+
+    def _fit_level_event(self, col: str, data: np.ndarray,
+                         n_levels: int, transitions: int) -> dict:
+        """Constant baseline + rare level-shift events (a light turning off)."""
+        ts = self.df['timestamp'].values
+        t_seconds = (ts - ts[0]) / 1000.0
+        change_idx = np.where(np.diff(data) != 0)[0]
+        events = []
+        for i in change_idx:
+            events.append({
+                "t_start": float(t_seconds[i + 1]),
+                "duration": 1.0,
+                "magnitude": 0.0,
+                "level_shift": float(data[i + 1] - data[i]),
+                "type": "sustained",
+            })
+        print(f"[LevelEvent] {col}: {n_levels} levels, {transitions} switch(es) "
+              f"-> constant + level-shift events")
+        config = {
+            "engine": "event_spike",
+            "params": {
+                "baseline": float(data[0]),
+                "baseline_noise_std": 0.0,
+                "events": events,
+            },
+        }
+        if float(np.min(data)) >= 0:
+            config["realism"] = {"clip_min": 0}
+        return config
 
     # ----- Pattern detection helpers -----
 
@@ -2205,9 +2359,24 @@ class AutoFitter:
         # Target = average of the final 10% (where the signal ends up).
         target = float(np.mean(data[int(n * 0.9):]))
 
-        # Linear rate = total change / duration (units per second).
+        # Rate from the actual settle time: when does the (smoothed) signal
+        # first cover 90% of the total change? total_change / full duration is
+        # only right for a signal that drifts the whole session; a
+        # settle-then-plateau curve (temperature warm-up: ~80 min settle, then
+        # 4 h flat) gets a rate several times too slow that way, and the
+        # synthetic ramps linearly across the entire session without ever
+        # reaching the plateau.
         total_change = abs(target - start_val)
-        rate = total_change / duration_s if duration_s > 0 else 0.0
+        win = max(5, min(100, n // 20))
+        smooth = pd.Series(data).rolling(win, center=True, min_periods=1).mean().values
+        settle_s = duration_s
+        rate = 0.0
+        if total_change > 0 and duration_s > 0:
+            frac = (smooth - start_val) / (target - start_val + 1e-12)
+            settled = np.where(frac >= 0.9)[0]
+            if len(settled):
+                settle_s = float(t_seconds[settled[0]])
+            rate = 0.9 * total_change / max(settle_s, 1.0)
 
         # Noise: residual after removing rolling-mean trend.
         rolling = pd.Series(data).rolling(min(100, n // 5), center=True).mean()
@@ -2271,19 +2440,18 @@ class AutoFitter:
         rate_by_state = {"normal": rate}
 
         if cycling_states is not None:
+            # Per-phase targets = measured means in the PLATEAU region (after
+            # settling), so the synthetic oscillates between the levels the
+            # real signal actually reaches per phase. The old heuristic
+            # (target +/- 10% of the total warm-up change) scaled the
+            # oscillation with the warm-up span, which has nothing to do with
+            # the per-phase wave amplitude.
             valid = (cycling_states != "unknown")
+            plateau = t_seconds >= settle_s
             for phase in ["phase_on", "phase_off"]:
-                mask = (cycling_states == phase) & valid
+                mask = (cycling_states == phase) & valid & plateau
                 if mask.sum() > 50:
-                    # Check trend direction in each phase
-                    phase_data = data[mask]
-                    phase_diffs = np.diff(phase_data)
-                    avg_change = np.mean(phase_diffs)
-                    if avg_change < 0:
-                        # Cooling during this phase
-                        target_by_state[phase] = target - abs(target - start_val) * 0.1
-                    else:
-                        target_by_state[phase] = target + abs(target - start_val) * 0.1
+                    target_by_state[phase] = float(np.mean(data[mask]))
                     rate_by_state[phase] = rate
 
         config = {
