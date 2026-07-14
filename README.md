@@ -77,19 +77,6 @@ An anomaly run consumes the random stream identically to a normal run with
 the same seed, so both are byte-identical before `t_start` — matched
 normal/anomalous pairs for training and evaluating detectors.
 
-**3. Evaluate against real data:**
-
-```bash
-# distribution + texture similarity (Wasserstein, KS, increments, ACF)
-python3 stat_eval.py --real real.csv --syn synthetic.csv --cols acceleration_z rolling_std
-
-# utility: Train-on-Synthetic-Test-on-Real vs Train-on-Real
-python3 tstr_eval.py --real real.csv --syn synthetic.csv --col rolling_std
-```
-
-TSTR/TRTR ratio below ~1.1 means the synthetic data is a valid training
-substitute. Note: KS on quantized columns (e.g. an accelerometer that only
-outputs 0.9/1.0) is only meaningful after rounding to ~4 decimals.
 
 ## Layout
 
@@ -99,8 +86,6 @@ core/generator.py   the library: TimestampGenerator, StateMachine,
                     AutoFitter
 main.py             CLI: config -> synthetic CSV
 extract_config.py   CLI: real CSV -> config
-stat_eval.py        statistical similarity evaluation
-tstr_eval.py        TSTR utility evaluation
 out/                generated CSVs (created at runtime, not tracked)
 ```
 
