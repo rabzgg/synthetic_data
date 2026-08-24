@@ -167,10 +167,18 @@ trough) or ∩-shape (warm peak) in the middle of the recording, offset from
 both endpoints, over **≥18 hours** of data. Shorter windows can't
 distinguish a true daily cycle from an ordinary settle-then-plateau curve.
 
-**Real example:** not yet triggered by any dataset in this project — every
-recording so far has been too short or didn't have a true diurnal swing.
-Exists and is tested via unit paths, just hasn't been exercised on real
-multi-day data.
+**Known limit / bug (found 2026-08-10):** despite the ≥18h guard above, this
+engine IS assigned to `pressure` in the fridge configs (`fridge_fit60`,
+`fridge_10pct`, `fridge_25pct`) and to `temperature` / `humidity` / `pressure`
+in `aquarium_03`, on windows of only ~0.5–3h — far short of 18h. On such a short
+window a 24h sine (`daily_period_s = 86400`) is fitted across less than a quarter
+of its own period, so the output is a degenerate monotone curve, not a real
+diurnal cycle. This directly contradicts the "needs ≥18h / not yet triggered"
+description above: either the `_has_reversal` ≥18h guard leaks, or another
+routing path reaches this engine before the guard runs. Both are bugs — **under
+investigation**. Surfaced via the fridge deck config `fridge_fit60.json::pressure`
+(~3h window). Do NOT present `sinusoidal_drift` as a working feature until the
+routing is fixed; it currently produces a degenerate quarter-cycle fit.
 
 ---
 
@@ -276,16 +284,32 @@ data resolves finer than the claimed grid.
 
 ---
 
-## Known architecture gaps (not fixed, worth knowing)
+## Known architecture gaps (measured — see PHYSICS_REPORT.md for numbers)
 
-- **Columns are fit and generated fully independently.** There is no
-  cross-column noise correlation. Real `mag_x`/`mag_y`/`mag_z` (or
-  `acceleration_x/y/z`) are correlated (~0.4-0.6) because one physical
-  device is being shaken/oriented at once; the synthetic versions come out
-  at ~0.00 correlation. Anything computed as a combination of columns
-  (vector magnitude, RMS-of-axes) will not match the real correlation
-  structure even though each individual axis looks fine alone. Same root
-  cause as quaternion components not satisfying `‖q‖ = 1`.
+Status legend: **OPEN** = not addressed; **PARTIAL (flag)** = a fix exists behind
+a config flag, default OFF (deck reproduces the old behavior).
+
+- **Columns are fit and generated fully independently.** [**OPEN**] No cross-column
+  noise correlation. Real `mag_x/y/z` and `accel_x/y/z` are correlated (~0.4–0.6,
+  e.g. aquarium mag mx–my 0.623, accel ax–ay 0.412); synthetic comes out ~0.00.
+  Orientation axes are worse: arm real qx–qz ±0.98–0.99 → syn ~0.0. Anything derived
+  from a combination of axes (vector magnitude, quaternion norm) won't match. Targeted
+  by the planned Cholesky-correlated-noise phase.
+- **Quaternion validity `s = x²+y²+z² ≤ 1`.** [**PARTIAL (flag)** —
+  `physics.enforce_quaternion_norm`, default OFF] Independent generation pushed arm
+  joint-1 synthetic off the unit sphere: **4.9% of samples s>1, max s = 1.70** (not a
+  rotation at all). With the flag ON, a cross-column renormalization runs after
+  clipping and brings **max s → 1.000 and real violations (s>1.001) → 0%**, with no
+  marginal-quality cost (orientation KS/Wasserstein change ≤ 0.001, one column
+  improves). **It does NOT fix gravity consistency** (34.9° → 35.9°, unchanged): a
+  valid quaternion is still unrelated to the independently-generated accel — that is
+  the separate gravity-derivation gap below.
+- **Gravity component of accel is generated independently of orientation.** [**OPEN**]
+  On moving joints the accel direction does not match the gravity implied by the
+  quaternion: median angle error **arm j1 36°, j3 28° vs real ~0.3–1°**; synthetic
+  joint-1 also produces angular speeds of **~720°/s (16× real p99)** — physically
+  impossible for the arm. Targeted by the planned derive-gravity-from-orientation
+  phase (same deferred slot as `derived_rolling_std`).
 - **No engine models "shock, then slow asymmetric multi-hour recovery."**
   Found via the gas-sensor (HT_Sensor) dataset: columns with that shape get
   routed to `constant_noise` (losing all structure) or falsely to

@@ -176,6 +176,43 @@ class StateMachine:
         current_time = 0.0
         phase_idx = 0
 
+        # Semi-Markov mode (labeled states, e.g. dog-robot poses): each state
+        # has its own duration distribution and the NEXT state is sampled from
+        # a fitted transition matrix instead of simple alternation. The
+        # generator invents a new plausible command sequence — it does not
+        # replay the recorded one.
+        transition_matrix = self.rhythm_config.get("transition_matrix")
+        if transition_matrix:
+            phase_by_name = {p["name"]: p for p in phases}
+            state = self.rhythm_config.get("initial_state", phases[0]["name"])
+            phase_segments = []
+            while current_time < total_duration:
+                p = phase_by_name.get(state, phases[0])
+                duration = max(1.0, rng.normal(p["duration_mean"],
+                                               p["duration_std"]))
+                phase_segments.append({
+                    "name": state,
+                    "start": current_time,
+                    "end": current_time + duration
+                })
+                current_time += duration
+                nxt = transition_matrix.get(state)
+                if nxt:
+                    names = list(nxt.keys())
+                    probs = np.asarray(list(nxt.values()), dtype=float)
+                    state = str(names[rng.choice(len(names),
+                                                 p=probs / probs.sum())])
+                else:
+                    state = phases[0]["name"]
+
+            seg_idx = 0
+            for t in t_seconds:
+                while (seg_idx < len(phase_segments) - 1 and
+                       t >= phase_segments[seg_idx]["end"]):
+                    seg_idx += 1
+                timeline.append(phase_segments[seg_idx]["name"])
+            return timeline
+
         # Pre-generate phase sequence covering entire duration. Always drawn
         # the same way (same rng consumption) whether or not power_off windows
         # exist, so an anomaly run stays sample-identical to its normal
@@ -420,7 +457,8 @@ class CyclingEngine:
                  transition_spike: Optional[dict] = None,
                  default_value: float = 0.0,
                  default_noise_std: float = 0.001,
-                 ramp_by_state: dict[str, float] = None):
+                 ramp_by_state: dict[str, float] = None,
+                 segment_level_std_by_state: dict[str, float] = None):
         self.value_by_state = value_by_state
         self.noise_std_by_state = noise_std_by_state
         self.transition_spike = transition_spike
@@ -429,6 +467,10 @@ class CyclingEngine:
         # ramp_by_state[state] = total value increase across one phase:
         # value(t) = base - span/2 + span * progress
         self.ramp_by_state = ramp_by_state or {}
+        # segment_level_std_by_state[state]: the level is drawn ONCE per
+        # contiguous run of the state and held (an orientation pose plateaus
+        # within a segment; the spread lives BETWEEN segments, not per sample).
+        self.segment_level_std_by_state = segment_level_std_by_state or {}
 
     def generate(self, states: list[dict],
                  rng: np.random.Generator) -> np.ndarray:
@@ -437,9 +479,13 @@ class CyclingEngine:
         progress = _segment_progress(states) if self.ramp_by_state else None
 
         prev_state_key = None
+        seg_offset = 0.0
         for i, state in enumerate(states):
             key = state["micro"] or state["macro"]
-            base = self.value_by_state.get(key, self.default_value)
+            if key != prev_state_key:
+                lvl_std = self.segment_level_std_by_state.get(key, 0.0)
+                seg_offset = float(rng.normal(0, lvl_std)) if lvl_std > 0 else 0.0
+            base = self.value_by_state.get(key, self.default_value) + seg_offset
             std = self.noise_std_by_state.get(key, self.default_noise_std)
             span = self.ramp_by_state.get(key, 0.0)
             if span and progress is not None:
@@ -933,7 +979,14 @@ class SyntheticXDKGenerator:
         if "sensor_id" in s:
             data["sensor_id"] = np.full(len(timestamps), s["sensor_id"])
 
+        # Derived columns (rolling statistics of another column) are computed
+        # AFTER their source column exists.
+        deferred_derived = []
+
         for col_name, col_config in s["columns"].items():
+            if col_config["engine"] == "derived_rolling_std":
+                deferred_derived.append((col_name, col_config))
+                continue
             col_config = self._apply_anomaly_to_config(col_name, col_config)
             engine = self._build_engine(col_name, col_config)
 
@@ -954,6 +1007,49 @@ class SyntheticXDKGenerator:
                 raw = realism.apply(raw, self.rng)
 
             data[col_name] = raw
+
+        # Derived rolling-std columns: the real column is a firmware-computed
+        # rolling statistic of an acceleration channel — smooth and strongly
+        # autocorrelated. Generating it as per-sample noise destroys exactly
+        # that texture (bad ACF/TSTR), so compute the real thing from the
+        # synthetic source instead; it also stays consistent with the source
+        # during anomalies for free.
+        for col_name, col_config in deferred_derived:
+            p = col_config["params"]
+            src = pd.Series(data[p["source"]])
+            fs = s["frequency_hz"]
+            win = max(5, int(round(p["window_s"] * fs)))
+            raw = src.rolling(win, min_periods=max(2, win // 2)).std()
+            raw = raw.bfill().values
+            if p.get("floor") is not None:
+                raw = np.maximum(raw, p["floor"])
+            # Firmware updates the stat every few samples and holds it in
+            # between (real data repeats values ~80% of the time).
+            k = int(p.get("update_every", 1))
+            if k > 1:
+                idx = (np.arange(len(raw)) // k) * k
+                raw = raw[idx]
+            realism_config = col_config.get("realism", {})
+            if realism_config:
+                raw = SensorRealism(**realism_config).apply(raw, self.rng)
+            data[col_name] = raw
+
+        # ── Physics fix (Phase 1) — enforce quaternion validity. Flag, default OFF.
+        # Runs AFTER every column's clipping, as a cross-column GROUP step: the
+        # unit-norm couples the orientation axes, so a per-column SensorRealism
+        # pass cannot see it. Deck numbers use the old behavior (flag off = no-op).
+        if s.get("physics", {}).get("enforce_quaternion_norm", False):
+            ox, oy, oz = "orientation_x", "orientation_y", "orientation_z"
+            if all(c in data for c in (ox, oy, oz)):
+                x = np.asarray(data[ox], float); y = np.asarray(data[oy], float); z = np.asarray(data[oz], float)
+                if "orientation_w" in data:                       # full 4-vector -> unit
+                    w = np.asarray(data["orientation_w"], float)
+                    nrm = np.sqrt(x*x + y*y + z*z + w*w); nrm[nrm == 0] = 1.0
+                    data[ox], data[oy], data[oz], data["orientation_w"] = x/nrm, y/nrm, z/nrm, w/nrm
+                else:                                             # no w: only pull s>1 down to s=1
+                    s_val = x*x + y*y + z*z
+                    scale = np.where(s_val > 1.0, 1.0/np.sqrt(np.where(s_val > 0, s_val, 1.0)), 1.0)
+                    data[ox], data[oy], data[oz] = x*scale, y*scale, z*scale
 
         df = pd.DataFrame(data)
 
@@ -1214,6 +1310,228 @@ class AutoFitter:
             self._fit_anomaly_params_from_data(scenario, hints["anomaly_times"])
 
         return scenario
+
+    # -----------------------------------------------------------------
+    # LABELED FITTING (supervised states, e.g. dog-robot pose labels)
+    # -----------------------------------------------------------------
+
+    def fit_labeled(self, labels: np.ndarray, domain_hints: dict = None) -> dict:
+        """
+        Fit with KNOWN per-row state labels instead of detecting a rhythm.
+        The label sequence becomes a semi-Markov state machine (per-label
+        duration stats + transition matrix), and every column gets per-label
+        parameters. Made for recordings where the device is commanded through
+        named behaviors (dog robot: idle/forward/backward/rotate/crouch/sit).
+        """
+        hints = domain_hints or {}
+        labels = np.asarray(labels).astype(str)
+        if len(labels) != len(self.df):
+            raise ValueError(f"labels length {len(labels)} != rows {len(self.df)}")
+
+        ts_stats = self._analyze_timestamps()
+        rhythm_config = self._fit_label_rhythm(labels)
+
+        columns = {}
+        for col in self.sensor_columns:
+            if col == 'timestamp':
+                continue
+            config = self._fit_labeled_column(col, labels)
+            if config is not None:
+                columns[col] = config
+
+        scenario = {
+            "domain": hints.get("domain", "labeled"),
+            "sensor_position": hints.get("sensor_position", "unknown"),
+            "frequency_hz": ts_stats["frequency_hz"],
+            "duration_s": ts_stats["duration_s"],
+            "jitter_std_ms": ts_stats["jitter_std_ms"],
+            "gap_probability": ts_stats["gap_probability"],
+            "rhythm": rhythm_config,
+            "gated_logging": None,
+            "anomalies": [],
+            "columns": columns,
+        }
+        if 'sensor_id' in self.df.columns:
+            scenario["sensor_id"] = int(self.df['sensor_id'].iloc[0])
+        return scenario
+
+    def _fit_label_rhythm(self, labels: np.ndarray) -> dict:
+        """Per-label duration stats + transition matrix from the label runs."""
+        ts = self.df['timestamp'].values
+        t = (ts - ts[0]) / 1000.0
+
+        seq, durs = [], {}
+        start = 0
+        n = len(labels)
+        for i in range(1, n + 1):
+            if i == n or labels[i] != labels[start]:
+                lbl = labels[start]
+                seq.append(lbl)
+                durs.setdefault(lbl, []).append(
+                    max(float(t[i - 1] - t[start]), 0.5))
+                start = i
+
+        phases = []
+        for lbl in sorted(durs):
+            arr = np.asarray(durs[lbl])
+            med = float(np.median(arr))
+            mad_std = 1.4826 * float(np.median(np.abs(arr - med)))
+            phases.append({
+                "name": lbl,
+                "duration_mean": med,
+                "duration_std": max(mad_std, 0.1 * med),
+            })
+
+        counts = {lbl: {} for lbl in durs}
+        for a, b in zip(seq[:-1], seq[1:]):
+            counts[a][b] = counts[a].get(b, 0) + 1
+        transition_matrix = {}
+        most_common = max(durs, key=lambda l: len(durs[l]))
+        for lbl, nxt in counts.items():
+            total = sum(nxt.values())
+            if total == 0:  # terminal state in the recording
+                transition_matrix[lbl] = {most_common: 1.0}
+            else:
+                transition_matrix[lbl] = {b: c / total for b, c in nxt.items()}
+
+        print(f"[Labels] {len(durs)} states, {len(seq)} segments "
+              f"-> semi-Markov rhythm")
+        return {
+            "phases": phases,
+            "transition_matrix": transition_matrix,
+            "initial_state": seq[0],
+            "_detection_info": {"source": "labels", "n_segments": len(seq)},
+        }
+
+    # Slow environmental columns: per-label TARGETS with a gradual approach
+    # (an instant per-label jump would look wrong for temperature).
+    LABELED_SLOW = {'temperature', 'humidity', 'pressure', 'altitude'}
+
+    def _fit_labeled_column(self, col: str, labels: np.ndarray) -> Optional[dict]:
+        data = self.df[col].values
+        n = len(data)
+        if n < 10:
+            return None
+
+        overall_std = float(np.nanstd(data))
+        if overall_std < 1e-6:
+            return {
+                "engine": "constant_noise",
+                "params": {
+                    "base_value": float(np.nanmedian(data)),
+                    "noise_std_by_state": {},
+                    "default_noise_std": 0.0,
+                    "stickiness": 0.99,
+                }
+            }
+
+        means, stds = {}, {}
+        for lbl in np.unique(labels):
+            m = labels == lbl
+            if m.sum() < 20:
+                continue
+            means[lbl] = float(np.nanmean(data[m]))
+            stds[lbl] = float(np.nanstd(data[m]))
+        if not means:
+            return None
+
+        mean_vals = np.array(list(means.values()))
+        std_vals = np.array(list(stds.values()))
+        mean_spread = float(mean_vals.max() - mean_vals.min())
+        pooled_std = float(std_vals.max()) + 1e-10
+        std_ratio = float(std_vals.max() / (std_vals.min() + 1e-10))
+
+        # Bounded signals (quaternions!) must never leave the observed range.
+        # _get_realism already validates any XDK-specific quantization step
+        # (temperature/humidity/pressure/light) against this data's actual
+        # scale before returning it, so no re-validation is needed here.
+        realism = self._get_realism(col, data) or {}
+        realism.setdefault("clip_min", float(np.nanmin(data)))
+        realism.setdefault("clip_max", float(np.nanmax(data)))
+        # Settling is a single-shot session-start transient; not meaningful
+        # once a column is driven by per-label targets.
+        realism.pop("settling_samples", None)
+        realism.pop("settling_noise_factor", None)
+
+        if col in self.LABELED_SLOW:
+            # Slow drift toward a per-label target. Rate = a high quantile of
+            # the smoothed slope, i.e. how fast the signal actually moves when
+            # it is moving.
+            ts = self.df['timestamp'].values
+            t_sec = (ts - ts[0]) / 1000.0
+            win = max(5, min(100, n // 20))
+            smooth = pd.Series(data).rolling(win, center=True, min_periods=1).mean().values
+            dt = np.diff(t_sec)
+            dt[dt <= 0] = np.nan
+            slopes = np.abs(np.diff(smooth)) / dt
+            rate = float(np.nanpercentile(slopes, 90))
+            noise_std = float(np.nanstd(data - smooth))
+            return {
+                "engine": "gradual_curve",
+                "params": {
+                    "initial_value": float(np.nanmean(data[:min(50, n)])),
+                    "target_by_state": means,
+                    "rate_by_state": {lbl: rate for lbl in means},
+                    "noise_std": noise_std,
+                    "default_target": float(np.nanmean(data)),
+                    "default_rate": rate,
+                    "stickiness": 0.0,
+                    "quantization_step": 0.0,
+                },
+                "realism": realism,
+            }
+
+        if mean_spread > 0.5 * pooled_std:
+            # Level shifts between labels (orientation poses, activity level).
+            # Split each label's variance into BETWEEN-segment spread (the pose
+            # is different each time the command runs — drawn once per segment)
+            # and WITHIN-segment noise (the plateau wobble). Using the raw
+            # per-label std as per-sample noise smears both together and turns
+            # a clean pose plateau into full-range noise.
+            seg_means = {lbl: [] for lbl in means}
+            seg_stds = {lbl: [] for lbl in means}
+            start = 0
+            for i in range(1, n + 1):
+                if i == n or labels[i] != labels[start]:
+                    lbl = labels[start]
+                    if lbl in means and (i - start) >= 5:
+                        seg = data[start:i]
+                        seg_means[lbl].append(float(np.nanmean(seg)))
+                        seg_stds[lbl].append(float(np.nanstd(seg)))
+                    start = i
+            level_std, within_std = {}, {}
+            for lbl in means:
+                if len(seg_means[lbl]) >= 3:
+                    level_std[lbl] = float(np.std(seg_means[lbl]))
+                    within_std[lbl] = float(np.median(seg_stds[lbl]))
+                else:
+                    level_std[lbl] = 0.0
+                    within_std[lbl] = stds[lbl]
+            return {
+                "engine": "cycling",
+                "params": {
+                    "value_by_state": means,
+                    "noise_std_by_state": within_std,
+                    "segment_level_std_by_state": level_std,
+                    "default_value": float(np.nanmean(data)),
+                    "default_noise_std": overall_std,
+                },
+                "realism": realism,
+            }
+
+        if std_ratio > 1.5:
+            # Same level, different activity (acceleration: quiet vs moving)
+            return {
+                "engine": "constant_noise",
+                "params": {
+                    "base_value": float(np.nanmean(data)),
+                    "noise_std_by_state": stds,
+                    "default_noise_std": overall_std,
+                },
+                "realism": realism,
+            }
+
+        return self._fit_constant_noise(col, data, None)
 
     def _fit_anomaly_params_from_data(self, scenario: dict,
                                        anomaly_times: list):
@@ -1589,6 +1907,16 @@ class AutoFitter:
                 }
             }
 
+        # --- Check 0a2: derived rolling-statistic column ---
+        # A column named like a rolling stat that correlates strongly with the
+        # rolling std of an acceleration channel IS that statistic, computed
+        # by the firmware. Fit it as a derived column so the synthetic version
+        # is smooth/autocorrelated like the real one, instead of iid noise.
+        if "rolling" in col.lower():
+            derived = self._fit_derived_rolling(col, data)
+            if derived is not None:
+                return derived
+
         # --- Check 0b: few-level event column (e.g. room light switching off once) ---
         # A column that sits on a handful of discrete levels and switches rarely
         # is a level-shift EVENT column. Every other route misreads it: trending
@@ -1632,6 +1960,47 @@ class AutoFitter:
 
         # --- Default: constant_noise ---
         return self._fit_constant_noise(col, data, cycling_states)
+
+    def _fit_derived_rolling(self, col: str, data: np.ndarray) -> Optional[dict]:
+        """Detect that `col` is a rolling std of an acceleration channel."""
+        ts = self.df['timestamp'].values
+        med_dt_s = float(np.median(np.diff(ts))) / 1000.0
+        if med_dt_s <= 0:
+            return None
+        fs = 1.0 / med_dt_s
+
+        target = pd.Series(data)
+        best = None  # (corr, source, window_samples)
+        for src in sorted(self.ACCEL_COLS & set(self.df.columns)):
+            src_s = pd.Series(self.df[src].values)
+            for win in [25, 50, 75, 100, 150]:
+                derived = src_s.rolling(win, min_periods=max(2, win // 2)).std()
+                corr = float(derived.corr(target))
+                if best is None or corr > best[0]:
+                    best = (corr, src, win)
+        if best is None or best[0] < 0.8:
+            return None
+        corr, source, win = best
+
+        # Firmware floor: the real column never goes below a hard minimum.
+        floor = float(np.nanmin(data))
+        floor_frac = float(np.mean(np.isclose(data, floor, rtol=1e-6)))
+        # Firmware update-and-hold cadence from the repeat fraction.
+        diffs = np.diff(data)
+        sticky = float(np.mean(diffs == 0)) if len(diffs) else 0.0
+        update_every = int(round(1.0 / max(1e-3, 1.0 - sticky))) if sticky > 0.5 else 1
+
+        print(f"[Derived] {col}: rolling std of {source} "
+              f"(window {win} samples ~{win/fs:.0f}s, corr {corr:.2f}, "
+              f"floor {floor:.4f}, update every {update_every})")
+        params = {
+            "source": source,
+            "window_s": win / fs,
+            "update_every": update_every,
+        }
+        if floor_frac > 0.02:
+            params["floor"] = floor
+        return {"engine": "derived_rolling_std", "params": params}
 
     def _fit_level_event(self, col: str, data: np.ndarray,
                          n_levels: int, transitions: int) -> dict:
@@ -2192,6 +2561,27 @@ class AutoFitter:
         stable = data[max(1, n // 10):]
         base_value = float(np.median(stable))
         noise_std  = float(np.std(stable))
+        stickiness = 0.0
+
+        # Sticky/held-then-step columns (e.g. a near-static orientation axis
+        # that repeats one float for minutes, then jumps to a neighboring
+        # value a handful of times) don't qualify for the "Check 0: Static"
+        # constant guard (their std/relative_std sits above that threshold)
+        # and fall through to here, where std(stable) is the GLOBAL spread
+        # across all held levels -- applied as fresh per-sample gaussian
+        # noise with no holding, it turns a nearly-flat signal into
+        # continuous noise across its whole observed range (same failure
+        # family as the event_spike/gradual_curve fixes above). Detect it via
+        # the consecutive-equal fraction and, when high, hold values like the
+        # real data does and size the noise from the actual step magnitude
+        # (nonzero diffs) instead of the raw global std.
+        diffs_raw = np.diff(stable)
+        sticky_frac = float(np.mean(diffs_raw == 0)) if len(diffs_raw) else 0.0
+        if sticky_frac > 0.7:
+            stickiness = sticky_frac
+            nz_diffs = diffs_raw[diffs_raw != 0]
+            if len(nz_diffs) >= 5:
+                noise_std = float(np.std(nz_diffs))
 
         noise_std_by_state = {}
         if cycling_states is not None:
@@ -2207,6 +2597,7 @@ class AutoFitter:
                 "base_value": base_value,
                 "noise_std_by_state": noise_std_by_state,
                 "default_noise_std": noise_std,
+                "stickiness": stickiness,
             }
         }
 
@@ -2401,6 +2792,21 @@ class AutoFitter:
         stickiness = sticky_frac if use_stairs else 0.0
         quant_for_engine = q_step if use_stairs else 0.0
 
+        if use_stairs:
+            # The rolling-residual noise_std above is measured on the RAW
+            # (mostly-held) series, so >stickiness% zeros crush it toward 0
+            # (e.g. real humidity: residual std 0.19, yet it steps by a full
+            # +-1 unit whenever it moves). That tiny std, fed through
+            # round(value/q)*q in the engine, almost never rounds to a
+            # different grid level, so the synthetic stream goes far stickier
+            # than measured (sticky_frac ~1.0 instead of the fitted ~0.96) and
+            # flatlines after settling. Use the size of the REAL steps (std of
+            # the nonzero diffs) instead: that is what actually has to survive
+            # rounding to reproduce the true hold/step rate.
+            nz_diffs = diffs_raw[diffs_raw != 0]
+            if len(nz_diffs) >= 5:
+                noise_std = float(np.std(nz_diffs))
+
         # --- Detect pure drift vs approach-then-plateau ---
         # Pure drift (e.g. pressure falling for days): the signal keeps moving in one
         # direction with NO plateau. Approach-plateau (e.g. humidity 60->68 then holds):
@@ -2540,11 +2946,30 @@ class AutoFitter:
                     "type": "decaying",
                 })
 
-        # Baseline from stable periods
+        # Baseline from stable periods. "Stable" only excludes the sample-to-
+        # sample JUMP points, not sustained stretches that sit at a different
+        # level from the dominant baseline (e.g. light held at 2880 for the
+        # first 1.6h of a 22h session): those still pass the diff<threshold
+        # test everywhere except their entry/exit, so a plain mean/std over
+        # stable_mask mixes levels and wildly overstates baseline noise (a
+        # perfectly flat, exactly-quantized light column measured std~3500).
+        # Take a second robust pass: find the dominant level via the median,
+        # then measure noise only among points actually near it (MAD-gated),
+        # so sustained excursions are excluded the same way discrete events
+        # already are.
         stable_mask = diffs < threshold
         if stable_mask.sum() > 10:
-            baseline = float(np.mean(data[:-1][stable_mask]))
-            baseline_noise = float(np.std(data[:-1][stable_mask]))
+            stable_data = data[:-1][stable_mask]
+            med = float(np.median(stable_data))
+            abs_dev = np.abs(stable_data - med)
+            mad = float(np.median(abs_dev))
+            near_mode = stable_data[abs_dev <= max(mad * 5.0, 1e-9)]
+            if len(near_mode) >= 10:
+                baseline = float(np.median(near_mode))
+                baseline_noise = float(np.std(near_mode))
+            else:
+                baseline = float(np.mean(stable_data))
+                baseline_noise = float(np.std(stable_data))
         else:
             baseline = float(np.mean(data))
             baseline_noise = float(np.std(data)) * 0.1
@@ -2595,28 +3020,78 @@ class AutoFitter:
                 realism["clip_min"] = float(uniques[0])
                 realism["clip_max"] = float(uniques[-1])
 
-        # Column-specific overrides based on known XDK behavior
+        # Column-specific overrides based on known XDK behavior. These assume
+        # XDK's raw units (temperature/humidity/pressure/light all reported
+        # as large-magnitude raw ADC-ish values, e.g. temperature ~26489
+        # rather than 26.489). Other boards/datasets report the same column
+        # NAMES in plain physical units, where these steps are wildly too
+        # coarse -- e.g. a plain-Celsius temperature ~26.5 quantized to
+        # step=10 rounds to 30 for EVERY sample, collapsing all variation to
+        # a single flat value. Validate each hardcoded step against the
+        # actual data before keeping it.
+        # Steps already set above came from actually measuring this data (the
+        # smallest observed gap / diff), so they're self-validating and must
+        # NOT be re-checked below -- only the blind hardcoded literals here
+        # (10, 1, 1, 2880) need validating against the data's real scale.
         if col == 'temperature':
+            had_auto_step = "quantization_step" in realism
             realism.setdefault("quantization_step", 10)
             realism["settling_samples"] = 10
             realism["settling_noise_factor"] = float(np.std(data) * 0.5)
+            if not had_auto_step and not self._quant_step_fits_data(data, 10):
+                realism.pop("quantization_step", None)
+                realism.pop("settling_samples", None)
+                realism.pop("settling_noise_factor", None)
         elif col == 'humidity':
             realism["quantization_step"] = 1
             realism["clip_min"] = 0
             realism["clip_max"] = 100
+            if not self._quant_step_fits_data(data, 1):
+                realism.pop("quantization_step", None)
         elif col == 'pressure':
             realism["quantization_step"] = 1
+            if not self._quant_step_fits_data(data, 1):
+                realism.pop("quantization_step", None)
         elif col == 'light':
             realism["quantization_step"] = 2880
             realism["clip_min"] = 0
+            if not self._quant_step_fits_data(data, 2880):
+                realism.pop("quantization_step", None)
         elif col == 'rolling_std':
             # A rolling std can never be negative
             realism["clip_min"] = 0
 
         return realism if realism else None
 
+    @staticmethod
+    def _quant_step_fits_data(data: np.ndarray, q: float) -> bool:
+        """Is a candidate quantization step plausible for this data's scale?
+
+        Rejects the step only when a meaningful share of real step sizes are
+        smaller than half the candidate grid -- i.e. the data clearly
+        resolves finer than that grid (e.g. plain-Celsius temperature moving
+        in 0.01-0.1 steps quantized to a step of 10). A narrow observed range
+        is NOT on its own disqualifying: a column that genuinely only takes
+        integer values 42-45 (span 3) is correctly modeled by step=1 even
+        though the step is a third of the span -- what matters is whether
+        real transitions are smaller than the grid, not how wide the range
+        happens to be in a given recording.
+        """
+        diffs = np.abs(np.diff(data[~np.isnan(data)]))
+        diffs = diffs[diffs > 0]
+        if len(diffs) == 0:
+            return True
+        finer = float(np.mean(diffs < 0.5 * q))
+        return finer <= 0.1
+
 
 def fit_from_real_data(filepath: str, domain_hints: dict = None,
-                       encoding: str = 'utf-8') -> dict:
+                       encoding: str = 'utf-8',
+                       labels_csv: str = None) -> dict:
     fitter = AutoFitter(filepath, encoding=encoding)
+    if labels_csv:
+        # Supervised states: labels CSV must be row-aligned with the data CSV
+        # (same recording, one label per row).
+        labels = pd.read_csv(labels_csv)["label"].values
+        return fitter.fit_labeled(labels, domain_hints)
     return fitter.fit(domain_hints)
