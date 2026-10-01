@@ -222,11 +222,14 @@ def main():
     print(f"  Results for column: {args.col}{residual_note}")
     print(f"  Value range: {real_series.min():.3g} – {real_series.max():.3g}")
     print(f"{'─'*60}")
-    print(f"  {'Model':<18} {'RMSE':>10} {'NRMSE':>8} {'MAE':>10} {'vs Naive':>10}")
-    print(f"  {'─'*18} {'─'*10} {'─'*8} {'─'*10} {'─'*10}")
-    print(f"  {'TRTR (real)':<18} {rmse_real:>10.4f} {nrmse_real:>8.3%} {mae_real:>10.4f} {rel_real:>9.3f}x")
-    print(f"  {'TSTR (synthetic)':<18} {rmse_syn:>10.4f} {nrmse_syn:>8.3%} {mae_syn:>10.4f} {rel_syn:>9.3f}x")
-    print(f"  {'Naive (lag-1)':<18} {rmse_naive:>10.4f} {nrmse_naive:>8.3%} {mae_naive:>10.4f} {'(baseline)':>10}")
+    # Column name embedded in the table header so a screenshot of just the table
+    # region is self-describing (the caption above can get cropped out).
+    model_hdr = f"Model / col={args.col}"
+    print(f"  {model_hdr:<22} {'RMSE':>10} {'NRMSE':>8} {'MAE':>10} {'vs Naive':>10}")
+    print(f"  {'─'*22} {'─'*10} {'─'*8} {'─'*10} {'─'*10}")
+    print(f"  {'TRTR (real)':<22} {rmse_real:>10.4f} {nrmse_real:>8.3%} {mae_real:>10.4f} {rel_real:>9.3f}x")
+    print(f"  {'TSTR (synthetic)':<22} {rmse_syn:>10.4f} {nrmse_syn:>8.3%} {mae_syn:>10.4f} {rel_syn:>9.3f}x")
+    print(f"  {'Naive (lag-1)':<22} {rmse_naive:>10.4f} {nrmse_naive:>8.3%} {mae_naive:>10.4f} {'(baseline)':>10}")
     print(f"{'─'*60}")
 
     # ratio < 1 → TSTR better than TRTR; > 1 → TSTR worse

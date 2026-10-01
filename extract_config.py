@@ -32,6 +32,7 @@ parser.add_argument("--csv",      required=True,              help="Path to inpu
 parser.add_argument("--output",   required=True,              help="Path to output JSON config")
 parser.add_argument("--domain",   default="robot_arm",        help="Domain hint (default: robot_arm)")
 parser.add_argument("--duration", type=float, default=None,   help="Override duration_s in output (seconds)")
+parser.add_argument("--labels",   default=None,               help="Row-aligned labels CSV (supervised states, e.g. dog robot poses)")
 args = parser.parse_args()
 
 if not os.path.exists(args.csv):
@@ -39,7 +40,7 @@ if not os.path.exists(args.csv):
     sys.exit(1)
 
 print(f"Fitting from : {args.csv}")
-scenario = fit_from_real_data(args.csv, domain_hints={"domain": args.domain})
+scenario = fit_from_real_data(args.csv, domain_hints={"domain": args.domain}, labels_csv=args.labels)
 
 if args.duration:
     scenario["duration_s"] = args.duration
