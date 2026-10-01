@@ -27,6 +27,7 @@ classes below produced it and which one will regenerate it.
 | `sinusoidal_drift` | A reading that rises and falls once every 24 hours, like clockwork — outdoor temperature over day and night. | Smooth 24h day/night sine wave + noise | Column shows a clear day/night reversal over ≥18h of data |
 | `derived_rolling_std` | Not a real sensor reading at all — it's a number calculated from how "shaky" another sensor has been over the last few seconds, so it's generated FROM that sensor instead of on its own. | Computed from another (already-generated) column, not generated independently | Column name contains "rolling" and correlates >0.8 with an acceleration channel's rolling std |
 | `envelope_noise` | How "jumpy" a reading looks switches between calm and noisy on a repeating schedule. Built and ready to use, just not something the automatic fitting step currently reaches for on its own. | Noise amplitude alternates low/high on its own period | **Never auto-picked** — implemented, usable in a hand-written config, but no fitter path selects it |
+| `motion.joint_template` (flag, not a column engine) | Several sensors bolted to one robot arm, all moving together. Instead of inventing each reading on its own, it replays whole real arm cycles — every motion reading of every sensor taken from the same moment of the recording. | Whole-cycle joint replay of [quat, accel, mag] for all sensors on one shared cycle schedule; XDK-measured noise | **Never auto-picked** — scenario flag `"motion": {"joint_template": true}`, default OFF; arm_robot only |
 
 Routing order in `_fit_column` (first match wins): stable/pressure-like →
 static → derived-rolling → few-level event → day/night sinusoidal → trending
@@ -199,6 +200,71 @@ the presentation deck (`ppt/arm_robot/xdk*_orientation*.png`), including
 that the match holds at both the start and the end of a run, because a
 template gets redrawn every cycle rather than events running out.
 
+**Limit (arm_robot):** each column gets its own templates and its own period,
+so the quaternion axes, the accel and the three sensors drift out of step. That
+is the root cause of the arm's physics failures (partial quaternion flips →
+omega p99 722°/s, gravity error 36°, s > 1 on 4.9 % of samples, no
+inter-sensor timing). `motion.joint_template` below replaces it for the arm.
+
+---
+
+## `JointTemplateEngine` → scenario flag `"motion": {"joint_template": true}` (arm_robot)
+
+Code: `core/joint_template.py`. Default **OFF**; with the flag off the output is
+byte-identical to the previous generator (checked by `regression_arm.py`).
+
+**Claim:** physical consistency is inherited from the real recording — whole
+orientation–accel–mag cycles are taken together, and all three sensors share
+the same cycle schedule.
+
+**How it works**
+
+1. `build_joint_bank.py` reads the real recordings of all sensors (one shared
+   clock), detects the arm cycle (37.0 s) on their combined motion, and cuts
+   every sensor over the *same* time windows → `configs/robot_arm/joint_bank_arm.npz`
+   (120 usable cycles from the 94.9-min recording; the pool is the whole recording).
+2. A schedule (template index, start time, ±1 % time warp, residual donor) is a
+   pure function of (bank, duration, seed). Separate `main.py` runs for
+   sensor_1/2/3 with the same `--seed`/`--duration` therefore share it exactly.
+   Inside the recording span, the cycle at synthetic minute *t* is drawn from real
+   cycles within ±150 s of session minute *t*, so slow orientation drift is carried.
+3. Each sensor renders its own slice of the chosen cycles. Splices sit mid-rest
+   with a 1 s crossfade.
+4. Noise, measured on the real XDK:
+   - quaternion at rest: sample-and-hold. The fused quaternion only updates on
+     22–35 % of rest samples, the same rate as real.
+   - quaternion in motion: small rotation-vector noise at the measured floor.
+   - accel/mag: smoothed template shape + the residual of a *different* real
+     cycle at the same phase. Real accel noise is clustered in time and is
+     2–5× larger while the arm moves; a stationary Gaussian broke Check 7b (61 %).
+   - output: canonical w ≥ 0 (a flip negates all components), quat 1e-4,
+     accel 0.001 g, mag integer.
+5. Longer than the recording: past 94.9 min, cycles come from the whole pool,
+   restricted to those whose start pose matches the previous end pose in every
+   sensor (tilt < 2°, full pose < 3°). A warning is logged: drift outside the
+   recording window is not modelled.
+
+**Run:** `./run_robot_arm_joint.sh [seed] [duration_s]` generates the three
+sensors and runs the full physics gate (`physics_gate.py`; exit code ≠ 0 on
+failure). `main.py` runs the per-sensor part of the gate after every
+joint-template generation unless `--no-physics-gate` is given.
+
+**Limitations (must stay in any write-up):**
+- It replays patterns that were recorded; it cannot produce a motion the arm never made.
+- Drift is not extrapolated outside the recording. Past 95 min the pose stays
+  near the end-of-recording pose (only 25 of 120 cycles are pose-compatible there).
+- Noise is resampled real residuals, not a parametric model.
+- The copy-paste check is uninformative for sensor_3 (its real cycles are near-identical).
+- Sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing here identifies which link a sensor is on.
+
+**Retired / parked for arm_robot:** the planned Phase 2 (derive gravity from the
+quaternion) and Phase 3 (Cholesky-correlated noise) are **RETIRED** for
+arm_robot. Joint replay already gives gravity consistency (median 1.2° / 0.34° /
+0.34° vs real 1.11° / 0.33° / 0.33°) and the cross-column and cross-sensor
+coupling, so a hand-built correlation model would only approximate what the
+replay inherits. MuJoCo (`MUJOCO_FEASIBILITY.md`) is **parked**: not used in
+production.
+
 ---
 
 ## `derived_rolling_std` (special-cased, not a class)
@@ -287,7 +353,13 @@ data resolves finer than the claimed grid.
 ## Known architecture gaps (measured — see PHYSICS_REPORT.md for numbers)
 
 Status legend: **OPEN** = not addressed; **PARTIAL (flag)** = a fix exists behind
-a config flag, default OFF (deck reproduces the old behavior).
+a config flag, default OFF (deck reproduces the old behavior); **ADDRESSED for
+arm_robot (flag)** = fixed for the robot arm by `motion.joint_template` (default
+OFF), still open for other domains.
+
+> The first three gaps below (independence, no "same body", gravity) are
+> **ADDRESSED for arm_robot (flag)** by `motion.joint_template`. Gate numbers are in
+> PHYSICS_REPORT.md, "Joint template". They remain OPEN for every other domain.
 
 - **Columns are fit and generated fully independently.** [**OPEN**] No cross-column
   noise correlation. Real `mag_x/y/z` and `accel_x/y/z` are correlated (~0.4–0.6,
@@ -295,6 +367,17 @@ a config flag, default OFF (deck reproduces the old behavior).
   Orientation axes are worse: arm real qx–qz ±0.98–0.99 → syn ~0.0. Anything derived
   from a combination of axes (vector magnitude, quaternion norm) won't match. Targeted
   by the planned Cholesky-correlated-noise phase.
+- **No concept of "same body / same time" across files.** [**OPEN**] The three arm
+  XDKs are one rigid body recorded simultaneously: real inter-sensor activity
+  correlation **0.92–0.96**, they agree "moving vs still" **94%** of the time, at **0 ms
+  lag**. Generated as three independent files, synthetic drops to **~0.00 correlation,
+  25% agreement (chance), no shared timing** (Check 7 in PHYSICS_REPORT.md). This is the
+  cross-file level of the independence gap; a full fix needs a shared motion source, not
+  per-file generation. **Not addressed by the planned motion-group phase** — motion
+  groups work *within* one file (coupling columns of one sensor); this gap is *between*
+  files (sensor vs sensor). See the "session" concept sketch in
+  `ARCHITECTURE_NOTES.md` for a cheaper-than-forward-model option — design only, not
+  implemented.
 - **Quaternion validity `s = x²+y²+z² ≤ 1`.** [**PARTIAL (flag)** —
   `physics.enforce_quaternion_norm`, default OFF] Independent generation pushed arm
   joint-1 synthetic off the unit sphere: **4.9% of samples s>1, max s = 1.70** (not a
@@ -307,9 +390,11 @@ a config flag, default OFF (deck reproduces the old behavior).
 - **Gravity component of accel is generated independently of orientation.** [**OPEN**]
   On moving joints the accel direction does not match the gravity implied by the
   quaternion: median angle error **arm j1 36°, j3 28° vs real ~0.3–1°**; synthetic
-  joint-1 also produces angular speeds of **~720°/s (16× real p99)** — physically
-  impossible for the arm. Targeted by the planned derive-gravity-from-orientation
-  phase (same deferred slot as `derived_rolling_std`).
+  joint-1 also produces sensor angular speeds of **~720°/s, 16× the real p99 (45°/s)**
+  — well above the Franka Panda per-joint limit (150°/s) too, though the XDK is on a
+  link not a joint so that spec is indicative context, not proof (see PHYSICS_REPORT.md
+  Check 4). Targeted by the planned derive-gravity-from-orientation phase (same
+  deferred slot as `derived_rolling_std`).
 - **No engine models "shock, then slow asymmetric multi-hour recovery."**
   Found via the gas-sensor (HT_Sensor) dataset: columns with that shape get
   routed to `constant_noise` (losing all structure) or falsely to

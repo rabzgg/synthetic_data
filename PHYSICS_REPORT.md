@@ -1,6 +1,8 @@
 # Is the synthetic data physically real? 
 This is measurement only. Nothing in the generator was changed for this report. Every synthetic number sits next to the real number it's compared against. The test bed is the robot arm, joints 1, 2, and 3.
 
+> **Update:** the arm's physics gaps measured below are fixed for arm_robot by the joint-template engine (`motion.joint_template`, default OFF). Results, gate, limitations and the identity test are in the last section, "Joint template".
+
 ## The basic idea
  check one thing that must always be true in the real world: gravity always points down.
 The sensor has two ways of knowing "down." One is the accelerometer, which feels gravity directly. The other is the orientation reading, which stores which way the sensor is tilted. If you know the tilt, you can calculate which way "down" should be. In a real recording, those two ansrs must agree.
@@ -86,7 +88,146 @@ Result: exactly what expected, nothing more and nothing less.
 * Nothing else got worse. Spin speed, distribution shape, everything else stayed the same or improved slightly.
 
 ## Fixes 've identified but haven't built yet
-* Connect accelerometer to tilt: calculate the gravity part of the accelerometer reading directly from the tilt number, instead of generating it separately. This is the fix that should close the 34.6°/27.9° gap.
-* Make paired columns move together: add correlated noise within each sensor's group of columns, instead of generating each one in isolation.
+* Connect accelerometer to tilt: calculate the gravity part of the accelerometer reading directly from the tilt number, instead of generating it separately. This is the fix that should close the 34.6°/27.9° gap. **RETIRED for arm_robot:** superseded by the joint-template engine, which closes the gap (see "Joint template").
+* Make paired columns move together: add correlated noise (Cholesky) within each sensor's group of columns, instead of generating each one in isolation. **RETIRED for arm_robot:** the joint template takes whole real cycles, so the columns already move together.
+* MuJoCo physics simulation (`MUJOCO_FEASIBILITY.md`): **parked**, not used in production.
 * Widen the joint-1 ceiling: fix the template-scaling issue so the motion can reach its real full range.
 * Fix the joint-1 magnetic scale error: investigate the 2.4x magnitude mismatch separately.
+
+---
+
+## Joint template (`motion.joint_template`, default OFF) — arm_robot
+
+**TL;DR.** The arm's physics failures came from generating every motion column on
+its own (own template, own period). The joint-template engine replays whole real
+arm cycles instead: orientation, accel and mag of all three sensors come from the
+same moment of the recording, on one shared cycle schedule. All mandatory physics
+gates pass on 5 seeds and on every hour of a 3-hour run. **Claim:** physical
+consistency is inherited from the real recording; whole orientation–accel–mag cycles
+are taken together and the three sensors share the same schedule. The sensor →
+arm-link mapping is **[USER TO VERIFY]**. Nothing below says which link a sensor is on.
+
+### Root cause (diagnosis)
+- The `quaternion_flip` mode of `periodic_motion` is not the cause: the arm uses
+  `cycle_template`, and forcing the flag off gives byte-identical output.
+- The real XDK flips hemisphere (q → −q, x and z together) 304 times at |w| ≈ 0.
+  Those flips are baked into the per-column templates. Laid out with independent
+  periods (x 27.9 s, z 27.5 s, y 37.0 s; true cycle 37.0 s), the x and z flips
+  coincide only 3.7 % of the time, and each half-flip reads as a huge rotation.
+- Removing those steps drops omega p99 722 → ~191°/s. The rest, and the 36°
+  gravity error, is the same independence: the pair (x, z) comes from different
+  cycles, so the implied tilt is false.
+- Unwrapping alone (variant A) made it worse (omega 983°/s, gravity 54°).
+
+### Noise model, measured on the real XDK
+| property | real | used |
+|---|---|---|
+| quaternion identical to previous sample, at rest | 63 / 72 / 77 % (s1/s2/s3) — **not** 100 % | sample-and-hold with the measured update rate |
+| orientation noise while moving | floor 12–40× above the 1e-4 quantisation | rotation-vector noise at that floor |
+| accel step while the whole arm is still | typically 1 LSB (0.001 g), std 0.004–0.009 g (clustered) | residual of another real cycle, same phase |
+| accel noise while the arm moves | 2–5× larger (vibration) | (same) |
+| resolution | quat 1e-4, accel 0.001 g, mag integer | same |
+
+A stationary Gaussian per axis (the first attempt) dropped Check 7b to 61 %, and an
+i.i.d. empirical bootstrap gave 62 %. Phase-aligned residual swap gives ~91 %.
+
+### Physics gate (`physics_gate.py`; fixed thresholds; real in brackets)
+Thresholds:
+- validity: 0 % of samples with s > 1 + 1e-3
+- gravity: median quiet error < 2°
+- omega p99: within ±25 % of real
+- jumps: 0 non-flip quaternion jumps
+- Check 7b ≥ 85 %, Check 7c lag 0 ms
+- copy: ≤ 5 % of windows with corr > 0.99 (s1, s2)
+
+| seed | grav s1/s2/s3 (1.11/0.33/0.33°) | omega p99 s1/s2/s3 (44.9/16.4/43.1) | 7b (94.3) | 7c | copy s1/s2 | jumps | result |
+|---|---|---|---|---|---|---|---|
+| 42 | 1.15 / 0.34 / 0.34 | 42.8 / 15.5 / 42.2 | 91.7 | 0 ms | 0 / 0 % | 0 | PASS |
+| 43 | 1.26 / 0.34 / 0.35 | 42.9 / 15.6 / 42.3 | 91.2 | 0 ms | 0 / 0 % | 0 | PASS |
+| 44 | 1.25 / 0.34 / 0.35 | 42.7 / 15.5 / 42.2 | 90.6 | 0 ms | 0 / 0 % | 0 | PASS |
+| 45 | 1.31 / 0.34 / 0.35 | 42.7 / 15.5 / 42.2 | 91.1 | 0 ms | 0 / 0 % | 0 | PASS |
+| 46 | 1.23 / 0.34 / 0.34 | 42.6 / 15.6 / 42.2 | 91.5 | 0 ms | 0 / 0 % | 0 | PASS |
+
+Against `baseline_before.json` (deck, seed 42):
+- sensor_1 gravity 36.2 → 1.15°; omega p99 722 → 42.8°/s; % s > 1 (strict) 4.86 → 0.15 (real 0.14).
+- sensor_3 gravity 27.9 → 0.34°.
+
+Gate definition notes:
+- The copy check excludes sensor_3: its real cycles are near-identical to each other
+  (held-out vs training max-corr 0.997), so similarity cannot separate replay from
+  real data.
+- The jump check counts one-sample steps only (dt ≤ 2× median, the same rule as
+  omega). A step across a timestamp gap is checked by angular speed instead
+  (must be ≤ real p99 + 25 %). One seed-42 sensor_1 transition across a 0.98 s
+  gap had flipped hemisphere mid-gap and was a false "jump" under the first
+  definition.
+
+### Longer than the recording (3 h, seed 42; recording = 94.9 min)
+Gate run separately on each hour:
+
+| hour | grav s1 | omega p99 s1 | 7b | 7c | copy s1 | result |
+|---|---|---|---|---|---|---|
+| 1 (0–60 min) | 1.18° | 42.7 | 91.9 % | 0 ms | 0 % | PASS |
+| 2 (60–120, crosses end of recording) | 1.21° | 42.8 | 91.6 % | 0 ms | 1.0 % | PASS |
+| 3 (120–180, all past the recording) | 1.30° | 43.0 | 91.4 % | 0 ms | 0 % | PASS |
+
+- Splices after the recording: tilt ≤ 0.19°, full pose ≤ 2.97°, no fallbacks.
+- Only 25 of 120 cycles are pose-compatible with the end-of-recording pose, so the
+  orientation stays near that pose.
+- The log warns that drift outside the recording window is not modelled.
+- The first 3 h run failed 7c in hour 3 (100 ms lag). Cause: the engine timed motion
+  from each file's first sample, and Check 7 aligned synthetic files on per-file
+  elapsed time, so per-hour chunks started up to 88 ms apart. Fixed by timing motion
+  on the generator's shared clock and aligning synthetic files on absolute
+  timestamps (`check_inter_sensor(..., syn_use_abs=True)`; default unchanged).
+
+### Sensor identity (Level 1 only: is synthetic sensor_k recognisable as real sensor_k?)
+Level 2 (which link a sensor is on) is **not** answered: the mapping is **[USER TO VERIFY]**.
+
+Fingerprints are heading-independent (F1 gravity direction at rest, F2 body-frame
+rotation axis, F3 axis-vs-gravity angle, F4 speed). Distance = Wasserstein (F1–F3)
+or KS (F4); "nearest other" = the closest *other* real sensor.
+
+| sensor | F1 syn→own / →other | F2 | F3 (°) | F4 | old generator closer to own? |
+|---|---|---|---|---|---|
+| sensor_1 | 0.0013 / 0.038 | 0.009 / 0.38 | 0.86 / 46.6 | 0.043 / 0.48 | F2, F3 **no** |
+| sensor_2 | 0.0005 / 0.039 | 0.013 / 0.32 | 0.66 / 7.5 | 0.042 / 0.35 | all yes |
+| sensor_3 | 0.0075 / 0.45 | 0.010 / 0.33 | 0.60 / 6.5 | 0.042 / 0.35 | F2, F3 **no** |
+
+Random-forest classifier on 10 s windows of motion columns only (temp, light,
+humidity, pressure, id and timestamp excluded: temperature offsets alone identify the
+device). Trained on real with an interleaved per-cycle split.
+
+| case | accuracy (all / no mag / frame-safe) |
+|---|---|
+| a real holdout | 1.00 / 1.00 / 1.00 |
+| b joint template (bank = whole recording, overlaps training) | 1.00 / 1.00 / 1.00 |
+| b2 joint template from held-out cycles only (leak-free) | 1.00 / 1.00 / 1.00 |
+| c old generator (deck) | 0.87 / 0.99 / 0.97 (sensor_2 and sensor_3 recall 1.00) |
+| d shuffled labels | 0.32 / 0.33 / 0.33 |
+
+**Verdict:** the identity test is too weak to gate on. Control c, the old generator,
+passes it: classifier recall 1.0 for sensor_2/3, and F1–F4 closer to its own sensor
+for sensor_2. The three sensors differ so much in static mounting orientation and
+motion type that anything reproducing per-sensor marginals is "recognised".
+`physics_gate.py --identity` therefore reports these checks as **informational**
+only. Identity does not depend on the magnetometer: accuracy is the same without
+mag and with heading-independent features only.
+
+F6 (cross-sensor relations):
+
+| relation | real | joint template |
+|---|---|---|
+| activity correlation (1–2 / 1–3 / 2–3) | 0.96 / 0.95 / 0.92 | 0.95 / 0.94 / 0.92 |
+| rotation-amplitude ratio per cycle (s2/s1, s3/s1) | 0.16, 0.39 | 0.16, 0.39 |
+| counter-rotation about the vertical, s1–s2 | 26.7 % | **9.0 %** (not reproduced; cause not investigated) |
+
+### Limitations
+- It replays patterns that were recorded; it cannot produce a motion the arm never made.
+- Drift is not extrapolated outside the recording (log warning when the requested duration is longer).
+- Noise is resampled real residuals, not a parametric model.
+- The copy-paste check is uninformative for sensor_3.
+- The identity test failed control validation (see above).
+- With the flag OFF, `ppt/arm_robot/sensor_1_syn.csv` already differed from a fresh
+  run in the `temperature` column *before* this work (an older, unrelated change).
+  sensor_2/3 are byte-identical.

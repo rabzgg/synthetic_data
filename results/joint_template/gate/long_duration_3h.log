@@ -1,0 +1,78 @@
+sensor_1: WARNING: requested duration 10800s exceeds the recording (5693s); drift outside the recording window is not modelled. Cycles past the recording come from the whole pool with pose-continuous splices.
+sensor_2: WARNING: requested duration 10800s exceeds the recording (5693s); drift outside the recording window is not modelled. Cycles past the recording come from the whole pool with pose-continuous splices.
+sensor_3: WARNING: requested duration 10800s exceeds the recording (5693s); drift outside the recording window is not modelled. Cycles past the recording come from the whole pool with pose-continuous splices.
+
+schedule: {'n_cycles': 293, 'n_pool_cycles': 139, 'n_pose_fallback': 0, 'splice_tilt_max_deg': 1.1777056348717436, 'splice_full_max_deg': 2.96982662391819, 'beyond_recording': True}
+  splices into 'local' cycles: n=153  tilt max 1.18° p95 0.15°  full-pose max 2.45° p95 1.66°
+  splices into 'pool' cycles: n=139  tilt max 0.19° p95 0.13°  full-pose max 2.97° p95 2.84°
+  distinct templates used after the recording: 25 of 120
+
+=== hour 1 (0-60 min; recording ends at 94.9 min) ===
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00011)
+[PASS] sensor_1  gravity    value=     1.181  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    42.744  required in [33.7, 56.2] °/s (real 44.9 ±25%)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48260)
+[PASS] sensor_2  gravity    value=     0.336  required < 2.0°
+[PASS] sensor_2  omega_p99  value=    15.540  required in [12.3, 20.5] °/s (real 16.4 ±25%)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.60165)
+[PASS] sensor_3  gravity    value=     0.341  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    42.273  required in [32.3, 53.8] °/s (real 43.1 ±25%)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[PASS] all       check7b    value=    91.892  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: PASSED
+
+=== hour 2 (60-120 min; recording ends at 94.9 min) ===
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00010)
+[PASS] sensor_1  gravity    value=     1.211  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    42.828  required in [33.7, 56.2] °/s (real 44.9 ±25%)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     1.031  required <= 5.0 % windows corr>0.99
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48367)
+[PASS] sensor_2  gravity    value=     0.337  required < 2.0°
+[PASS] sensor_2  omega_p99  value=    15.438  required in [12.3, 20.5] °/s (real 16.4 ±25%)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.62328)
+[PASS] sensor_3  gravity    value=     0.337  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    42.360  required in [32.3, 53.8] °/s (real 43.1 ±25%)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[PASS] all       check7b    value=    91.553  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: PASSED
+
+=== hour 3 (120-180 min; recording ends at 94.9 min) ===
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00011)
+[PASS] sensor_1  gravity    value=     1.301  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    42.985  required in [33.7, 56.2] °/s (real 44.9 ±25%)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48370)
+[PASS] sensor_2  gravity    value=     0.337  required < 2.0°
+[PASS] sensor_2  omega_p99  value=    15.518  required in [12.3, 20.5] °/s (real 16.4 ±25%)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.62311)
+[PASS] sensor_3  gravity    value=     0.330  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    42.246  required in [32.3, 53.8] °/s (real 43.1 ±25%)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[PASS] all       check7b    value=    91.380  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: PASSED
+wrote results/joint_template/gate/gate_3h_per_hour.json

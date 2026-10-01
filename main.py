@@ -54,6 +54,8 @@ parser.add_argument("--light-off",   default=None,             help="Time light 
 parser.add_argument("--light-peak",  type=float, default=None, help="Peak light level at full brightness (e.g. 11520). Generates quantized ramp steps at sunrise.")
 parser.add_argument("--anomaly",     action="append",          default=[],
                                                                help="Anomaly spec t_start:t_end:type (repeatable)")
+parser.add_argument("--no-physics-gate", action="store_true",
+                    help="Skip the per-sensor physics gate that runs after joint-template generation")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -62,6 +64,11 @@ if not os.path.exists(args.config):
 
 with open(args.config) as f:
     scenario = json.load(f)
+
+# Joint-template bank path is relative to the config file
+_motion = scenario.get("motion") or {}
+if _motion.get("joint_template") and not os.path.isabs(_motion.get("bank", "")):
+    _motion["bank"] = os.path.join(os.path.dirname(os.path.abspath(args.config)), _motion["bank"])
 
 if args.duration:
     scenario["duration_s"] = args.duration
@@ -249,3 +256,16 @@ df = gen.generate()
 df.to_csv(args.output, index=False)
 
 print(f"\nGenerated {len(df)} rows → {args.output}")
+
+# ── Physics gate (joint-template only). Single-sensor checks here; the cross-sensor
+# checks (7b/7c) need all sensors and run in physics_gate.py / run_robot_arm_joint.sh.
+if _motion.get("joint_template") and not args.no_physics_gate:
+    from physics_gate import check_physics_gate
+    from core.joint_template import JointBank
+    bank = JointBank(_motion["bank"])
+    sensor = _motion["sensor"]
+    rep = check_physics_gate({sensor: args.output}, {sensor: bank.real_path(sensor)}, bank.period,
+                             cross_sensor=False)
+    print(rep.format())
+    if not rep.passed:
+        sys.exit(1)

@@ -307,6 +307,69 @@ def check_doublet(dr):
             "gap_p10_s": float(np.percentile(gaps, 10)), "gap_p90_s": float(np.percentile(gaps, 90)),
             "bimodal_hint": bool(np.percentile(gaps, 90) > 2.2*np.percentile(gaps, 10))}
 
+# ── Check 7: inter-sensor consistency (three XDKs on one rigid arm) ─────────────
+
+def _abs_seconds(t):
+    """Absolute seconds from timestamp column (ISO datetime, epoch-ms, epoch-s)."""
+    tn = pd.to_numeric(t, errors="coerce")
+    if tn.notna().mean() > 0.9:
+        v = tn.to_numpy(float); dt = np.median(np.diff(v))
+        return v/1000.0 if dt >= 10 else v                  # ms -> s, or already epoch-s
+    epoch = pd.Timestamp("1970-01-01", tz="UTC")
+    return (pd.to_datetime(t, errors="coerce", utc=True) - epoch).dt.total_seconds().to_numpy()
+
+def _activity_on_grid(path, use_abs, grid, ref0=None):
+    """Resample the |accel| activity signal (rolling std, ~1s) onto `grid`.
+    use_abs=True -> x is absolute epoch seconds (real, shared clock);
+    use_abs=False -> x is elapsed seconds from this file's own start."""
+    d = load(path)
+    _, amag = accel_mag(d)
+    sec = _abs_seconds(d["timestamp"])
+    x = sec if use_abs else (sec - sec[0])
+    m = np.isfinite(x) & np.isfinite(amag)
+    amag_grid = np.interp(grid, x[m], amag[m])
+    act = pd.Series(amag_grid).rolling(10, center=True, min_periods=1).std().to_numpy()
+    return act, (x[m].min(), x[m].max())
+
+def check_inter_sensor(real_paths, syn_paths, hz=10.0, syn_use_abs=False):
+    """syn_use_abs=True: synthetic files share one generator clock (joint-template engine),
+    so align them on absolute timestamps like the real side. Default keeps the old behaviour."""
+    def one_side(paths, use_abs):
+        # common window + crop accounting
+        spans = []
+        for p in paths:
+            s = _abs_seconds(load(p)["timestamp"])
+            spans.append((s.min(), s.max()) if use_abs else (0.0, s.max()-s.min()))
+        lo = max(a for a, _ in spans); hi = min(b for _, b in spans)
+        overlap = max(0.0, hi - lo); total = np.mean([b-a for a, b in spans])
+        grid = np.arange(lo, hi, 1.0/hz)
+        acts = [_activity_on_grid(p, use_abs, grid)[0] for p in paths]
+        # 7a: pairwise Pearson of activity
+        pairs = [(0, 1), (0, 2), (1, 2)]
+        corr = {}
+        for i, j in pairs:
+            a, b = acts[i], acts[j]; mm = np.isfinite(a) & np.isfinite(b)
+            corr[f"s{i+1}-s{j+1}"] = float(np.corrcoef(a[mm], b[mm])[0, 1]) if mm.sum() > 10 else None
+        # 7b: moving mask = activity above its own median; % of time all 3 agree
+        masks = [a > np.nanmedian(a) for a in acts]
+        agree_all = float(100*np.mean((masks[0] == masks[1]) & (masks[1] == masks[2])))
+        # 7c: cross-correlation peak lag (samples->ms), max |lag| 5 s
+        maxlag = int(5*hz); lags = {}
+        for i, j in pairs:
+            a = acts[i]-np.nanmean(acts[i]); b = acts[j]-np.nanmean(acts[j])
+            a = np.nan_to_num(a); b = np.nan_to_num(b)
+            best_l, best_c = 0, -2
+            denom = (np.std(a)*np.std(b)*len(a)) or 1
+            for L in range(-maxlag, maxlag+1):
+                c = np.dot(a, np.roll(b, L))/denom
+                if c > best_c: best_c, best_l = c, L
+            lags[f"s{i+1}-s{j+1}"] = {"lag_ms": float(best_l*1000/hz), "peak_corr": float(best_c)}
+        return {"overlap_min": float(overlap/60), "mean_file_min": float(total/60),
+                "crop_pct": float(100*(1 - overlap/total)) if total else None,
+                "activity_corr": corr, "all_agree_pct": agree_all, "xcorr_lag": lags}
+    return {"real": one_side(real_paths, use_abs=True),
+            "syn": one_side(syn_paths, use_abs=syn_use_abs)}
+
 # ── frame resolution (A4): 4-combo test on a moving dataset ─────────────────────
 
 def frame_test(d):
@@ -400,6 +463,10 @@ def run_suite(out, do_plots=True):
         res["pairs"][name] = run_pair(real, syn, name, out, cfg, do_plots)
     res["open_questions"]["clip_floor_j1"] = check_clip_floor(SUITE[0][3])
     res["open_questions"]["doublet_period_j1"] = check_doublet(dr1)
+    # Check 7: inter-sensor consistency across the three arm XDKs (one rigid arm)
+    res["inter_sensor"] = check_inter_sensor(
+        [SUITE[0][1], SUITE[1][1], SUITE[2][1]],
+        [SUITE[0][2], SUITE[1][2], SUITE[2][2]])
     return res
 
 # ── compare mode ────────────────────────────────────────────────────────────

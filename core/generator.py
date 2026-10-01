@@ -940,7 +940,10 @@ class SyntheticXDKGenerator:
                  anomaly_specs: list = None,
                  no_season_temp: bool = False):
         self.scenario = scenario
+        self.seed = seed
         self.rng = np.random.default_rng(seed)
+        self.joint_schedule = None   # set when motion.joint_template is on
+        self.joint_info = None
         self.environment_config = environment_config or {}
         self.anomaly_specs = anomaly_specs or []
         self.no_season_temp = no_season_temp
@@ -1033,6 +1036,25 @@ class SyntheticXDKGenerator:
             if realism_config:
                 raw = SensorRealism(**realism_config).apply(raw, self.rng)
             data[col_name] = raw
+
+        # ── Joint-template motion (arm_robot). Flag, default OFF. Replaces the
+        # motion columns (quat, accel, mag) with whole real cycles replayed jointly,
+        # on a cycle schedule shared by every sensor of the arm. The per-column
+        # engines above still run, so the RNG stream — and therefore every
+        # non-motion column — is identical to flag-off output. See core/joint_template.py.
+        motion_cfg = s.get("motion") or {}
+        if motion_cfg.get("joint_template", False):
+            from .joint_template import JointTemplateEngine
+            jt = JointTemplateEngine.from_config(motion_cfg)
+            cols = jt.generate(timestamps, s["duration_s"], self.seed,
+                               origin_ms=s.get("start_timestamp_ms", 20000.0))
+            for col_name, values in cols.items():
+                data[col_name] = values
+            self.joint_schedule, self.joint_info = jt.schedule, jt.info
+            if jt.info["beyond_recording"]:
+                print(f"WARNING: requested duration {s['duration_s']:.0f}s exceeds the recording "
+                      f"({jt.bank.recording_s:.0f}s); drift outside the recording window is not modelled. "
+                      f"Cycles past the recording come from the whole pool with pose-continuous splices.")
 
         # ── Physics fix (Phase 1) — enforce quaternion validity. Flag, default OFF.
         # Runs AFTER every column's clipping, as a cross-column GROUP step: the
