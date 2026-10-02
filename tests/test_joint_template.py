@@ -96,12 +96,50 @@ class TestSharedSchedule(unittest.TestCase):
         self.assertNotEqual([c["template"] for c in a], [c["template"] for c in b])
 
 
+class TestClock(unittest.TestCase):
+    """The real XDK samples on a regular internal clock and only the logged timestamp jitters:
+    step angle is uncorrelated with dt and dt has lag-1 autocorrelation ~ -0.5."""
+
+    def test_regular_clock_with_logging_jitter(self):
+        on, _ = _generate(1, joint=True)
+        off, _ = _generate(1, joint=False)
+        dt_on = np.diff(on["timestamp"].to_numpy(float))
+        dt_off = np.diff(off["timestamp"].to_numpy(float))
+        self.assertEqual(len(dt_on), len(dt_off))
+        self.assertEqual(int(np.sum(dt_on > 200)), int(np.sum(dt_off > 200)), "gaps not preserved")
+        n = (dt_on > 50) & (dt_on < 150)
+        d = dt_on[n]
+        self.assertLess(np.corrcoef(d[:-1], d[1:])[0, 1], -0.3)
+
+    def test_step_angle_uncorrelated_with_dt(self):
+        df, _ = _generate(1)
+        x = df[list(Q_COLS)].to_numpy(float)
+        w = np.sqrt(np.clip(1 - (x ** 2).sum(1), 0, None))
+        q = np.c_[w, x]
+        ang = np.degrees(2 * np.arccos(np.clip(np.abs((q[1:] * q[:-1]).sum(1)), 0, 1)))
+        dt = np.diff(df["timestamp"].to_numpy(float))
+        steady = (dt > 50) & (dt < 150) & (ang > 1.5)
+        self.assertGreater(steady.sum(), 200)
+        self.assertLess(abs(np.corrcoef(dt[steady], ang[steady])[0, 1]), 0.15)
+
+    def test_no_frozen_quaternion_while_moving(self):
+        """Real XDK: the fused quaternion repeats only while truly static (~0 % above 0.5 deg/s)."""
+        df, _ = _generate(1)
+        x = df[list(Q_COLS)].to_numpy(float)
+        same = np.all(x[1:] == x[:-1], axis=1)
+        w = np.sqrt(np.clip(1 - (x ** 2).sum(1), 0, None))
+        q = np.c_[w, x]
+        ang = np.degrees(2 * np.arccos(np.clip(np.abs((q[1:] * q[:-1]).sum(1)), 0, 1)))
+        moving = np.r_[ang[1:], 0] > 2.0          # the following step clearly rotates
+        self.assertLess(same[moving].mean(), 0.01)
+
+
 class TestFlagOff(unittest.TestCase):
     def test_non_motion_columns_unchanged_and_flag_off_is_noop(self):
         on, _ = _generate(2, joint=True)
         off, gen_off = _generate(2, joint=False)
         self.assertIsNone(gen_off.joint_schedule)
-        motion = set(Q_COLS) | set(A_COLS) | set(M_COLS) | {"mag_res"}
+        motion = set(Q_COLS) | set(A_COLS) | set(M_COLS) | {"mag_res", "timestamp"}   # timestamp: see TestClock
         for c in on.columns:
             if c not in motion:
                 np.testing.assert_array_equal(on[c].to_numpy(), off[c].to_numpy(), err_msg=c)

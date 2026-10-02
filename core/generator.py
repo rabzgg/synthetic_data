@@ -1045,6 +1045,8 @@ class SyntheticXDKGenerator:
         motion_cfg = s.get("motion") or {}
         if motion_cfg.get("joint_template", False):
             from .joint_template import JointTemplateEngine
+            motion_cfg = dict(motion_cfg)
+            motion_cfg.setdefault("frequency_hz", s["frequency_hz"])
             jt = JointTemplateEngine.from_config(motion_cfg)
             cols = jt.generate(timestamps, s["duration_s"], self.seed,
                                origin_ms=s.get("start_timestamp_ms", 20000.0))

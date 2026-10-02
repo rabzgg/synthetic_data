@@ -1,0 +1,4 @@
+sensor_1: omega tol ±3.6% (natural 3.3% + seeds 0.4%)  C2ST threshold 0.621 (baseline 0.444 + margin 0.177); synthetic 0.694±0.022
+sensor_2: omega tol ±1.4% (natural 0.6% + seeds 0.8%)  C2ST threshold 0.577 (baseline 0.419 + margin 0.157); synthetic 0.695±0.021
+sensor_3: omega tol ±0.9% (natural 0.5% + seeds 0.4%)  C2ST threshold 0.523 (baseline 0.397 + margin 0.126); synthetic 0.766±0.020
+wrote configs/robot_arm/gate_thresholds.json

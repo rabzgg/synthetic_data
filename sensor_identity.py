@@ -1,26 +1,25 @@
 """
-sensor_identity.py — is synthetic sensor_k recognisable as real sensor_k? (Level 1 only)
+sensor_identity.py — can synthetic sensor_k be told apart from real sensor_k? (Level 1 only)
 
-Level 1 (this file): synthetic sensor_k is recognised as the same device/position as real sensor_k.
-Level 2 (NOT answered here): which arm link sensor_k is mounted on. The sensor -> link mapping
-is [USER TO VERIFY]; nothing in this file supports a Level-2 claim.
+Level 1: synthetic sensor_k vs real sensor_k of the same device/position.
+Level 2 (which arm link a sensor is on) is NOT answered here: the mapping is [USER TO VERIFY].
 
-Two independent judges:
-  1. Physical fingerprints F1–F6 (interpretable, heading-independent: each XDK has its own
-     magnetometer heading, so absolute yaw is never compared).
-       F1 gravity direction at rest, body frame (distribution of accel unit vectors)
-       F2 body-frame rotation-axis distribution while moving (|axis| components; sign-free)
-       F3 angle between rotation axis and gravity (0° = yaw about vertical, 90° = pitch/roll)
-       F4 angular speed distribution while moving (p50 / p99)
-       F5 magnetometer magnitude at rest (+ mean vector, reported only: heading-dependent)
-       F6 inter-sensor relations: activity correlation, per-cycle rotation-amplitude ratio,
-          counter-rotation frequency about the vertical
-  2. A random-forest classifier on 10 s windows of motion columns only (quat, accel, mag and
-     their derivatives). temp/light/humidity/pressure/id/timestamp are excluded: per-sensor
-     temperature offsets alone would identify the device and make the test meaningless.
+Tools (used by physics_gate.py, derive_gate_thresholds.py and identity_report.py):
+  * C2ST — classifier two-sample test, real_k vs synthetic_k, motion features only (quat, accel,
+    mag, body angular velocity, gravity from quat; never temp/light/humidity/pressure/id/timestamp),
+    10 s windows, folds = contiguous blocks of 10 cycles. Compared with a real-vs-real baseline
+    (interleaved halves of the same span). 0.5 = indistinguishable.
+  * Fingerprints F1-F5 (heading-independent: each XDK has its own magnetometer heading):
+       F1 gravity direction at rest (body frame)     F2 body-frame rotation-axis distribution
+       F3 rotation axis vs gravity angle             F4 angular speed while moving
+       F5 magnetometer magnitude at rest
+    compared as d(synthetic_k, real_k) next to d(real_k half A, real_k half B).
+  * F6 counter-rotation about the vertical between sensors, on quaternions slerped to a 10 Hz grid,
+    with per-sensor relative thresholds and per motion episode.
 
-Gate (identity_checks): per sensor, synthetic recall >= 0.9 x real-holdout recall AND, for each
-F1–F4, d(syn_k, real_k) < d(syn_k, real_j) for every j != k.
+An earlier "is sensor_k recognised as sensor_k" classifier was removed: the old per-column
+generator passed it too (the sensors differ so much in mounting that any per-sensor marginal
+match is recognised), so it had no power.
 """
 import os
 import sys
@@ -36,7 +35,7 @@ from core.joint_template import REAL_ALIASES, Q_COLS, A_COLS, M_COLS, _abs_secon
 MOVE_DEG_S = 3.0          # rotation counts as "moving" above this rate (same for every sensor)
 WIN_S = 10.0              # classifier window
 CYCLE_S = 37.0            # arm cycle, for the interleaved split
-FEATURE_SETS = ("all", "no_mag", "frame_safe")
+FEATURE_SETS = ("all", "no_mag", "frame_safe")   # "all" is used by the gate
 
 
 # ── per-sample signals ────────────────────────────────────────────────────────
@@ -104,39 +103,7 @@ def fp_summary(f: dict) -> dict:
             "F5_mean_vec": f["F5_mean_vec"].round(0).tolist()}
 
 
-def relations(sig: dict) -> dict:
-    """F6 on a set of 3 sensors sharing a clock (real: absolute, synthetic: generator clock)."""
-    keys = sorted(sig)
-    t0 = max(sig[k]["t"][0] for k in keys)
-    t1 = min(sig[k]["t"][-1] for k in keys)
-    g = np.arange(t0, t1, 0.1)
-    act, wz, ang = {}, {}, {}
-    for k in keys:
-        s = sig[k]
-        am = np.interp(g, s["t"], np.linalg.norm(s["A"], axis=1))
-        act[k] = pd.Series(am).rolling(10, center=True, min_periods=1).std().to_numpy()
-        f = np.isfinite(s["om_wz"])
-        wz[k] = np.interp(g, s["t"][f], s["om_wz"][f])
-        sp = np.nan_to_num(s["speed"])
-        ang[k] = np.interp(g, s["t"], sp)
-    out = {}
-    for i in range(3):
-        for j in range(i + 1, 3):
-            a, b = keys[i], keys[j]
-            tag = f"{a[-1]}-{b[-1]}"
-            out[f"act_corr_{tag}"] = float(np.corrcoef(act[a], act[b])[0, 1])
-            both = (np.abs(wz[a]) > MOVE_DEG_S) & (np.abs(wz[b]) > MOVE_DEG_S)
-            out[f"counter_rot_pct_{tag}"] = float(100 * np.mean(np.sign(wz[a][both]) != np.sign(wz[b][both]))) if both.any() else float("nan")
-    # per-cycle rotation amplitude (integrated speed) ratio vs sensor_1
-    n = int((t1 - t0) // CYCLE_S)
-    per = {k: np.array([ang[k][int(c * CYCLE_S * 10):int((c + 1) * CYCLE_S * 10)].sum() * 0.1 for c in range(n)]) for k in keys}
-    for k in keys[1:]:
-        r = per[k] / np.maximum(per[keys[0]], 1e-6)
-        out[f"amp_ratio_{k[-1]}/{keys[0][-1]}_median"] = float(np.median(r))
-    return out
-
-
-# ── classifier ────────────────────────────────────────────────────────────────
+# ── window features (C2ST) ─────────────────────────────────────────────────────
 
 def _channels(s: dict, feature_set: str) -> np.ndarray:
     chans = [s["A"], s["om"], s["speed"][:, None], s["grav"]]
@@ -166,64 +133,158 @@ def window_features(s: dict, feature_set: str, t_origin: float = None):
     return np.nan_to_num(np.array(X)), np.array(starts)
 
 
-def real_split(starts: np.ndarray, t0: float):
-    """Interleaved per cycle: cycle%5==0 -> test, %5 in {1,4} -> buffer (dropped), else train."""
-    c = (((starts - t0) + WIN_S / 2) // CYCLE_S).astype(int) % 5
-    return c in (2, 3) if np.isscalar(c) else np.isin(c, (2, 3)), c == 0
+# ══ F6 and C2ST ═══════════════════════════════════════════════════════════════
+
+GRID_HZ = 10.0
+REL_MOVE = 0.2            # a sensor is "yawing" when |wz| > 20 % of its own p95 |wz|
+EPISODE_MERGE_S = 1.0     # merge motion runs closer than this
+EPISODE_MIN_S = 1.0
+EPISODE_MIN_YAW_DEG = 1.0
 
 
-def train_classifier(real_sig: dict, feature_set: str, seed: int = 0):
+def slerp_grid(path: str, smooth: bool = False) -> dict:
+    """Quaternion slerped onto an absolute 10 Hz grid (unwrapped first, duplicate/non-increasing
+    timestamps dropped) and the world-vertical yaw rate wz = [R_i·rotvec(R_i^-1 R_{i+1})]_z / dt."""
+    from scipy.spatial.transform import Slerp
+    from scipy.signal import savgol_filter
+    d = pd.read_csv(path).rename(columns=REAL_ALIASES)
+    t = _abs_seconds(d["timestamp"])
+    x, y, z = (d[c].to_numpy(float) for c in Q_COLS)
+    w = np.sqrt(np.clip(1 - (x * x + y * y + z * z), 0, None))
+    q = np.c_[w, x, y, z]
+    for i in range(1, len(q)):                        # unwrap
+        if np.dot(q[i], q[i - 1]) < 0:
+            q[i] = -q[i]
+    keep = np.r_[True, np.diff(t) > 0]
+    keep &= np.r_[True, np.maximum.accumulate(t)[:-1] < t[1:]] if len(t) > 1 else keep
+    t, q = t[keep], q[keep]
+    if smooth:
+        q = savgol_filter(q, 5, 2, axis=0)
+    q /= np.linalg.norm(q, axis=1, keepdims=True)
+    g = np.arange(np.ceil(t[0] * GRID_HZ) / GRID_HZ, t[-1], 1.0 / GRID_HZ)
+    rot = Slerp(t, Rotation.from_quat(np.c_[q[:, 1:], q[:, 0]]))(g)
+    rv = (rot[:-1].inv() * rot[1:]).as_rotvec()
+    wz = np.degrees(rot[:-1].apply(rv)[:, 2]) * GRID_HZ
+    return {"g": g[:-1], "wz": wz}
+
+
+def _align(a: dict, b: dict):
+    ia = np.round(a["g"] * GRID_HZ).astype(np.int64)
+    ib = np.round(b["g"] * GRID_HZ).astype(np.int64)
+    common, xa, xb = np.intersect1d(ia, ib, return_indices=True)
+    return a["wz"][xa], b["wz"][xb]
+
+
+def counter_rotation(a: dict, b: dict) -> dict:
+    """Counter-rotation about the vertical between two sensors, per sample and per motion episode,
+    with per-sensor relative thresholds."""
+    wa, wb = _align(a, b)
+    ta = REL_MOVE * np.percentile(np.abs(wa), 95)
+    tb = REL_MOVE * np.percentile(np.abs(wb), 95)
+    both = (np.abs(wa) > ta) & (np.abs(wb) > tb)
+    per_sample = float(100 * np.mean(np.sign(wa[both]) != np.sign(wb[both]))) if both.any() else float("nan")
+    moving = (np.abs(wa) > ta) | (np.abs(wb) > tb)
+    edges = np.diff(np.r_[0, moving.astype(int), 0])
+    st, en = list(np.where(edges == 1)[0]), list(np.where(edges == -1)[0])
+    merged = []
+    for s_, e_ in zip(st, en):
+        if merged and (s_ - merged[-1][1]) / GRID_HZ < EPISODE_MERGE_S:
+            merged[-1][1] = e_
+        else:
+            merged.append([s_, e_])
+    n_ep, n_counted, n_counter = 0, 0, 0
+    for s_, e_ in merged:
+        if (e_ - s_) / GRID_HZ < EPISODE_MIN_S:
+            continue
+        n_ep += 1
+        ya, yb = wa[s_:e_].sum() / GRID_HZ, wb[s_:e_].sum() / GRID_HZ
+        if abs(ya) >= EPISODE_MIN_YAW_DEG and abs(yb) >= EPISODE_MIN_YAW_DEG:
+            n_counted += 1
+            n_counter += int(np.sign(ya) != np.sign(yb))
+    return {"per_sample_pct": per_sample, "thr_a": float(ta), "thr_b": float(tb),
+            "episodes": n_ep, "episodes_both_yaw": n_counted,
+            "episode_counter_pct": float(100 * n_counter / n_counted) if n_counted else float("nan")}
+
+
+def relations_v2(paths: dict, smooth: bool = False) -> dict:
+    keys = sorted(paths)
+    sg = {k: slerp_grid(paths[k], smooth) for k in keys}
+    out = {}
+    for i in range(3):
+        for j in range(i + 1, 3):
+            out[f"{keys[i][-1]}-{keys[j][-1]}"] = counter_rotation(sg[keys[i]], sg[keys[j]])
+    return out
+
+
+# ── C2ST ──────────────────────────────────────────────────────────────────────
+
+def subset(s: dict, mask: np.ndarray) -> dict:
+    return {k: (v[mask] if isinstance(v, np.ndarray) and len(v) == len(mask) else v)
+            for k, v in s.items() if k != "rot"}
+
+
+def windows_with_cycles(s: dict, feature_set: str = "all"):
+    X, st = window_features(s, feature_set)
+    cyc = (((st - s["t"][0]) + WIN_S / 2) // CYCLE_S).astype(int)
+    return X, cyc
+
+
+FOLD_BLOCK_CYCLES = 10    # C2ST folds are contiguous blocks of 10 cycles (~6 min)
+
+
+def c2st(XA, fA, XB, fB, seed: int = 0, n_folds: int = 5, return_model: bool = False):
+    """Mean balanced accuracy of a random forest separating set A from set B, cross-validated
+    over fold ids fA/fB (block-of-cycles folds, see block_fold)."""
     from sklearn.ensemble import RandomForestClassifier
-    keys = sorted(real_sig)
-    t0 = max(real_sig[k]["t"][0] for k in keys)
-    Xtr, ytr, Xte, yte = [], [], [], []
-    for lab, k in enumerate(keys):
-        X, st = window_features(real_sig[k], feature_set, t_origin=t0)
-        tr, te = real_split(st, t0)
-        Xtr.append(X[tr]); ytr += [lab] * int(tr.sum())
-        Xte.append(X[te]); yte += [lab] * int(te.sum())
-    clf = RandomForestClassifier(n_estimators=300, random_state=seed, n_jobs=-1)
-    clf.fit(np.vstack(Xtr), np.array(ytr))
-    return clf, np.vstack(Xte), np.array(yte), keys, t0
+    from sklearn.metrics import balanced_accuracy_score
+    accs, imps = [], []
+    for f in range(n_folds):
+        trA, teA, trB, teB = fA % n_folds != f, fA % n_folds == f, fB % n_folds != f, fB % n_folds == f
+        if teA.sum() == 0 or teB.sum() == 0:
+            continue
+        X = np.vstack([XA[trA], XB[trB]]); y = np.r_[np.zeros(trA.sum()), np.ones(trB.sum())]
+        clf = RandomForestClassifier(n_estimators=200, random_state=seed, n_jobs=-1,
+                                     class_weight="balanced").fit(X, y)
+        Xt = np.vstack([XA[teA], XB[teB]]); yt = np.r_[np.zeros(teA.sum()), np.ones(teB.sum())]
+        accs.append(balanced_accuracy_score(yt, clf.predict(Xt)))
+        imps.append(clf.feature_importances_)
+    return (float(np.mean(accs)), np.mean(imps, 0)) if return_model else float(np.mean(accs))
 
 
-def confusion(clf, X, y, n=3):
-    p = clf.predict(X)
-    cm = np.zeros((n, n), int)
-    for a, b in zip(y, p):
-        cm[a, b] += 1
-    recall = cm.diagonal() / np.maximum(cm.sum(1), 1)
-    return cm, recall
+def block_fold(cyc: np.ndarray) -> np.ndarray:
+    """Folds are contiguous blocks of cycles. With interleaved (cycle-level) folds, features that
+    carry slow drift make the nearest training neighbour of every test window belong to the other
+    half, which drives a real-vs-real C2ST far BELOW 0.5 (measured 0.18). Block folds remove both
+    classes of a whole time block together."""
+    return cyc // FOLD_BLOCK_CYCLES
 
 
-def syn_windows(syn_sig: dict, keys, feature_set):
-    X, y = [], []
-    for lab, k in enumerate(keys):
-        Xi, _ = window_features(syn_sig[k], feature_set)
-        X.append(Xi); y += [lab] * len(Xi)
-    return np.vstack(X), np.array(y)
+def real_span(s_real: dict, span_s: float, start_s: float = 0.0) -> dict:
+    el = s_real["t"] - s_real["t"][0]
+    return subset(s_real, (el >= start_s) & (el < start_s + span_s))
 
 
-# ── gate ──────────────────────────────────────────────────────────────────────
+def c2st_real_baseline(s_real_span: dict, seeds=(0, 1, 2, 3, 4), feature_set: str = "all") -> list:
+    """Real vs real: interleaved halves (even/odd cycles, and cycle pairs) of the same span,
+    block folds, x RF seeds."""
+    X, cyc = windows_with_cycles(s_real_span, feature_set)
+    out = []
+    for scheme in ("even_odd", "pairs"):
+        a = cyc % 2 == 0 if scheme == "even_odd" else (cyc % 4) < 2
+        fold = block_fold(cyc)
+        for sd in seeds:
+            out.append(c2st(X[a], fold[a], X[~a], fold[~a], seed=sd))
+    return out
 
-def identity_checks(syn_paths: dict, real_paths: dict, report):
-    from physics_gate import Check
-    keys = sorted(syn_paths)
-    real = {k: signals(real_paths[k], use_abs_time=True) for k in keys}
-    syn = {k: signals(syn_paths[k], use_abs_time=False) for k in keys}
-    fr = {k: fingerprint(real[k]) for k in keys}
-    fs = {k: fingerprint(syn[k]) for k in keys}
-    for k in keys:
-        d_own = fp_distance(fs[k], fr[k])
-        d_oth = {j: fp_distance(fs[k], fr[j]) for j in keys if j != k}
-        for F in ("F1", "F2", "F3", "F4"):
-            nearest_other = min(d_oth[j][F] for j in d_oth)
-            report.add(Check(f"id_{F}", k, d_own[F], f"< nearest other real sensor ({nearest_other:.4f})",
-                             d_own[F] < nearest_other))
-    clf, Xte, yte, ck, _ = train_classifier(real, "all")
-    _, rec_real = confusion(clf, Xte, yte)
-    Xs, ys = syn_windows(syn, ck, "all")
-    _, rec_syn = confusion(clf, Xs, ys)
-    for i, k in enumerate(ck):
-        report.add(Check("id_clf", k, float(rec_syn[i]), f">= 0.9 x real-holdout recall ({rec_real[i]:.3f})",
-                         rec_syn[i] >= 0.9 * rec_real[i]))
+
+def c2st_syn(s_real_span: dict, s_syn: dict, seed: int = 0, feature_set: str = "all", return_model=False):
+    XR, cR = windows_with_cycles(s_real_span, feature_set)
+    XS, cS = windows_with_cycles(s_syn, feature_set)
+    return c2st(XR, block_fold(cR), XS, block_fold(cS), seed=seed, return_model=return_model)
+
+
+def fingerprint_split_distance(s_real_span: dict) -> dict:
+    """d(real_A, real_B) for interleaved even/odd cycles of the same span."""
+    cyc = (((s_real_span["t"] - s_real_span["t"][0])) // CYCLE_S).astype(int)
+    a = cyc % 2 == 0
+    return fp_distance(fingerprint(subset(s_real_span, a)), fingerprint(subset(s_real_span, ~a)))

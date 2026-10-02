@@ -22,6 +22,8 @@ from core.joint_template import build_bank
 ap = argparse.ArgumentParser(description="Fit a joint-template bank from real arm recordings.")
 ap.add_argument("--real", action="append", required=True, help="sensor_name=path.csv (repeat per sensor)")
 ap.add_argument("--output", required=True, help="output .npz bank")
+ap.add_argument("--smooth-quat", action="store_true",
+                help="savgol-smooth the template quaternion (old behaviour; default stores it as recorded)")
 args = ap.parse_args()
 
 paths = {}
@@ -32,11 +34,11 @@ for item in args.real:
         sys.exit(1)
     paths[name] = path
 
-meta = build_bank(paths, args.output)
+meta = build_bank(paths, args.output, smooth_quat=args.smooth_quat)
 print(f"Saved bank   : {args.output}  ({os.path.getsize(args.output)/1e6:.1f} MB)")
 print(f"  sensors    : {meta['sensors']}")
-print(f"  period     : {meta['period_s']:.2f}s")
+print(f"  period     : {meta['period_s']:.2f}s   smooth_quat={meta['smooth_quat']}")
 print(f"  recording  : {meta['recording_s']:.0f}s ({meta['recording_s']/60:.1f} min)")
 print(f"  cycles     : {meta['n_windows_kept']} kept of {meta['n_windows_detected']} detected")
 for s, n in meta["noise"].items():
-    print(f"  noise {s}: p_update_rest={n['p_update_rest']:.3f}  sig_rotvec={n['sig_rotvec_rad']:.2e} rad")
+    print(f"  noise {s}: sig_rotvec={n['sig_rotvec_rad']:.2e} rad  log_jitter={n['log_jitter_ms']:.1f} ms")

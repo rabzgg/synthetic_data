@@ -1,6 +1,6 @@
 {
  "42": {
-  "passed": true,
+  "passed": false,
   "checks": [
    {
     "name": "validity",
@@ -8,13 +8,13 @@
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 1.00011",
+    "note": "max s 1.00013",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_1",
-    "value": 1.1535000024648636,
+    "value": 1.2267241057131721,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -23,8 +23,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_1",
-    "value": 42.76457133324206,
-    "threshold": "in [33.7, 56.2] \u00b0/s (real 44.9 \u00b125%)",
+    "value": 44.00001303467265,
+    "threshold": "in [43.29, 46.56] \u00b0/s (real 44.93 \u00b13.6%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -35,7 +35,7 @@
     "value": 0.0,
     "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
     "passed": true,
-    "note": "1 transition(s) across timestamp gaps checked by angular speed",
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
     "informational": false
    },
    {
@@ -57,18 +57,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.6774992321867322,
+    "threshold": "<= 0.621 (real-vs-real 0.444 + margin 0.177)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_2",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.48259",
+    "note": "max s 0.48265",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_2",
-    "value": 0.33590446368494037,
+    "value": 0.33112017776202046,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -77,9 +86,9 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_2",
-    "value": 15.501684231643692,
-    "threshold": "in [12.3, 20.5] \u00b0/s (real 16.4 \u00b125%)",
-    "passed": true,
+    "value": 16.135741196988906,
+    "threshold": "in [16.17, 16.62] \u00b0/s (real 16.40 \u00b11.4%, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -111,18 +120,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.6782005016380017,
+    "threshold": "<= 0.577 (real-vs-real 0.419 + margin 0.157)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_3",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.60147",
+    "note": "max s 0.60131",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_3",
-    "value": 0.34108025139574805,
+    "value": 0.3421421510144104,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -131,8 +149,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_3",
-    "value": 42.17905918553353,
-    "threshold": "in [32.3, 53.8] \u00b0/s (real 43.1 \u00b125%)",
+    "value": 42.779701136235786,
+    "threshold": "in [42.67, 43.44] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -165,9 +183,18 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.7866259725634726,
+    "threshold": "<= 0.523 (real-vs-real 0.397 + margin 0.126)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "check7b",
     "sensor": "all",
-    "value": 91.70019701972973,
+    "value": 92.37584712809688,
     "threshold": ">= 85.0 %",
     "passed": true,
     "note": "",
@@ -185,7 +212,7 @@
   ]
  },
  "43": {
-  "passed": true,
+  "passed": false,
   "checks": [
    {
     "name": "validity",
@@ -193,13 +220,13 @@
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 1.00010",
+    "note": "max s 1.00013",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_1",
-    "value": 1.2608544833757334,
+    "value": 1.2791019689578345,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -208,8 +235,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_1",
-    "value": 42.88797654886356,
-    "threshold": "in [33.7, 56.2] \u00b0/s (real 44.9 \u00b125%)",
+    "value": 43.98412574509569,
+    "threshold": "in [43.29, 46.56] \u00b0/s (real 44.93 \u00b13.6%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -242,18 +269,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.7189534705159705,
+    "threshold": "<= 0.621 (real-vs-real 0.444 + margin 0.177)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_2",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.48234",
+    "note": "max s 0.48265",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_2",
-    "value": 0.33858440124589584,
+    "value": 0.32927298650827364,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -262,9 +298,9 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_2",
-    "value": 15.556860821934638,
-    "threshold": "in [12.3, 20.5] \u00b0/s (real 16.4 \u00b125%)",
-    "passed": true,
+    "value": 16.162793711290547,
+    "threshold": "in [16.17, 16.62] \u00b0/s (real 16.40 \u00b11.4%, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -296,18 +332,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.7113994676494675,
+    "threshold": "<= 0.577 (real-vs-real 0.419 + margin 0.157)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_3",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.60156",
+    "note": "max s 0.60131",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_3",
-    "value": 0.3458566482079457,
+    "value": 0.34043540283835755,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -316,8 +361,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_3",
-    "value": 42.3480710583875,
-    "threshold": "in [32.3, 53.8] \u00b0/s (real 43.1 \u00b125%)",
+    "value": 42.96546975921995,
+    "threshold": "in [42.67, 43.44] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -350,9 +395,18 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.7424063267813268,
+    "threshold": "<= 0.523 (real-vs-real 0.397 + margin 0.126)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "check7b",
     "sensor": "all",
-    "value": 91.24659589840493,
+    "value": 92.37627062156307,
     "threshold": ">= 85.0 %",
     "passed": true,
     "note": "",
@@ -370,7 +424,7 @@
   ]
  },
  "44": {
-  "passed": true,
+  "passed": false,
   "checks": [
    {
     "name": "validity",
@@ -378,13 +432,13 @@
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 1.00013",
+    "note": "max s 1.00011",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_1",
-    "value": 1.2488850240388927,
+    "value": 1.326142625632508,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -393,8 +447,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_1",
-    "value": 42.731535159347736,
-    "threshold": "in [33.7, 56.2] \u00b0/s (real 44.9 \u00b125%)",
+    "value": 43.81456720062405,
+    "threshold": "in [43.29, 46.56] \u00b0/s (real 44.93 \u00b13.6%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -405,7 +459,7 @@
     "value": 0.0,
     "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
     "passed": true,
-    "note": "1 transition(s) across timestamp gaps checked by angular speed",
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
     "informational": false
    },
    {
@@ -427,18 +481,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.715822072072072,
+    "threshold": "<= 0.621 (real-vs-real 0.444 + margin 0.177)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_2",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.48240",
+    "note": "max s 0.48265",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_2",
-    "value": 0.3374590445628415,
+    "value": 0.3333894797823983,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -447,9 +510,9 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_2",
-    "value": 15.480244727269694,
-    "threshold": "in [12.3, 20.5] \u00b0/s (real 16.4 \u00b125%)",
-    "passed": true,
+    "value": 16.048717255342854,
+    "threshold": "in [16.17, 16.62] \u00b0/s (real 16.40 \u00b11.4%, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -481,18 +544,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.7218826781326781,
+    "threshold": "<= 0.577 (real-vs-real 0.419 + margin 0.157)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_3",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.60135",
+    "note": "max s 0.60131",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_3",
-    "value": 0.3486730031033789,
+    "value": 0.3451871178918198,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -501,8 +573,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_3",
-    "value": 42.15670697138352,
-    "threshold": "in [32.3, 53.8] \u00b0/s (real 43.1 \u00b125%)",
+    "value": 42.84995930721631,
+    "threshold": "in [42.67, 43.44] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -535,9 +607,18 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.76163621007371,
+    "threshold": "<= 0.523 (real-vs-real 0.397 + margin 0.126)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "check7b",
     "sensor": "all",
-    "value": 90.59313793582442,
+    "value": 92.21197644706145,
     "threshold": ">= 85.0 %",
     "passed": true,
     "note": "",
@@ -555,7 +636,7 @@
   ]
  },
  "45": {
-  "passed": true,
+  "passed": false,
   "checks": [
    {
     "name": "validity",
@@ -563,13 +644,13 @@
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 1.00012",
+    "note": "max s 1.00011",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_1",
-    "value": 1.3116678283306602,
+    "value": 1.2901713197257676,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -578,8 +659,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_1",
-    "value": 42.712185089909674,
-    "threshold": "in [33.7, 56.2] \u00b0/s (real 44.9 \u00b125%)",
+    "value": 43.84057305348259,
+    "threshold": "in [43.29, 46.56] \u00b0/s (real 44.93 \u00b13.6%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -612,18 +693,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.6766546375921376,
+    "threshold": "<= 0.621 (real-vs-real 0.444 + margin 0.177)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_2",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.48224",
+    "note": "max s 0.48265",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_2",
-    "value": 0.3371186724197104,
+    "value": 0.3298483737324443,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -632,8 +722,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_2",
-    "value": 15.49158476424282,
-    "threshold": "in [12.3, 20.5] \u00b0/s (real 16.4 \u00b125%)",
+    "value": 16.213919916664846,
+    "threshold": "in [16.17, 16.62] \u00b0/s (real 16.40 \u00b11.4%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -666,18 +756,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.6720989455364456,
+    "threshold": "<= 0.577 (real-vs-real 0.419 + margin 0.157)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_3",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.60154",
+    "note": "max s 0.59980",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_3",
-    "value": 0.3457028384362886,
+    "value": 0.34034185812206846,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -686,8 +785,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_3",
-    "value": 42.160485453388254,
-    "threshold": "in [32.3, 53.8] \u00b0/s (real 43.1 \u00b125%)",
+    "value": 42.767512892407694,
+    "threshold": "in [42.67, 43.44] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -720,9 +819,18 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.7507562960687961,
+    "threshold": "<= 0.523 (real-vs-real 0.397 + margin 0.126)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "check7b",
     "sensor": "all",
-    "value": 91.05828774541112,
+    "value": 92.72323288432163,
     "threshold": ">= 85.0 %",
     "passed": true,
     "note": "",
@@ -740,7 +848,7 @@
   ]
  },
  "46": {
-  "passed": true,
+  "passed": false,
   "checks": [
    {
     "name": "validity",
@@ -748,13 +856,13 @@
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 1.00011",
+    "note": "max s 1.00013",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_1",
-    "value": 1.2272353140377066,
+    "value": 1.1869706257342705,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -763,8 +871,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_1",
-    "value": 42.61153873470808,
-    "threshold": "in [33.7, 56.2] \u00b0/s (real 44.9 \u00b125%)",
+    "value": 43.944754641863376,
+    "threshold": "in [43.29, 46.56] \u00b0/s (real 44.93 \u00b13.6%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -797,18 +905,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.6790668509418509,
+    "threshold": "<= 0.621 (real-vs-real 0.444 + margin 0.177)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_2",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.48247",
+    "note": "max s 0.48263",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_2",
-    "value": 0.33773425848658684,
+    "value": 0.3285962018164752,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -817,9 +934,9 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_2",
-    "value": 15.5800029188301,
-    "threshold": "in [12.3, 20.5] \u00b0/s (real 16.4 \u00b125%)",
-    "passed": true,
+    "value": 16.094761199524637,
+    "threshold": "in [16.17, 16.62] \u00b0/s (real 16.40 \u00b11.4%, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -851,18 +968,27 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.6908860565110565,
+    "threshold": "<= 0.577 (real-vs-real 0.419 + margin 0.157)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "validity",
     "sensor": "sensor_3",
     "value": 0.0,
     "threshold": "= 0 % of s > 1+0.001",
     "passed": true,
-    "note": "max s 0.60125",
+    "note": "max s 0.60131",
     "informational": false
    },
    {
     "name": "gravity",
     "sensor": "sensor_3",
-    "value": 0.3411674269168515,
+    "value": 0.33991726714588155,
     "threshold": "< 2.0\u00b0",
     "passed": true,
     "note": "",
@@ -871,8 +997,8 @@
    {
     "name": "omega_p99",
     "sensor": "sensor_3",
-    "value": 42.23687737725297,
-    "threshold": "in [32.3, 53.8] \u00b0/s (real 43.1 \u00b125%)",
+    "value": 42.74733210102086,
+    "threshold": "in [42.67, 43.44] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -905,9 +1031,18 @@
     "informational": false
    },
    {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.7867424242424244,
+    "threshold": "<= 0.523 (real-vs-real 0.397 + margin 0.126)",
+    "passed": false,
+    "note": "real span 0-60 min",
+    "informational": false
+   },
+   {
     "name": "check7b",
     "sensor": "all",
-    "value": 91.48321102957527,
+    "value": 93.13630176939529,
     "threshold": ">= 85.0 %",
     "passed": true,
     "note": "",

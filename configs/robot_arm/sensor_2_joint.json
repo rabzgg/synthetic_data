@@ -21569,7 +21569,6 @@
     "sensor": "sensor_2",
     "local_window_s": 150.0,
     "crossfade_s": 1.0,
-    "warp_sd": 0.01,
     "pose_tol_deg": 2.0,
     "yaw_tol_deg": 3.0
   }

@@ -9,19 +9,22 @@ Checks (per sensor unless noted; real reference values are computed from the
 real recording at gate time):
   validity     0 % samples with s = x²+y²+z² > 1 + 1e-3 (after quantisation)
   gravity      median quiet-sample gravity angle error < 2°
-  omega        omega p99 within ±25 % of the real p99
+  omega        omega p99 within a per-sensor tolerance of the real p99, derived from data
+               (gate_thresholds.json: real 60-min-window variation + 2 sd over seeds; ±25 % only
+               when no thresholds file is given)
   jumps        0 one-sample quaternion jumps that are NOT a full q -> -q flip
   copy         % of cycle-length windows with max corr > 0.99 vs the real recording <= 5 %
+  c2st         [per sensor] classifier two-sample test, real vs synthetic (motion features, 10 s
+               windows, block folds): balanced accuracy <= real-vs-real baseline + margin
+               (gate_thresholds.json; margin = 2 sqrt(sd_seed^2 + sd_baseline^2))
                (sensor_3 excluded, see COPY_EXCLUDE)
   check7b      [cross-sensor] all-three moving-mask agreement >= 85 %
   check7c      [cross-sensor] activity cross-correlation lag = 0 ms for every pair
-  identity     [optional, INFORMATIONAL] see sensor_identity.py — does not decide the gate:
-               it failed control validation (the old generator passes it for sensor_2)
 
 CLI
 ---
 python3 physics_gate.py --syn sensor_1=a.csv --syn sensor_2=b.csv --syn sensor_3=c.csv \\
-                        --bank configs/robot_arm/joint_bank_arm.npz [--no-cross] [--identity]
+                        --bank configs/robot_arm/joint_bank_arm.npz [--no-cross]
 """
 import argparse
 import os
@@ -166,7 +169,13 @@ def copy_pct(d_syn, d_real, period_s) -> float:
     return float(100 * np.nanmean(mc > THRESHOLDS["copy_corr"]))
 
 
-def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport):
+def load_thresholds(path):
+    import json
+    return json.load(open(path)) if path and os.path.exists(path) else None
+
+
+def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport, thresholds=None,
+                      c2st_span=None):
     T = THRESHOLDS
     ds, dr = _load(syn_path), _load(real_path)
     qx, qy, qz, qw = V.quat_cols(ds)
@@ -181,15 +190,18 @@ def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport)
     om_s = np.percentile(V.omega_series(ds)["all"], 99)
     om_real_all = V.omega_series(dr)["all"]
     om_r = np.percentile(om_real_all, 99)
-    lo, hi = om_r * (1 - T["omega_rel_tol"]), om_r * (1 + T["omega_rel_tol"])
-    report.add(Check("omega_p99", sensor, om_s, f"in [{lo:.1f}, {hi:.1f}] °/s (real {om_r:.1f} ±25%)",
+    tol = thresholds["omega_p99"][sensor]["rel_tol"] if thresholds else T["omega_rel_tol"]
+    src = "data-derived" if thresholds else "default"
+    lo, hi = om_r * (1 - tol), om_r * (1 + tol)
+    report.add(Check("omega_p99", sensor, om_s, f"in [{lo:.2f}, {hi:.2f}] °/s (real {om_r:.2f} ±{100*tol:.1f}%, {src})",
                      lo <= om_s <= hi))
 
-    nj, ngv, ngap = nonflip_jumps(ds, hi)
+    gap_limit = om_r * (1 + T["omega_rel_tol"])
+    nj, ngv, ngap = nonflip_jumps(ds, gap_limit)
     report.add(Check("jumps", sensor, nj, "= 0 non-flip quaternion jumps (one-sample steps)", nj == 0,
                      f"{ngap} transition(s) across timestamp gaps checked by angular speed"))
     report.add(Check("gap_jumps", sensor, ngv, f"= 0 gap transitions faster than real p99 +25% "
-                     f"({hi:.1f}°/s)", ngv == 0))
+                     f"({gap_limit:.1f}°/s)", ngv == 0))
 
     if sensor in COPY_EXCLUDE:
         report.add(Check("copy", sensor, "n/a", "excluded", True, COPY_EXCLUDE[sensor]))
@@ -197,6 +209,17 @@ def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport)
         cp = copy_pct(ds, dr, period_s)
         report.add(Check("copy", sensor, cp, f"<= {T['copy_max_pct']} % windows corr>{T['copy_corr']}",
                          cp <= T["copy_max_pct"]))
+
+    if thresholds and "c2st" in thresholds:
+        import sensor_identity as SI
+        ss = SI.signals(syn_path, use_abs_time=False)
+        start, span = c2st_span if c2st_span else (0.0, float(ss["t"][-1] - ss["t"][0]))
+        sr = SI.real_span(SI.signals(real_path, use_abs_time=True), span, start)
+        acc = SI.c2st_syn(sr, ss)
+        thr = thresholds["c2st"][sensor]
+        report.add(Check("c2st", sensor, acc, f"<= {thr['threshold']:.3f} (real-vs-real {thr['baseline_mean']:.3f}"
+                         f" + margin {thr['margin']:.3f})", acc <= thr["threshold"],
+                         f"real span {start/60:.0f}-{(start+span)/60:.0f} min"))
 
 
 def cross_sensor_checks(syn_paths: dict, real_paths: dict, report: GateReport):
@@ -214,21 +237,12 @@ def cross_sensor_checks(syn_paths: dict, real_paths: dict, report: GateReport):
 
 
 def check_physics_gate(syn_paths: dict, real_paths: dict, period_s: float, cross_sensor: bool = True,
-                       identity: bool = False) -> GateReport:
+                       thresholds: dict = None, c2st_span=None) -> GateReport:
     report = GateReport()
     for sensor in sorted(syn_paths):
-        per_sensor_checks(syn_paths[sensor], real_paths[sensor], sensor, period_s, report)
+        per_sensor_checks(syn_paths[sensor], real_paths[sensor], sensor, period_s, report, thresholds, c2st_span)
     if cross_sensor and len(syn_paths) >= 2:
         cross_sensor_checks(syn_paths, real_paths, report)
-    if identity:
-        # INFORMATIONAL ONLY. Validated against controls (identity_report.py): the old per-column
-        # generator (control c) passes the identity criteria for sensor_2 (classifier recall 1.0,
-        # F1-F4 closer to own sensor), so the test is too weak to gate on.
-        from sensor_identity import identity_checks
-        identity_checks(syn_paths, real_paths, report)
-        for c in report.checks:
-            if c.name.startswith("id_"):
-                c.informational = True
     return report
 
 
@@ -247,19 +261,22 @@ def main():
     ap.add_argument("--bank", default=None, help="joint-template bank (.npz): real paths + cycle period")
     ap.add_argument("--period", type=float, default=None, help="cycle period s (default: from --bank)")
     ap.add_argument("--no-cross", action="store_true", help="skip cross-sensor checks")
-    ap.add_argument("--identity", action="store_true", help="also run the sensor-identity gate")
+    ap.add_argument("--thresholds", default=None, help="gate_thresholds.json (default: next to --bank)")
     args = ap.parse_args()
     syn, real, period = _kv(args.syn), _kv(args.real), args.period
+    thresholds = load_thresholds(args.thresholds)
     if args.bank:
         from core.joint_template import JointBank
         bank = JointBank(args.bank)
         period = period or bank.period
+        thresholds = load_thresholds(args.thresholds or os.path.join(os.path.dirname(os.path.abspath(args.bank)),
+                                                                     "gate_thresholds.json"))
         for s in syn:
             real.setdefault(s, bank.real_path(s))
     if period is None or any(s not in real for s in syn):
         print("Error: need --bank, or --real for every sensor plus --period")
         sys.exit(2)
-    rep = check_physics_gate(syn, real, period, cross_sensor=not args.no_cross, identity=args.identity)
+    rep = check_physics_gate(syn, real, period, cross_sensor=not args.no_cross, thresholds=thresholds)
     print(rep.format())
     sys.exit(0 if rep.passed else 1)
 

@@ -25,14 +25,16 @@ The schedule is a pure function of (bank, duration_s, seed), so separate
 main.py runs for sensor_1/2/3 with the same --seed and --duration produce the
 same schedule without talking to each other.
 
-Noise model (measured on the real XDK, see PHYSICS_REPORT.md):
-  * quaternion: rest = sample-and-hold (the fused quaternion only updates with
-    the measured per-sample probability, 23-37%); motion = small rotation-vector
-    noise at the measured floor. Output quantised to 1e-4, canonical w >= 0.
-  * accel / mag: smoothed template shape + the residual (raw - smooth) of a
-    DIFFERENT real cycle at the same phase. Real accel noise is clustered in
-    time and depends on whether the arm moves, so a stationary Gaussian does
-    not reproduce it. Quantised to 0.001 g / integer.
+Noise and timing model (measured on the real XDK, see PHYSICS_REPORT.md):
+  * timing: the XDK samples on a regular internal clock and only the logged timestamp jitters.
+    Templates sit on the real internal clock; motion is evaluated on a regular synthetic
+    clock and the written timestamp = clock + logging jitter.
+  * quaternion: the recorded quaternion, replayed as whole samples (no smoothing, nothing
+    added), with the real per-sample freeze pattern (the XDK repeats its fused quaternion
+    only while truly static). Output quantised to 1e-4, canonical w >= 0.
+  * accel / mag: smoothed template shape + the residual (raw - smooth) of a DIFFERENT real
+    cycle at the same phase. Real accel noise is clustered in time and depends on whether
+    the arm moves, so a stationary Gaussian does not reproduce it. Quantised to 0.001 g / integer.
 """
 import json
 import os
@@ -51,7 +53,7 @@ REAL_ALIASES = {"quat_x": "orientation_x", "quat_y": "orientation_y", "quat_z": 
 Q_DECIMALS, A_DECIMALS = 4, 3          # XDK output resolution (1e-4, 0.001 g); mag is integer
 SG_Q, SG_AM = (5, 2), (7, 2)           # savgol (window, order) for quat / accel+mag smoothing
 SG_Q_RESID = np.sqrt(1 - 17 / 35)      # white-noise residual factor of savgol(5,2)
-BANK_VERSION = 1
+BANK_VERSION = 3                       # v2: per-sample real XDK freeze flag; v3: internal-clock template time
 
 
 # ── quaternion helpers ─────────────────────────────────────────────────────────
@@ -109,6 +111,25 @@ def load_real(path: str) -> dict:
     q = unwrap(reconstruct_w(*(d[c].to_numpy(float) for c in Q_COLS)))
     return {"t": t, "q_raw_xyz": d[list(Q_COLS)].to_numpy(float), "q": q,
             "A": d[list(A_COLS)].to_numpy(float), "M": d[list(M_COLS)].to_numpy(float)}
+
+
+def internal_clock(t: np.ndarray) -> np.ndarray:
+    """Sample times on the XDK's regular internal clock. The logged timestamp = clock + logging
+    jitter (outliers down to ~1 ms / up to ~150 ms between samples), so within each run without
+    missing samples (dt < 1.5x nominal) the k-th sample sits at a fitted offset + k x period."""
+    t = np.asarray(t, float)
+    dt = np.diff(t)
+    nominal = float(np.median(dt))
+    breaks = np.r_[0, np.where(dt > 1.5 * nominal)[0] + 1, len(t)]
+    out = np.empty_like(t)
+    for a, b in zip(breaks[:-1], breaks[1:]):
+        j = np.arange(b - a, dtype=float)
+        if b - a >= 20:
+            slope, icpt = np.polyfit(j, t[a:b], 1)
+        else:
+            slope, icpt = nominal, float(np.median(t[a:b] - j * nominal))
+        out[a:b] = icpt + j * slope
+    return np.maximum.accumulate(out)
 
 
 def omega_smooth(t: np.ndarray, q: np.ndarray, win_s: float = 1.0) -> np.ndarray:
@@ -171,7 +192,7 @@ def detect_cycles(t: np.ndarray, om: np.ndarray, thr: float, period: float) -> n
 # ── bank ───────────────────────────────────────────────────────────────────────
 
 def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
-               rest_pose_tol_deg: float = 2.0) -> dict:
+               rest_pose_tol_deg: float = 2.0, smooth_quat: bool = False) -> dict:
     """Fit a joint-template bank from the real recordings of all sensors on one arm.
 
     real_paths : {sensor_name: csv_path}, all recorded on the same clock.
@@ -185,6 +206,9 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
         r = R[s]
         r["om"] = omega_smooth(r["t"], r["q"])
         r["rest"] = r["om"] < motion_threshold(r["om"])
+        # the real XDK repeats its fused quaternion exactly while truly static (93-95 % of
+        # samples below 0.2°/s, ~0 % above): keep that per-sample pattern for the engine
+        r["frozen"] = np.r_[False, np.all(r["q_raw_xyz"][1:] == r["q_raw_xyz"][:-1], axis=1)]
 
     # shared windows from the combined (per-sensor normalised) speed
     t0 = max(R[s]["t"][0] for s in sensors)
@@ -199,8 +223,11 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
     out, keep = {}, []
     for s in sensors:
         r = R[s]
-        qc = savgol_filter(r["q"], *SG_Q, axis=0)
-        qc /= np.linalg.norm(qc, axis=1, keepdims=True)
+        if smooth_quat:
+            qc = savgol_filter(r["q"], *SG_Q, axis=0)
+            qc /= np.linalg.norm(qc, axis=1, keepdims=True)
+        else:                       # unwrapped real quaternion as recorded
+            qc = r["q"].copy()
         Ac = savgol_filter(r["A"], *SG_AM, axis=0)
         Mc = savgol_filter(r["M"], *SG_AM, axis=0)
         r.update(qc=qc, Ac=Ac, Mc=Mc, rA=r["A"] - Ac, rM=r["M"] - Mc)
@@ -238,15 +265,17 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
                         "real_paths": {s: os.path.relpath(os.path.abspath(p), os.path.dirname(os.path.abspath(out_path)))
                                        for s, p in real_paths.items()},
                         "n_windows_detected": int(len(windows)), "n_windows_kept": int(len(keep)),
-                        "noise": {}}
+                        "smooth_quat": bool(smooth_quat), "noise": {}}
     arrays["windows"] = (keep - t0).astype(np.float64)
     for s in sensors:
         r = R[s]
         m = (r["t"] >= keep[0, 0]) & (r["t"] <= keep[-1, 1])
-        arrays[f"{s}/t"] = (r["t"][m] - t0).astype(np.float64)
+        # template time axis = the real internal sample clock, not the jittered logged timestamp
+        arrays[f"{s}/t"] = (internal_clock(r["t"])[m] - t0).astype(np.float64)
         for key in ("qc", "Ac", "Mc", "rA", "rM"):
             arrays[f"{s}/{key}"] = r[key][m].astype(np.float32)
         arrays[f"{s}/rest"] = r["rest"][m]
+        arrays[f"{s}/frozen"] = r["frozen"][m]
         # boundary poses per window (start, end)
         arrays[f"{s}/pose_start"] = np.array([_pose_at(s, a) for a, _ in keep])
         arrays[f"{s}/pose_end"] = np.array([_pose_at(s, b) for _, b in keep])
@@ -268,7 +297,12 @@ def _noise_params(r: dict) -> dict:
     if m.sum() < 100:
         m = ~rest & (speed < 10)
     sig_q = float(np.sqrt(np.mean(resid[m] ** 2)) / SG_Q_RESID)
-    return {"p_update_rest": float(1.0 - same[rr].mean()), "sig_rotvec_rad": 2.0 * sig_q}
+    # logged timestamps = regular internal clock + logging jitter (real dt lag-1 autocorr ~ -0.5,
+    # step angle uncorrelated with dt), so the per-timestamp jitter is sd(dt)/sqrt(2)
+    d = np.diff(t)
+    d = d[(d > 0.5 * np.median(d)) & (d < 1.5 * np.median(d))]
+    return {"p_update_rest": float(1.0 - same[rr].mean()), "sig_rotvec_rad": 2.0 * sig_q,
+            "log_jitter_ms": float(1000 * np.std(d) / np.sqrt(2))}
 
 
 class JointBank:
@@ -281,7 +315,9 @@ class JointBank:
         self.period = self.meta["period_s"]
         self.recording_s = self.meta["recording_s"]
         self.data = {s: {k: z[f"{s}/{k}"] for k in ("t", "qc", "Ac", "Mc", "rA", "rM", "rest",
-                                                     "pose_start", "pose_end")} for s in self.sensors}
+                                                     "pose_start", "pose_end", "frozen")
+                         if f"{s}/{k}" in z.files} for s in self.sensors}
+        self.has_frozen = all("frozen" in self.data[s] for s in self.sensors)
 
     def real_path(self, sensor: str) -> str:
         return os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(self.path)),
@@ -293,13 +329,15 @@ class JointBank:
         lo, hi = np.searchsorted(d["t"], a), np.searchsorted(d["t"], b, side="right")
         return {"tau": d["t"][lo:hi] - a, "q": d["qc"][lo:hi].astype(float), "A": d["Ac"][lo:hi].astype(float),
                 "M": d["Mc"][lo:hi].astype(float), "rA": d["rA"][lo:hi].astype(float),
-                "rM": d["rM"][lo:hi].astype(float), "rest": d["rest"][lo:hi], "len": float(b - a)}
+                "rM": d["rM"][lo:hi].astype(float), "rest": d["rest"][lo:hi], "len": float(b - a),
+                "frozen": d["frozen"][lo:hi] if "frozen" in d else None}
 
 
 # ── schedule (shared by all sensors) ───────────────────────────────────────────
 
 def build_schedule(bank: JointBank, duration_s: float, seed: int, local_window_s: float = 150.0,
-                   warp_sd: float = 0.01, pose_tol_deg: float = 2.0, yaw_tol_deg: float = 3.0) -> tuple:
+                   warp_sd: float = 0.01, pose_tol_deg: float = 2.0, yaw_tol_deg: float = 3.0,
+                   tick_s: float = None) -> tuple:
     """Shared cycle schedule. Inside the recording span a cycle at synthetic time t is drawn
     from real cycles near session time t (drift is carried). Past the recording, cycles come
     from the whole pool, constrained so the end pose of cycle i matches the start pose of
@@ -316,6 +354,8 @@ def build_schedule(bank: JointBank, duration_s: float, seed: int, local_window_s
     pe = {s: bank.data[s]["pose_end"] for s in sensors}
 
     sched, s_t, prev = [], -rng.uniform(0, P), None
+    if tick_s:                                  # cycle starts on the sample-clock grid
+        s_t = np.round(s_t / tick_s) * tick_s
     n_fallback, gaps_tilt, gaps_full = 0, [], []
     while s_t < duration_s:
         t_sess = max(s_t, 0.0)
@@ -343,10 +383,10 @@ def build_schedule(bank: JointBank, duration_s: float, seed: int, local_window_s
         donors = [j for j in (np.where(np.abs(starts - starts[i]) <= local_window_s)[0] if phase == "local"
                               else np.arange(n)) if j != i]
         donor = int(rng.choice(donors)) if donors else i
-        warp = 1.0 + rng.normal(0, warp_sd)
+        warp = 1.0 + rng.normal(0, warp_sd) if warp_sd > 0 else 1.0
         sched.append({"start_s": float(s_t), "template": i, "warp": float(warp), "residual_donor": donor,
                       "phase": phase, "source_session_s": float(starts[i])})
-        s_t += lens[i] * warp
+        s_t += (np.round(lens[i] * warp / tick_s) * tick_s) if tick_s else lens[i] * warp
         prev = i
     info = {"n_cycles": len(sched), "n_pool_cycles": sum(c["phase"] == "pool" for c in sched),
             "n_pose_fallback": n_fallback,
@@ -358,9 +398,14 @@ def build_schedule(bank: JointBank, duration_s: float, seed: int, local_window_s
 
 # ── engine ─────────────────────────────────────────────────────────────────────
 
-def _interp_segment(seg: dict, tau: np.ndarray):
+def _interp_segment(seg: dict, tau: np.ndarray, nearest: bool = False):
     tt = seg["tau"]
     tau = np.clip(tau, tt[0], tt[-1])
+    if nearest:   # whole real samples (keeps the per-step noise texture of the recording)
+        k = np.clip(np.searchsorted(tt, tau), 0, len(tt) - 1)
+        k = np.where((k > 0) & (np.abs(tt[np.maximum(k - 1, 0)] - tau) < np.abs(tt[k] - tau)), k - 1, k)
+        frozen = seg["frozen"][k] if seg.get("frozen") is not None else np.zeros(len(tau), bool)
+        return seg["q"][k], seg["A"][k], seg["M"][k], seg["rest"][k], frozen
     j = np.clip(np.searchsorted(tt, tau) - 1, 0, len(tt) - 2)
     f = ((tau - tt[j]) / np.maximum(tt[j + 1] - tt[j], 1e-9))[:, None]
     q = seg["q"][j] * (1 - f) + seg["q"][j + 1] * f
@@ -368,13 +413,15 @@ def _interp_segment(seg: dict, tau: np.ndarray):
     A = seg["A"][j] * (1 - f) + seg["A"][j + 1] * f
     M = seg["M"][j] * (1 - f) + seg["M"][j + 1] * f
     near = np.clip(np.searchsorted(tt, tau), 0, len(tt) - 1)
-    return q, A, M, seg["rest"][near]
+    frozen = seg["frozen"][near] if seg.get("frozen") is not None else np.zeros(len(tau), bool)
+    return q, A, M, seg["rest"][near], frozen
 
 
 class JointTemplateEngine:
     def __init__(self, bank_path: str, sensor: str, local_window_s: float = 150.0,
                  crossfade_s: float = 1.0, warp_sd: float = 0.01, pose_tol_deg: float = 2.0,
-                 yaw_tol_deg: float = 3.0):
+                 yaw_tol_deg: float = 3.0, rotvec_noise_scale: float = None,
+                 regular_clock: bool = True, frequency_hz: float = 10.0, resample: str = "nearest"):
         self.bank = JointBank(bank_path)
         if sensor not in self.bank.sensors:
             raise ValueError(f"sensor '{sensor}' not in bank {self.bank.sensors}")
@@ -384,11 +431,22 @@ class JointTemplateEngine:
         self.warp_sd = warp_sd
         self.pose_tol_deg = pose_tol_deg
         self.yaw_tol_deg = yaw_tol_deg
+        # raw templates already carry the real orientation noise: add none unless asked;
+        # smoothed (savgol) templates get the measured motion floor back
+        if rotvec_noise_scale is None:
+            rotvec_noise_scale = 1.0 if self.bank.meta.get("smooth_quat", True) else 0.0
+        self.rotvec_noise_scale = rotvec_noise_scale
+        self.regular_clock = regular_clock
+        if resample not in ("linear", "nearest"):
+            raise ValueError("resample must be 'linear' or 'nearest'")
+        self.resample = resample
+        self.frequency_hz = frequency_hz
         self.schedule, self.info = None, None
 
     @classmethod
     def from_config(cls, cfg: dict) -> "JointTemplateEngine":
-        keys = ("local_window_s", "crossfade_s", "warp_sd", "pose_tol_deg", "yaw_tol_deg")
+        keys = ("local_window_s", "crossfade_s", "warp_sd", "pose_tol_deg", "yaw_tol_deg", "rotvec_noise_scale",
+                "regular_clock", "frequency_hz", "resample")
         return cls(cfg["bank"], cfg["sensor"], **{k: cfg[k] for k in keys if k in cfg})
 
     def generate(self, timestamps_ms: np.ndarray, duration_s: float, seed: int,
@@ -396,24 +454,42 @@ class JointTemplateEngine:
         # Motion is a function of time on the generator's shared clock (origin_ms = the
         # scenario start), not of each file's first sample, so sensors stay aligned.
         origin = timestamps_ms[0] if origin_ms is None else origin_ms
-        ts = (np.asarray(timestamps_ms, float) - origin) / 1000.0
-        sched, info = build_schedule(self.bank, max(duration_s, ts[-1]), seed, self.local_window_s,
-                                     self.warp_sd, self.pose_tol_deg, self.yaw_tol_deg)
-        self.schedule, self.info = sched, info
         sensor_index = self.bank.sensors.index(self.sensor)
-        rng = np.random.default_rng([seed, sensor_index])
         noise = self.bank.meta["noise"][self.sensor]
+        log_ts = None
+        if self.regular_clock:
+            # The XDK samples on a regular internal clock; only the LOGGED timestamp jitters
+            # (real: step angle uncorrelated with dt, dt lag-1 autocorr ~ -0.5). Motion is evaluated
+            # on that clock (gaps kept as whole missing ticks); timestamps = clock + logging jitter.
+            nominal = 1000.0 / self.frequency_hz
+            tsm = np.asarray(timestamps_ms, float)
+            steps = np.r_[np.round((tsm[0] - origin) / nominal), np.maximum(1, np.round(np.diff(tsm) / nominal))]
+            clock = origin + np.cumsum(steps) * nominal
+            jit = np.random.default_rng([seed, sensor_index, 7]).normal(0, noise.get("log_jitter_ms", 0.0), len(clock))
+            log_ts = np.round(clock + np.clip(jit, -0.45 * nominal, 0.45 * nominal))
+            ts = (clock - origin) / 1000.0
+        else:
+            ts = (np.asarray(timestamps_ms, float) - origin) / 1000.0
+        tick = 1.0 / self.frequency_hz if (self.resample == "nearest" and self.regular_clock) else None
+        sched, info = build_schedule(self.bank, max(duration_s, ts[-1]), seed, self.local_window_s,
+                                     0.0 if tick else self.warp_sd, self.pose_tol_deg, self.yaw_tol_deg,
+                                     tick_s=tick)
+        self.schedule, self.info = sched, info
+        rng = np.random.default_rng([seed, sensor_index])
 
         n = len(ts)
         Q = np.zeros((n, 4)); A = np.zeros((n, 3)); M = np.zeros((n, 3)); rest = np.zeros(n, bool)
+        frozen = np.zeros(n, bool); xfade = np.zeros(n, bool)
         prev_end = None
-        for c in sched:
+        for ci, c in enumerate(sched):
             seg = self.bank.segment(self.sensor, c["template"])
             w = c["warp"]
-            m = (ts >= c["start_s"]) & (ts < c["start_s"] + seg["len"] * w)
+            # a cycle runs until the next one starts, so every sample is owned by exactly one cycle
+            end = sched[ci + 1]["start_s"] if ci + 1 < len(sched) else np.inf
+            m = (ts >= c["start_s"]) & (ts < end)
             if m.any():
                 el = ts[m] - c["start_s"]
-                q, a, mg, rs = _interp_segment(seg, el / w)
+                q, a, mg, rs, fz = _interp_segment(seg, el / w, self.resample == "nearest")
                 # residual texture of another real cycle at the same phase (nearest sample)
                 don = self.bank.segment(self.sensor, c["residual_donor"])
                 tau_d = np.clip(el / w * don["len"] / seg["len"], 0, don["tau"][-1])
@@ -428,24 +504,35 @@ class JointTemplateEngine:
                     q /= np.linalg.norm(q, axis=1, keepdims=True)
                     a = pa * (1 - al) + a * al
                     mg = pm * (1 - al) + mg * al
-                Q[m], A[m], M[m], rest[m] = q, a + ra, mg + rm, rs
+                Q[m], A[m], M[m], rest[m], frozen[m] = q, a + ra, mg + rm, rs, fz
+                if prev_end is not None:
+                    xfade[m] = el < self.crossfade_s
             e = _interp_segment(seg, np.array([seg["tau"][-1]]))
             prev_end = (e[0][0], e[1][0], e[2][0])
 
         # orientation: motion noise in rotation space, canonical sign, XDK quantisation, rest hold
         r = Rotation.from_quat(np.c_[Q[:, 1:], Q[:, 0]]) * \
-            Rotation.from_rotvec(rng.normal(0, noise["sig_rotvec_rad"], (n, 3)))
+            Rotation.from_rotvec(rng.normal(0, noise["sig_rotvec_rad"] * self.rotvec_noise_scale, (n, 3)))
         xyzw = r.as_quat()
         Q = canonicalize(np.c_[xyzw[:, 3], xyzw[:, :3]])
         Qq = np.round(Q[:, 1:], Q_DECIMALS)
-        upd = rng.random(n) < noise["p_update_rest"]
-        for i in range(1, n):
-            if rest[i] and rest[i - 1] and not upd[i]:
-                Qq[i] = Qq[i - 1]
+        if self.bank.has_frozen:
+            # replay the real XDK freeze pattern of the template sample (not during a splice crossfade)
+            hold = frozen & ~xfade
+            for i in range(1, n):
+                if hold[i]:
+                    Qq[i] = Qq[i - 1]
+        else:                                   # v1 banks: random hold at rest (old behaviour)
+            upd = rng.random(n) < noise["p_update_rest"]
+            for i in range(1, n):
+                if rest[i] and rest[i - 1] and not upd[i]:
+                    Qq[i] = Qq[i - 1]
         Aq = np.round(A, A_DECIMALS)
         Mq = np.round(M)
         out = {c: Qq[:, j] for j, c in enumerate(Q_COLS)}
         out.update({c: Aq[:, j] for j, c in enumerate(A_COLS)})
         out.update({c: Mq[:, j] for j, c in enumerate(M_COLS)})
         out["mag_res"] = np.linalg.norm(Mq, axis=1)
+        if log_ts is not None:
+            out["timestamp"] = log_ts.astype(np.int64)
         return out

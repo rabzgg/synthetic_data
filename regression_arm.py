@@ -11,7 +11,7 @@ regression_arm.py — regression harness for the robot-arm generator.
 
 Exit code != 0 if the flag-off check or any gate fails.
 
-Usage: python3 regression_arm.py [--seeds 42 43 44 45 46] [--duration 3600] [--identity]
+Usage: python3 regression_arm.py [--seeds 42 43 44 45 46] [--duration 3600] [--json out.json]
 """
 import argparse
 import json
@@ -25,7 +25,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 import validate_physics as V
-from physics_gate import check_physics_gate
+from physics_gate import check_physics_gate, load_thresholds
 from core.joint_template import JointBank
 
 KNOWN_PREEXISTING = {1: {"temperature"}}
@@ -58,7 +58,7 @@ def flag_off_check() -> bool:
     return ok
 
 
-def joint_gate(seeds, duration, identity) -> dict:
+def joint_gate(seeds, duration) -> dict:
     bank = JointBank(os.path.join(ROOT, "configs", "robot_arm", "joint_bank_arm.npz"))
     real = {s: bank.real_path(s) for s in bank.sensors}
     results = {}
@@ -69,7 +69,8 @@ def joint_gate(seeds, duration, identity) -> dict:
             run(["python3", "main.py", "--config", f"configs/robot_arm/sensor_{k}_joint.json", "--output", out,
                  "--duration", str(duration), "--seed", str(seed), "--no-physics-gate"])
             syn[f"sensor_{k}"] = out
-        rep = check_physics_gate(syn, real, bank.period, cross_sensor=True, identity=identity)
+        thr = load_thresholds(os.path.join(ROOT, "configs", "robot_arm", "gate_thresholds.json"))
+        rep = check_physics_gate(syn, real, bank.period, cross_sensor=True, thresholds=thr)
         results[seed] = rep
         print(f"\n--- seed {seed} ---\n{rep.format()}")
     return results
@@ -96,7 +97,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44, 45, 46])
     ap.add_argument("--duration", type=float, default=3600)
-    ap.add_argument("--identity", action="store_true")
     ap.add_argument("--skip-flag-off", action="store_true")
     ap.add_argument("--json", default=None, help="write every gate check per seed to this JSON file")
     args = ap.parse_args()
@@ -106,7 +106,7 @@ def main():
         print("=== 1. flag OFF vs deck files ===")
         ok &= flag_off_check()
     print("\n=== 2. joint template: physics gate per seed ===")
-    res = joint_gate(args.seeds, args.duration, args.identity)
+    res = joint_gate(args.seeds, args.duration)
     print("\n=== summary ===")
     for seed, rep in res.items():
         failed = [f"{c.sensor}/{c.name}" for c in rep.checks if not c.passed]
