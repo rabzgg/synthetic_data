@@ -21,11 +21,12 @@ DURATION = 600.0
 SEED = 7
 
 
-def _scenario(k, joint=True):
+def _scenario(k, joint=True, motion=None):
     with open(os.path.join(CFG_DIR, f"sensor_{k}_joint.json")) as f:
         s = json.load(f)
     s["duration_s"] = DURATION
     s["motion"]["bank"] = os.path.join(CFG_DIR, s["motion"]["bank"])
+    s["motion"].update(motion or {})
     if not joint:
         s["motion"]["joint_template"] = False
     return s
@@ -34,10 +35,10 @@ def _scenario(k, joint=True):
 _CACHE = {}
 
 
-def _generate(k, joint=True, seed=SEED):
-    key = (k, joint, seed)
+def _generate(k, joint=True, seed=SEED, **motion):
+    key = (k, joint, seed, tuple(sorted(motion.items())))
     if key not in _CACHE:
-        gen = SyntheticXDKGenerator(_scenario(k, joint), seed=seed)
+        gen = SyntheticXDKGenerator(_scenario(k, joint, motion), seed=seed)
         _CACHE[key] = (gen.generate(), gen)
     return _CACHE[key]
 
@@ -96,15 +97,83 @@ class TestSharedSchedule(unittest.TestCase):
         self.assertNotEqual([c["template"] for c in a], [c["template"] for c in b])
 
 
+class TestClock(unittest.TestCase):
+    """The real XDK samples on a regular internal clock (100.003 ms) and only the logged timestamp
+    is offset: a heavy-tailed delivery delay (late sample then catch-up, backlogs delivered within a
+    few ms) that is shared between sensors. Step angle is uncorrelated with dt."""
+
+    def test_regular_ticks_and_gaps(self):
+        on, _ = _generate(1, joint=True, log_jitter="none")
+        off, _ = _generate(1, joint=False)
+        ts = on["timestamp"].to_numpy(float)
+        self.assertTrue(np.all(np.abs((ts - ts[0]) / 100.0 - np.round((ts - ts[0]) / 100.0)) < 1e-9),
+                        "without logging offsets every timestamp sits on the 100 ms tick grid")
+        dt_off = np.diff(off["timestamp"].to_numpy(float))
+        self.assertEqual(len(ts), len(off))
+        self.assertEqual(int(np.sum(np.diff(ts) > 150)), int(np.sum(np.round(dt_off / 100.0) > 1)),
+                         "missing ticks (gaps) not preserved")
+
+    def test_empirical_offsets_heavy_tailed(self):
+        df, _ = _generate(1)
+        dt = np.diff(df["timestamp"].to_numpy(float))
+        self.assertTrue(np.all(dt > 0), "timestamps must be strictly increasing")
+        core = dt[(dt > 50) & (dt < 150)]
+        self.assertTrue(96 <= np.percentile(core, 25) <= 99 and 101 <= np.percentile(core, 75) <= 104)
+        self.assertGreater(np.mean(dt < 40), 0.001, "no catch-up / backlog samples")
+        self.assertGreater(np.mean((dt > 150) & (dt < 1000)), 0.001, "no late samples")
+
+    def test_empirical_offsets_shared_between_sensors(self):
+        from core.joint_template import JointBank, empirical_log_offsets
+        bank = JointBank(os.path.join(CFG_DIR, "joint_bank_arm.npz"))
+        off = empirical_log_offsets(bank, 20000, SEED)
+        late = {s: off[s] > 50 for s in bank.sensors}
+        a, b = late["sensor_1"], late["sensor_3"]
+        both = np.mean(a & b)
+        self.assertGreater(both, 3 * a.mean() * b.mean(), "late deliveries should coincide across sensors")
+
+    def test_real_dropped_ticks(self):
+        """Ticks the real logger dropped (same real blocks as the offsets) are removed: rate in the
+        real in-block range (0.3-0.7 %), and log_drops=False keeps every row."""
+        df, gen = _generate(1)
+        full, _ = _generate(1, log_drops=False)
+        rate = 1 - len(df) / len(full)
+        self.assertTrue(0.001 < rate < 0.015, f"drop rate {100 * rate:.2f} %")
+        self.assertEqual(len(df), int(gen.joint_keep.sum()))
+
+    def test_step_angle_uncorrelated_with_dt(self):
+        df, _ = _generate(1)
+        x = df[list(Q_COLS)].to_numpy(float)
+        w = np.sqrt(np.clip(1 - (x ** 2).sum(1), 0, None))
+        q = np.c_[w, x]
+        ang = np.degrees(2 * np.arccos(np.clip(np.abs((q[1:] * q[:-1]).sum(1)), 0, 1)))
+        dt = np.diff(df["timestamp"].to_numpy(float))
+        steady = (dt > 50) & (dt < 150) & (ang > 1.5)
+        self.assertGreater(steady.sum(), 200)
+        self.assertLess(abs(np.corrcoef(dt[steady], ang[steady])[0, 1]), 0.15)
+
+    def test_no_frozen_quaternion_while_moving(self):
+        """Real XDK: the fused quaternion repeats only while truly static (~0 % above 0.5 deg/s)."""
+        df, _ = _generate(1)
+        x = df[list(Q_COLS)].to_numpy(float)
+        same = np.all(x[1:] == x[:-1], axis=1)
+        w = np.sqrt(np.clip(1 - (x ** 2).sum(1), 0, None))
+        q = np.c_[w, x]
+        ang = np.degrees(2 * np.arccos(np.clip(np.abs((q[1:] * q[:-1]).sum(1)), 0, 1)))
+        moving = np.r_[ang[1:], 0] > 2.0          # the following step clearly rotates
+        self.assertLess(same[moving].mean(), 0.01)
+
+
 class TestFlagOff(unittest.TestCase):
     def test_non_motion_columns_unchanged_and_flag_off_is_noop(self):
-        on, _ = _generate(2, joint=True)
+        on, gen_on = _generate(2, joint=True)
         off, gen_off = _generate(2, joint=False)
         self.assertIsNone(gen_off.joint_schedule)
-        motion = set(Q_COLS) | set(A_COLS) | set(M_COLS) | {"mag_res"}
+        keep = gen_on.joint_keep                      # rows the real logger dropped are removed
+        self.assertEqual(len(on), int(keep.sum()))
+        motion = set(Q_COLS) | set(A_COLS) | set(M_COLS) | {"mag_res", "timestamp"}   # timestamp: see TestClock
         for c in on.columns:
             if c not in motion:
-                np.testing.assert_array_equal(on[c].to_numpy(), off[c].to_numpy(), err_msg=c)
+                np.testing.assert_array_equal(on[c].to_numpy(), off[c].to_numpy()[keep], err_msg=c)
         # flag off == config without any "motion" key
         s = _scenario(2, joint=False)
         s.pop("motion")

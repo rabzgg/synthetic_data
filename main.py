@@ -264,8 +264,10 @@ if _motion.get("joint_template") and not args.no_physics_gate:
     from core.joint_template import JointBank
     bank = JointBank(_motion["bank"])
     sensor = _motion["sensor"]
+    from physics_gate import load_thresholds
+    thr = load_thresholds(os.path.join(os.path.dirname(_motion["bank"]), "gate_thresholds.json"))
     rep = check_physics_gate({sensor: args.output}, {sensor: bank.real_path(sensor)}, bank.period,
-                             cross_sensor=False)
+                             cross_sensor=False, thresholds=thr)
     print(rep.format())
     if not rep.passed:
         sys.exit(1)

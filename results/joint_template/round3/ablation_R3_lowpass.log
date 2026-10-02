@@ -1,0 +1,16 @@
+sensor_1 seed 42: omega p99 46.28 (+3.0%, tol ±3.6%)  C2ST 0.734  quat 0.466  accel 0.636  angul 0.656  gravi 0.530  mag 0.699  copy 0.0%
+sensor_1 seed 43: omega p99 46.67 (+3.9%, tol ±3.6%)  C2ST 0.717  quat 0.529  accel 0.635  angul 0.649  gravi 0.506  mag 0.708  copy 0.0%
+sensor_1 seed 44: omega p99 45.34 (+0.9%, tol ±3.6%)  C2ST 0.755  quat 0.514  accel 0.621  angul 0.667  gravi 0.554  mag 0.715  copy 0.0%
+sensor_1 seed 45: omega p99 44.77 (-0.3%, tol ±3.6%)  C2ST 0.719  quat 0.496  accel 0.595  angul 0.616  gravi 0.512  mag 0.688  copy 0.0%
+sensor_1 seed 46: omega p99 46.61 (+3.7%, tol ±3.6%)  C2ST 0.728  quat 0.524  accel 0.638  angul 0.650  gravi 0.530  mag 0.679  copy 0.0%
+sensor_2 seed 42: omega p99 16.46 (+0.4%, tol ±1.4%)  C2ST 0.646  quat 0.479  accel 0.608  angul 0.587  gravi 0.555  mag 0.614  copy 0.0%
+sensor_2 seed 43: omega p99 16.66 (+1.6%, tol ±1.4%)  C2ST 0.640  quat 0.517  accel 0.637  angul 0.583  gravi 0.552  mag 0.621  copy 0.0%
+sensor_2 seed 44: omega p99 16.48 (+0.5%, tol ±1.4%)  C2ST 0.685  quat 0.588  accel 0.647  angul 0.612  gravi 0.593  mag 0.611  copy 0.0%
+sensor_2 seed 45: omega p99 16.43 (+0.2%, tol ±1.4%)  C2ST 0.612  quat 0.471  accel 0.593  angul 0.519  gravi 0.505  mag 0.581  copy 0.0%
+sensor_2 seed 46: omega p99 16.71 (+1.9%, tol ±1.4%)  C2ST 0.626  quat 0.511  accel 0.610  angul 0.577  gravi 0.532  mag 0.598  copy 0.0%
+sensor_3 seed 42: omega p99 43.00 (-0.1%, tol ±0.9%)  C2ST 0.636  quat 0.504  accel 0.661  angul 0.540  gravi 0.540  mag 0.651
+sensor_3 seed 43: omega p99 43.31 (+0.6%, tol ±0.9%)  C2ST 0.621  quat 0.503  accel 0.632  angul 0.537  gravi 0.527  mag 0.636
+sensor_3 seed 44: omega p99 43.15 (+0.2%, tol ±0.9%)  C2ST 0.637  quat 0.550  accel 0.649  angul 0.558  gravi 0.606  mag 0.629
+sensor_3 seed 45: omega p99 42.98 (-0.2%, tol ±0.9%)  C2ST 0.596  quat 0.475  accel 0.624  angul 0.506  gravi 0.479  mag 0.624
+sensor_3 seed 46: omega p99 43.28 (+0.5%, tol ±0.9%)  C2ST 0.584  quat 0.461  accel 0.599  angul 0.503  gravi 0.486  mag 0.592
+wrote out/ablation/R3_lowpass/ablation.json

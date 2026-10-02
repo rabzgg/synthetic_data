@@ -1,0 +1,16 @@
+sensor_1 seed 42: omega p99 46.14 (+2.7%, tol ±3.6%)  C2ST 0.663  quat 0.486  accel 0.661  angul 0.654  gravi 0.518  mag 0.594  copy 0.0%
+sensor_1 seed 43: omega p99 46.63 (+3.8%, tol ±3.6%)  C2ST 0.724  quat 0.534  accel 0.653  angul 0.670  gravi 0.497  mag 0.570  copy 0.0%
+sensor_1 seed 44: omega p99 45.27 (+0.8%, tol ±3.6%)  C2ST 0.726  quat 0.488  accel 0.650  angul 0.682  gravi 0.546  mag 0.622  copy 0.0%
+sensor_1 seed 45: omega p99 44.71 (-0.5%, tol ±3.6%)  C2ST 0.667  quat 0.479  accel 0.632  angul 0.627  gravi 0.512  mag 0.577  copy 0.0%
+sensor_1 seed 46: omega p99 46.50 (+3.5%, tol ±3.6%)  C2ST 0.704  quat 0.534  accel 0.693  angul 0.639  gravi 0.521  mag 0.570  copy 0.0%
+sensor_2 seed 42: omega p99 16.45 (+0.3%, tol ±1.4%)  C2ST 0.726  quat 0.468  accel 0.620  angul 0.581  gravi 0.537  mag 0.726  copy 0.0%
+sensor_2 seed 43: omega p99 16.66 (+1.6%, tol ±1.4%)  C2ST 0.710  quat 0.523  accel 0.650  angul 0.568  gravi 0.560  mag 0.700  copy 0.0%
+sensor_2 seed 44: omega p99 16.48 (+0.5%, tol ±1.4%)  C2ST 0.734  quat 0.575  accel 0.669  angul 0.625  gravi 0.596  mag 0.682  copy 0.0%
+sensor_2 seed 45: omega p99 16.43 (+0.2%, tol ±1.4%)  C2ST 0.704  quat 0.488  accel 0.624  angul 0.556  gravi 0.519  mag 0.705  copy 0.0%
+sensor_2 seed 46: omega p99 16.71 (+1.9%, tol ±1.4%)  C2ST 0.684  quat 0.488  accel 0.621  angul 0.557  gravi 0.530  mag 0.661  copy 0.0%
+sensor_3 seed 42: omega p99 43.01 (-0.1%, tol ±0.9%)  C2ST 0.749  quat 0.500  accel 0.650  angul 0.559  gravi 0.543  mag 0.755
+sensor_3 seed 43: omega p99 43.31 (+0.6%, tol ±0.9%)  C2ST 0.726  quat 0.510  accel 0.642  angul 0.524  gravi 0.529  mag 0.743
+sensor_3 seed 44: omega p99 43.14 (+0.2%, tol ±0.9%)  C2ST 0.732  quat 0.552  accel 0.696  angul 0.564  gravi 0.582  mag 0.720
+sensor_3 seed 45: omega p99 42.96 (-0.2%, tol ±0.9%)  C2ST 0.698  quat 0.499  accel 0.637  angul 0.510  gravi 0.485  mag 0.734
+sensor_3 seed 46: omega p99 43.27 (+0.5%, tol ±0.9%)  C2ST 0.724  quat 0.461  accel 0.642  angul 0.492  gravi 0.490  mag 0.693
+wrote out/ablation/S2_lattice/ablation.json

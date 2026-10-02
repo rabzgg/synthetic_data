@@ -1,0 +1,6 @@
+sensor_1 accel: step variance raw 0.000494, smooth + donor residual 0.000601 (ratio 1.216); 2 cov(smooth step, residual step) -0.000102
+sensor_1 mag: step variance raw 4.5, smooth + donor residual 4.65 (ratio 1.034); 2 cov(smooth step, residual step) -0.191
+sensor_2 accel: step variance raw 0.000241, smooth + donor residual 0.000247 (ratio 1.024); 2 cov(smooth step, residual step) -6.24e-06
+sensor_2 mag: step variance raw 18.8, smooth + donor residual 19.4 (ratio 1.029); 2 cov(smooth step, residual step) -0.447
+sensor_3 accel: step variance raw 0.000313, smooth + donor residual 0.00032 (ratio 1.022); 2 cov(smooth step, residual step) -5.54e-06
+sensor_3 mag: step variance raw 2.2, smooth + donor residual 2.31 (ratio 1.050); 2 cov(smooth step, residual step) -0.12

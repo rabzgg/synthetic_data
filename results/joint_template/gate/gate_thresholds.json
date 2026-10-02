@@ -1,0 +1,116 @@
+{
+ "derived_from": {
+  "seeds": [
+   42,
+   43,
+   44,
+   45,
+   46
+  ],
+  "span_s": 3600.0,
+  "bank_version": 4,
+  "bank_am_split": "savgol",
+  "log_jitter": "empirical",
+  "c2st_null": {
+   "n_perm": 100,
+   "pooled_with_seed": 42
+  }
+ },
+ "omega_p99": {
+  "sensor_1": {
+   "real_p99": 44.92703764963838,
+   "rel_tol": 0.07008242115470933,
+   "natural_rel_dev": 0.03269076877808132,
+   "seed_2sd_rel": 0.03739165237662801,
+   "seed_p99": [
+    46.281277114257726,
+    46.67286729305128,
+    45.342381071311024,
+    44.77120095658809,
+    46.60736133679707
+   ],
+   "rel_tol_previous": 0.03644845167876605,
+   "seed_2sd_rel_previous": 0.0037576829006847313,
+   "change_reason": "seed term re-derived with the empirical logging-offset model (real offset blocks + real dropped ticks); the previous seed term came from the Gaussian jitter model, which has been replaced"
+  },
+  "sensor_2": {
+   "real_p99": 16.39789749761739,
+   "rel_tol": 0.02138101481430935,
+   "natural_rel_dev": 0.006002830037609332,
+   "seed_2sd_rel": 0.015378184776700018,
+   "seed_p99": [
+    16.457596058257533,
+    16.65903977845361,
+    16.484709933792843,
+    16.43327335643696,
+    16.709002297896593
+   ],
+   "rel_tol_previous": 0.013714897175384148,
+   "seed_2sd_rel_previous": 0.007712067137774816,
+   "change_reason": "seed term re-derived with the empirical logging-offset model (real offset blocks + real dropped ticks); the previous seed term came from the Gaussian jitter model, which has been replaced"
+  },
+  "sensor_3": {
+   "real_p99": 43.0567713846645,
+   "rel_tol": 0.011880200961179813,
+   "natural_rel_dev": 0.004763072358976541,
+   "seed_2sd_rel": 0.007117128602203271,
+   "seed_p99": [
+    43.00390197473009,
+    43.31016211129867,
+    43.15032993133274,
+    42.979777969722115,
+    43.2842633680332
+   ],
+   "rel_tol_previous": 0.008898103405162318,
+   "seed_2sd_rel_previous": 0.0041350310461857765,
+   "change_reason": "seed term re-derived with the empirical logging-offset model (real offset blocks + real dropped ticks); the previous seed term came from the Gaussian jitter model, which has been replaced"
+  }
+ },
+ "c2st": {
+  "sensor_1": {
+   "threshold": 0.5825991465528247,
+   "null_p95": 0.5407206126588315,
+   "null_mean": 0.5021720231819374,
+   "null_sd": 0.025761230756253643,
+   "seed_sd": 0.020939266946996625,
+   "seed_values": [
+    0.6808827293202293,
+    0.7125499078624079,
+    0.7105868652743653,
+    0.6626663595413596,
+    0.6934096027846028
+   ],
+   "blocking": false
+  },
+  "sensor_2": {
+   "threshold": 0.6056457771482897,
+   "null_p95": 0.5488066435860731,
+   "null_mean": 0.5047465496751454,
+   "null_sd": 0.02651266794802749,
+   "seed_sd": 0.028419566781108296,
+   "seed_values": [
+    0.6739672911547911,
+    0.6943322583947584,
+    0.7139012592137592,
+    0.682989097051597,
+    0.6372005528255528
+   ],
+   "blocking": false
+  },
+  "sensor_3": {
+   "threshold": 0.5658305333928237,
+   "null_p95": 0.5400953417865116,
+   "null_mean": 0.5043993413464004,
+   "null_sd": 0.023850754536780573,
+   "seed_sd": 0.012867595803156072,
+   "seed_values": [
+    0.7054591523341524,
+    0.685374436936937,
+    0.696590909090909,
+    0.6749948812448812,
+    0.6776246416871416
+   ],
+   "blocking": false
+  }
+ }
+}

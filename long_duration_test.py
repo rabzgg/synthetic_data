@@ -14,7 +14,7 @@ import pandas as pd
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
-from physics_gate import check_physics_gate
+from physics_gate import check_physics_gate, load_thresholds
 from core.joint_template import JointBank, build_schedule
 
 ap = argparse.ArgumentParser()
@@ -70,7 +70,12 @@ for h in range(args.hours):
         part = d[(t >= h * 3600) & (t < (h + 1) * 3600)]
         hp[s] = os.path.join(OUT, f"{s}_hour{h+1}.csv")
         part.to_csv(hp[s], index=False)
-    rep = check_physics_gate(hp, real, bank.period, cross_sensor=True)
+    # C2ST reference: the real span the synthetic hour corresponds to; past the recording, the
+    # last 60 min of the recording (cycles there are drawn pose-continuously from the whole pool)
+    start = min(h * 3600.0, max(0.0, bank.recording_s - 3600.0))
+    span = min(3600.0, bank.recording_s - start)
+    thr = load_thresholds(os.path.join(ROOT, "configs", "robot_arm", "gate_thresholds.json"))
+    rep = check_physics_gate(hp, real, bank.period, cross_sensor=True, thresholds=thr, c2st_span=(start, span))
     print(f"\n=== hour {h+1} ({h*60}-{(h+1)*60} min; recording ends at {bank.recording_s/60:.1f} min) ===")
     print(rep.format())
     hours_out[f"hour_{h+1}"] = rep.to_dict()

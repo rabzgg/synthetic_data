@@ -1,0 +1,16 @@
+sensor_1 seed 42: omega p99 39.37 (-12.4%, tol ±3.6%)  C2ST 0.887  quat 0.476  accel 0.668  angul 0.899  gravi 0.519  mag 0.525  copy 0.0%
+sensor_1 seed 43: omega p99 39.37 (-12.4%, tol ±3.6%)  C2ST 0.874  quat 0.512  accel 0.672  angul 0.889  gravi 0.498  mag 0.557  copy 0.0%
+sensor_1 seed 44: omega p99 39.38 (-12.3%, tol ±3.6%)  C2ST 0.908  quat 0.491  accel 0.687  angul 0.905  gravi 0.575  mag 0.587  copy 0.0%
+sensor_1 seed 45: omega p99 39.37 (-12.4%, tol ±3.6%)  C2ST 0.875  quat 0.500  accel 0.627  angul 0.905  gravi 0.494  mag 0.511  copy 0.0%
+sensor_1 seed 46: omega p99 39.37 (-12.4%, tol ±3.6%)  C2ST 0.878  quat 0.522  accel 0.681  angul 0.887  gravi 0.538  mag 0.541  copy 0.0%
+sensor_2 seed 42: omega p99 15.76 (-3.9%, tol ±1.4%)  C2ST 0.798  quat 0.482  accel 0.640  angul 0.793  gravi 0.540  mag 0.683  copy 0.0%
+sensor_2 seed 43: omega p99 15.59 (-4.9%, tol ±1.4%)  C2ST 0.812  quat 0.518  accel 0.649  angul 0.788  gravi 0.557  mag 0.672  copy 0.0%
+sensor_2 seed 44: omega p99 15.70 (-4.2%, tol ±1.4%)  C2ST 0.827  quat 0.550  accel 0.668  angul 0.807  gravi 0.572  mag 0.666  copy 0.0%
+sensor_2 seed 45: omega p99 15.73 (-4.1%, tol ±1.4%)  C2ST 0.785  quat 0.470  accel 0.610  angul 0.760  gravi 0.486  mag 0.677  copy 0.0%
+sensor_2 seed 46: omega p99 15.65 (-4.6%, tol ±1.4%)  C2ST 0.794  quat 0.498  accel 0.630  angul 0.796  gravi 0.546  mag 0.653  copy 0.0%
+sensor_3 seed 42: omega p99 42.56 (-1.2%, tol ±0.9%)  C2ST 0.795  quat 0.514  accel 0.660  angul 0.729  gravi 0.522  mag 0.699
+sensor_3 seed 43: omega p99 42.46 (-1.4%, tol ±0.9%)  C2ST 0.781  quat 0.511  accel 0.625  angul 0.725  gravi 0.520  mag 0.684
+sensor_3 seed 44: omega p99 42.44 (-1.4%, tol ±0.9%)  C2ST 0.775  quat 0.551  accel 0.669  angul 0.743  gravi 0.601  mag 0.711
+sensor_3 seed 45: omega p99 42.49 (-1.3%, tol ±0.9%)  C2ST 0.732  quat 0.497  accel 0.637  angul 0.700  gravi 0.491  mag 0.683
+sensor_3 seed 46: omega p99 42.51 (-1.3%, tol ±0.9%)  C2ST 0.779  quat 0.475  accel 0.638  angul 0.724  gravi 0.521  mag 0.675
+wrote out/ablation/S1_A_no_jitter/ablation.json

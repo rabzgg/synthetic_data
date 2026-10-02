@@ -1,0 +1,18 @@
+{
+ "am_split": "lowpass",
+ "am_cutoffs": {
+  "sensor_1": {
+   "accel_hz": 1.25,
+   "mag_hz": 0.3
+  },
+  "sensor_2": {
+   "accel_hz": 1.0,
+   "mag_hz": 0.3
+  },
+  "sensor_3": {
+   "accel_hz": 1.0,
+   "mag_hz": 0.5
+  }
+ },
+ "rule": "cutoff = argmin over grid (0.3,0.5,0.75,1,1.25,1.5,2,3 Hz) of mean |log2 PSD(residual)/PSD(real rest noise)| above 0.5 Hz on real rest periods"
+}

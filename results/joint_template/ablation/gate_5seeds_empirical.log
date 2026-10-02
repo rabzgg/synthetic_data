@@ -1,0 +1,125 @@
+--- seed 42 ---
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00013)
+[PASS] sensor_1  gravity    value=     1.227  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    46.141  required in [43.29, 46.56] °/s (real 44.93 ±3.6%, data-derived)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_1  c2st       value=     0.675  required <= 0.621 (real-vs-real 0.444 + margin 0.177)   (real span 0-60 min)
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48265)
+[PASS] sensor_2  gravity    value=     0.331  required < 2.0°
+[PASS] sensor_2  omega_p99  value=    16.455  required in [16.17, 16.62] °/s (real 16.40 ±1.4%, data-derived)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_2  c2st       value=     0.666  required <= 0.577 (real-vs-real 0.419 + margin 0.157)   (real span 0-60 min)
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.60131)
+[PASS] sensor_3  gravity    value=     0.342  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    43.012  required in [42.67, 43.44] °/s (real 43.06 ±0.9%, data-derived)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[FAIL] sensor_3  c2st       value=     0.705  required <= 0.523 (real-vs-real 0.397 + margin 0.126)   (real span 0-60 min)
+[PASS] all       check7b    value=    92.301  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: FAILED (3 check(s): sensor_1/c2st, sensor_2/c2st, sensor_3/c2st)
+--- seed 43 ---
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00013)
+[PASS] sensor_1  gravity    value=     1.279  required < 2.0°
+[FAIL] sensor_1  omega_p99  value=    46.626  required in [43.29, 46.56] °/s (real 44.93 ±3.6%, data-derived)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_1  c2st       value=     0.711  required <= 0.621 (real-vs-real 0.444 + margin 0.177)   (real span 0-60 min)
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48265)
+[PASS] sensor_2  gravity    value=     0.329  required < 2.0°
+[FAIL] sensor_2  omega_p99  value=    16.659  required in [16.17, 16.62] °/s (real 16.40 ±1.4%, data-derived)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_2  c2st       value=     0.687  required <= 0.577 (real-vs-real 0.419 + margin 0.157)   (real span 0-60 min)
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.60131)
+[PASS] sensor_3  gravity    value=     0.340  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    43.311  required in [42.67, 43.44] °/s (real 43.06 ±0.9%, data-derived)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[FAIL] sensor_3  c2st       value=     0.697  required <= 0.523 (real-vs-real 0.397 + margin 0.126)   (real span 0-60 min)
+[PASS] all       check7b    value=    92.285  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: FAILED (5 check(s): sensor_1/omega_p99, sensor_1/c2st, sensor_2/omega_p99, sensor_2/c2st, sensor_3/c2st)
+--- seed 44 ---
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00011)
+[PASS] sensor_1  gravity    value=     1.326  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    45.267  required in [43.29, 46.56] °/s (real 44.93 ±3.6%, data-derived)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_1  c2st       value=     0.709  required <= 0.621 (real-vs-real 0.444 + margin 0.177)   (real span 0-60 min)
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48265)
+[PASS] sensor_2  gravity    value=     0.333  required < 2.0°
+[PASS] sensor_2  omega_p99  value=    16.476  required in [16.17, 16.62] °/s (real 16.40 ±1.4%, data-derived)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_2  c2st       value=     0.717  required <= 0.577 (real-vs-real 0.419 + margin 0.157)   (real span 0-60 min)
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.60131)
+[PASS] sensor_3  gravity    value=     0.345  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    43.143  required in [42.67, 43.44] °/s (real 43.06 ±0.9%, data-derived)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[FAIL] sensor_3  c2st       value=     0.721  required <= 0.523 (real-vs-real 0.397 + margin 0.126)   (real span 0-60 min)
+[PASS] all       check7b    value=    92.198  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: FAILED (3 check(s): sensor_1/c2st, sensor_2/c2st, sensor_3/c2st)
+--- seed 45 ---
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00011)
+[PASS] sensor_1  gravity    value=     1.290  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    44.708  required in [43.29, 46.56] °/s (real 44.93 ±3.6%, data-derived)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_1  c2st       value=     0.664  required <= 0.621 (real-vs-real 0.444 + margin 0.177)   (real span 0-60 min)
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48265)
+[PASS] sensor_2  gravity    value=     0.330  required < 2.0°
+[PASS] sensor_2  omega_p99  value=    16.431  required in [16.17, 16.62] °/s (real 16.40 ±1.4%, data-derived)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_2  c2st       value=     0.666  required <= 0.577 (real-vs-real 0.419 + margin 0.157)   (real span 0-60 min)
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.59980)
+[PASS] sensor_3  gravity    value=     0.340  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    42.964  required in [42.67, 43.44] °/s (real 43.06 ±0.9%, data-derived)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[FAIL] sensor_3  c2st       value=     0.666  required <= 0.523 (real-vs-real 0.397 + margin 0.126)   (real span 0-60 min)
+[PASS] all       check7b    value=    92.554  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: FAILED (3 check(s): sensor_1/c2st, sensor_2/c2st, sensor_3/c2st)
+--- seed 46 ---
+[PASS] sensor_1  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 1.00013)
+[PASS] sensor_1  gravity    value=     1.187  required < 2.0°
+[PASS] sensor_1  omega_p99  value=    46.498  required in [43.29, 46.56] °/s (real 44.93 ±3.6%, data-derived)
+[PASS] sensor_1  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_1  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (56.2°/s)
+[PASS] sensor_1  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_1  c2st       value=     0.694  required <= 0.621 (real-vs-real 0.444 + margin 0.177)   (real span 0-60 min)
+[PASS] sensor_2  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.48263)
+[PASS] sensor_2  gravity    value=     0.329  required < 2.0°
+[FAIL] sensor_2  omega_p99  value=    16.706  required in [16.17, 16.62] °/s (real 16.40 ±1.4%, data-derived)
+[PASS] sensor_2  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_2  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (20.5°/s)
+[PASS] sensor_2  copy       value=     0.000  required <= 5.0 % windows corr>0.99
+[FAIL] sensor_2  c2st       value=     0.662  required <= 0.577 (real-vs-real 0.419 + margin 0.157)   (real span 0-60 min)
+[PASS] sensor_3  validity   value=     0.000  required = 0 % of s > 1+0.001   (max s 0.60131)
+[PASS] sensor_3  gravity    value=     0.340  required < 2.0°
+[PASS] sensor_3  omega_p99  value=    43.274  required in [42.67, 43.44] °/s (real 43.06 ±0.9%, data-derived)
+[PASS] sensor_3  jumps      value=     0.000  required = 0 non-flip quaternion jumps (one-sample steps)   (0 transition(s) across timestamp gaps checked by angular speed)
+[PASS] sensor_3  gap_jumps  value=     0.000  required = 0 gap transitions faster than real p99 +25% (53.8°/s)
+[PASS] sensor_3  copy       value=       n/a  required excluded   (real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.)
+[FAIL] sensor_3  c2st       value=     0.680  required <= 0.523 (real-vs-real 0.397 + margin 0.126)   (real span 0-60 min)
+[PASS] all       check7b    value=    92.903  required >= 85.0 %
+[PASS] all       check7c    value=     0.000  required lag = 0 ms for every pair   (s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms)
+PHYSICS GATE: FAILED (4 check(s): sensor_1/c2st, sensor_2/omega_p99, sensor_2/c2st, sensor_3/c2st)

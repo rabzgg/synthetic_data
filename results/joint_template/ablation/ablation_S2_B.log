@@ -1,0 +1,16 @@
+sensor_1 seed 42: omega p99 46.14 (+2.7%, tol ±3.6%)  C2ST 0.612  quat 0.486  accel 0.502  angul 0.654  gravi 0.518  mag 0.518  copy 33.0%
+sensor_1 seed 43: omega p99 46.63 (+3.8%, tol ±3.6%)  C2ST 0.652  quat 0.534  accel 0.537  angul 0.670  gravi 0.497  mag 0.538  copy 13.4%
+sensor_1 seed 44: omega p99 45.27 (+0.8%, tol ±3.6%)  C2ST 0.652  quat 0.488  accel 0.499  angul 0.682  gravi 0.546  mag 0.575  copy 48.5%
+sensor_1 seed 45: omega p99 44.71 (-0.5%, tol ±3.6%)  C2ST 0.599  quat 0.479  accel 0.491  angul 0.627  gravi 0.512  mag 0.522  copy 13.4%
+sensor_1 seed 46: omega p99 46.50 (+3.5%, tol ±3.6%)  C2ST 0.608  quat 0.534  accel 0.494  angul 0.639  gravi 0.521  mag 0.505  copy 68.0%
+sensor_2 seed 42: omega p99 16.45 (+0.3%, tol ±1.4%)  C2ST 0.518  quat 0.468  accel 0.501  angul 0.581  gravi 0.537  mag 0.494  copy 12.4%
+sensor_2 seed 43: omega p99 16.66 (+1.6%, tol ±1.4%)  C2ST 0.549  quat 0.523  accel 0.508  angul 0.568  gravi 0.560  mag 0.475  copy 6.2%
+sensor_2 seed 44: omega p99 16.48 (+0.5%, tol ±1.4%)  C2ST 0.602  quat 0.575  accel 0.519  angul 0.625  gravi 0.596  mag 0.493  copy 7.2%
+sensor_2 seed 45: omega p99 16.43 (+0.2%, tol ±1.4%)  C2ST 0.540  quat 0.488  accel 0.487  angul 0.556  gravi 0.519  mag 0.457  copy 5.2%
+sensor_2 seed 46: omega p99 16.71 (+1.9%, tol ±1.4%)  C2ST 0.547  quat 0.488  accel 0.476  angul 0.557  gravi 0.530  mag 0.463  copy 16.5%
+sensor_3 seed 42: omega p99 43.01 (-0.1%, tol ±0.9%)  C2ST 0.516  quat 0.500  accel 0.552  angul 0.559  gravi 0.543  mag 0.558
+sensor_3 seed 43: omega p99 43.31 (+0.6%, tol ±0.9%)  C2ST 0.533  quat 0.510  accel 0.549  angul 0.524  gravi 0.529  mag 0.514
+sensor_3 seed 44: omega p99 43.14 (+0.2%, tol ±0.9%)  C2ST 0.557  quat 0.552  accel 0.599  angul 0.564  gravi 0.582  mag 0.580
+sensor_3 seed 45: omega p99 42.96 (-0.2%, tol ±0.9%)  C2ST 0.483  quat 0.499  accel 0.499  angul 0.510  gravi 0.485  mag 0.513
+sensor_3 seed 46: omega p99 43.27 (+0.5%, tol ±0.9%)  C2ST 0.480  quat 0.461  accel 0.503  angul 0.492  gravi 0.490  mag 0.495
+wrote out/ablation/S2_B_raw_accel_mag/ablation.json

@@ -223,26 +223,47 @@ the same cycle schedule.
    clock), detects the arm cycle (37.0 s) on their combined motion, and cuts
    every sensor over the *same* time windows → `configs/robot_arm/joint_bank_arm.npz`
    (120 usable cycles from the 94.9-min recording; the pool is the whole recording).
-2. A schedule (template index, start time, ±1 % time warp, residual donor) is a
-   pure function of (bank, duration, seed). Separate `main.py` runs for
-   sensor_1/2/3 with the same `--seed`/`--duration` therefore share it exactly.
-   Inside the recording span, the cycle at synthetic minute *t* is drawn from real
-   cycles within ±150 s of session minute *t*, so slow orientation drift is carried.
-3. Each sensor renders its own slice of the chosen cycles. Splices sit mid-rest
-   with a 1 s crossfade.
-4. Noise, measured on the real XDK:
-   - quaternion at rest: sample-and-hold. The fused quaternion only updates on
-     22–35 % of rest samples, the same rate as real.
-   - quaternion in motion: small rotation-vector noise at the measured floor.
-   - accel/mag: smoothed template shape + the residual of a *different* real
-     cycle at the same phase. Real accel noise is clustered in time and is
+2. A schedule (template index, start time, residual donor) is a pure function of
+   (bank, duration, seed). Separate `main.py` runs for sensor_1/2/3 with the same
+   `--seed`/`--duration` therefore share it exactly. Inside the recording span, the
+   cycle at synthetic minute *t* is drawn from real cycles within ±150 s of session
+   minute *t*, so slow orientation drift is carried. Cycle starts sit on the 10 Hz
+   sample clock and real cycles are replayed at their native length (no time warp).
+3. Timing, measured on the real XDK: it samples on a regular internal clock
+   (100.003 ms, all sensors) and only the logged timestamp is offset (step angle
+   uncorrelated with dt). The offset is a delivery delay: a late sample followed by a
+   catch-up, or a backlog of several samples held ~400 ms and delivered within a few ms.
+   Backlogs are shared between sensors (s1–s3 coincide 92 % vs 14 % by chance).
+   The engine keeps the template on the real internal clock, evaluates motion on a
+   regular synthetic clock (gaps kept), and writes timestamp = clock + offset, where
+   the offsets are whole real blocks (~60 s) taken from the same real time span for
+   all sensors and joined at calm samples (`"log_jitter": "empirical"`, default with
+   bank v4; `"gaussian"` = previous model, `"none"` = perfect ticks for diagnosis).
+   Ticks the real logger dropped inside those blocks (0.3–0.7 %) are dropped too
+   (`"log_drops"`, on with empirical jitter); the generator's own gap model still applies.
+   With the flag on, this replaces the generator's timestamp column.
+4. Each sensor renders its own slice of the chosen cycles as whole real samples
+   (nearest sample on the internal clock). Splices sit mid-rest with a 1 s crossfade.
+5. Noise, measured on the real XDK:
+   - quaternion: the recorded quaternion is used as is (no smoothing, no added
+     noise). The XDK repeats its fused quaternion only while truly static (93–95 %
+     of samples below 0.2°/s, ~0 % above), so the engine replays the real per-sample
+     freeze pattern of the template. A random hold over a wide "rest" band created
+     false counter-rotation between sensors (s1–s2 52 % vs real 1 %); this is fixed.
+   - accel/mag: smoothed template shape (savgol 7,2) + the residual of a *different* real
+     cycle at the same phase. (`build_joint_bank.py --am-split lowpass`, a rest-matched
+     zero-phase low-pass split, was tried in review round 3 and not adopted.) Real accel noise is clustered in time and is
      2–5× larger while the arm moves; a stationary Gaussian broke Check 7b (61 %).
    - output: canonical w ≥ 0 (a flip negates all components), quat 1e-4,
      accel 0.001 g, mag integer.
-5. Longer than the recording: past 94.9 min, cycles come from the whole pool,
+6. Longer than the recording: past 94.9 min, cycles come from the whole pool,
    restricted to those whose start pose matches the previous end pose in every
    sensor (tilt < 2°, full pose < 3°). A warning is logged: drift outside the
    recording window is not modelled.
+
+Older behaviour is still available for comparison: `build_joint_bank.py --smooth-quat`
+(savgol template + rotation-vector noise), and `"resample": "linear"` with
+`"regular_clock": false` in the `motion` block.
 
 **Run:** `./run_robot_arm_joint.sh [seed] [duration_s]` generates the three
 sensors and runs the full physics gate (`physics_gate.py`; exit code ≠ 0 on
@@ -251,10 +272,23 @@ joint-template generation unless `--no-physics-gate` is given.
 
 **Limitations (must stay in any write-up):**
 - It replays patterns that were recorded; it cannot produce a motion the arm never made.
-- Drift is not extrapolated outside the recording. Past 95 min the pose stays
-  near the end-of-recording pose (only 25 of 120 cycles are pose-compatible there).
+- Recommended duration ≤ the recording (94.9 min). Drift is not extrapolated outside the
+  recording: past 95 min the pose stays near the end-of-recording pose (only 25 of 120
+  cycles are pose-compatible there). The physics gate still passes, but C2ST rises to
+  0.82–0.84.
 - Noise is resampled real residuals, not a parametric model.
 - The copy-paste check is uninformative for sensor_3 (its real cycles are near-identical).
+- A classifier can still tell synthetic from real: C2ST 0.69 / 0.68 / 0.69 against a
+  permutation-null threshold of 0.583 / 0.606 / 0.566.
+  - C2ST is a reported metric, not a blocking gate check (user decision). The physics gate
+    passes.
+  - The separable groups are accel and mag, and the cause is unknown. Fixing the savgol
+    step covariance (round 3) changed accel C2ST by only 0.01–0.03. Orientation and gravity
+    are not separable, and angular velocity is close (0.65 / 0.58 / 0.53).
+  - See `results/joint_template/ablation/README.md` and `results/joint_template/round3/README.md`.
+- Omega p99 sits +2.1 / +0.9 / +0.2 % from real. Its tolerance (±7.0 / ±2.1 / ±1.2 %) was
+  re-derived with the empirical jitter; it was ±3.6 / ±1.4 / ±0.9 % with Gaussian jitter.
+- The one 74 s outage in the real recording is not reproduced (an anomaly, not normal logging).
 - Sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing here identifies which link a sensor is on.
 
 **Retired / parked for arm_robot:** the planned Phase 2 (derive gravity from the
