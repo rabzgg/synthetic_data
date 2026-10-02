@@ -283,6 +283,24 @@ def c2st_syn(s_real_span: dict, s_syn: dict, seed: int = 0, feature_set: str = "
     return c2st(XR, block_fold(cR), XS, block_fold(cS), seed=seed, return_model=return_model)
 
 
+def c2st_permutation_null(s_real_span: dict, s_syn: dict, n_perm: int = 100, seed: int = 0,
+                          feature_set: str = "all") -> list:
+    """Null distribution of the real-vs-synthetic C2ST under exchangeable labels: the SAME windows
+    and the SAME block folds as c2st_syn, with the real/synthetic labels shuffled across the pooled
+    windows (class sizes kept). Each permutation is one full cross-validated C2ST."""
+    XR, cR = windows_with_cycles(s_real_span, feature_set)
+    XS, cS = windows_with_cycles(s_syn, feature_set)
+    X = np.vstack([XR, XS])
+    fold = np.r_[block_fold(cR), block_fold(cS)]
+    nR = len(XR)
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(n_perm):
+        lab = rng.permutation(len(X)) < nR            # True -> "real"
+        out.append(c2st(X[lab], fold[lab], X[~lab], fold[~lab], seed=seed))
+    return out
+
+
 def fingerprint_split_distance(s_real_span: dict) -> dict:
     """d(real_A, real_B) for interleaved even/odd cycles of the same span."""
     cyc = (((s_real_span["t"] - s_real_span["t"][0])) // CYCLE_S).astype(int)

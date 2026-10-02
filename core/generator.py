@@ -943,6 +943,7 @@ class SyntheticXDKGenerator:
         self.seed = seed
         self.rng = np.random.default_rng(seed)
         self.joint_schedule = None   # set when motion.joint_template is on
+        self.joint_keep = None       # row mask of real-dropped ticks (joint template, empirical log drops)
         self.joint_info = None
         self.environment_config = environment_config or {}
         self.anomaly_specs = anomaly_specs or []
@@ -1043,6 +1044,7 @@ class SyntheticXDKGenerator:
         # engines above still run, so the RNG stream — and therefore every
         # non-motion column — is identical to flag-off output. See core/joint_template.py.
         motion_cfg = s.get("motion") or {}
+        joint_keep = None
         if motion_cfg.get("joint_template", False):
             from .joint_template import JointTemplateEngine
             motion_cfg = dict(motion_cfg)
@@ -1053,6 +1055,8 @@ class SyntheticXDKGenerator:
             for col_name, values in cols.items():
                 data[col_name] = values
             self.joint_schedule, self.joint_info = jt.schedule, jt.info
+            joint_keep = jt.keep        # ticks the real logger dropped (same real blocks as the offsets)
+            self.joint_keep = joint_keep
             if jt.info["beyond_recording"]:
                 print(f"WARNING: requested duration {s['duration_s']:.0f}s exceeds the recording "
                       f"({jt.bank.recording_s:.0f}s); drift outside the recording window is not modelled. "
@@ -1106,7 +1110,13 @@ class SyntheticXDKGenerator:
                 if run_end < len(micro):  # no lead when no ON phase follows
                     keep[run_start:run_end] |= (seg_t[-1] - seg_t) < keep_lead_s
 
+            if joint_keep is not None:
+                keep &= joint_keep
+                joint_keep = None
             df = df[keep].reset_index(drop=True)
+
+        if joint_keep is not None:
+            df = df[joint_keep].reset_index(drop=True)
 
         return df
 

@@ -1,0 +1,16 @@
+sensor_1 seed 42: omega p99 44.00 (-2.1%, tol ±3.6%)  C2ST 0.677  quat 0.465  accel 0.652  angul 0.693  gravi 0.521  mag 0.536  copy 0.0%
+sensor_1 seed 43: omega p99 43.98 (-2.1%, tol ±3.6%)  C2ST 0.719  quat 0.539  accel 0.657  angul 0.684  gravi 0.533  mag 0.562  copy 0.0%
+sensor_1 seed 44: omega p99 43.81 (-2.5%, tol ±3.6%)  C2ST 0.716  quat 0.516  accel 0.693  angul 0.699  gravi 0.550  mag 0.582  copy 0.0%
+sensor_1 seed 45: omega p99 43.84 (-2.4%, tol ±3.6%)  C2ST 0.677  quat 0.517  accel 0.637  angul 0.653  gravi 0.520  mag 0.534  copy 0.0%
+sensor_1 seed 46: omega p99 43.94 (-2.2%, tol ±3.6%)  C2ST 0.679  quat 0.503  accel 0.672  angul 0.649  gravi 0.512  mag 0.544  copy 0.0%
+sensor_2 seed 42: omega p99 16.14 (-1.6%, tol ±1.4%)  C2ST 0.678  quat 0.470  accel 0.624  angul 0.609  gravi 0.523  mag 0.691  copy 0.0%
+sensor_2 seed 43: omega p99 16.16 (-1.4%, tol ±1.4%)  C2ST 0.711  quat 0.513  accel 0.651  angul 0.644  gravi 0.567  mag 0.658  copy 0.0%
+sensor_2 seed 44: omega p99 16.05 (-2.1%, tol ±1.4%)  C2ST 0.722  quat 0.542  accel 0.651  angul 0.655  gravi 0.561  mag 0.663  copy 0.0%
+sensor_2 seed 45: omega p99 16.21 (-1.1%, tol ±1.4%)  C2ST 0.672  quat 0.495  accel 0.607  angul 0.592  gravi 0.511  mag 0.675  copy 0.0%
+sensor_2 seed 46: omega p99 16.09 (-1.8%, tol ±1.4%)  C2ST 0.691  quat 0.483  accel 0.640  angul 0.623  gravi 0.530  mag 0.661  copy 0.0%
+sensor_3 seed 42: omega p99 42.78 (-0.6%, tol ±0.9%)  C2ST 0.787  quat 0.503  accel 0.652  angul 0.716  gravi 0.515  mag 0.711
+sensor_3 seed 43: omega p99 42.97 (-0.2%, tol ±0.9%)  C2ST 0.742  quat 0.523  accel 0.640  angul 0.682  gravi 0.529  mag 0.686
+sensor_3 seed 44: omega p99 42.85 (-0.5%, tol ±0.9%)  C2ST 0.762  quat 0.546  accel 0.649  angul 0.716  gravi 0.583  mag 0.687
+sensor_3 seed 45: omega p99 42.77 (-0.7%, tol ±0.9%)  C2ST 0.751  quat 0.480  accel 0.611  angul 0.683  gravi 0.495  mag 0.683
+sensor_3 seed 46: omega p99 42.75 (-0.7%, tol ±0.9%)  C2ST 0.787  quat 0.453  accel 0.642  angul 0.716  gravi 0.515  mag 0.678
+wrote out/ablation/S1_gaussian/ablation.json

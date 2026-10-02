@@ -26,9 +26,11 @@ main.py runs for sensor_1/2/3 with the same --seed and --duration produce the
 same schedule without talking to each other.
 
 Noise and timing model (measured on the real XDK, see PHYSICS_REPORT.md):
-  * timing: the XDK samples on a regular internal clock and only the logged timestamp jitters.
-    Templates sit on the real internal clock; motion is evaluated on a regular synthetic
-    clock and the written timestamp = clock + logging jitter.
+  * timing: the XDK samples on a regular internal clock (100.003 ms) and only the logged timestamp
+    is offset: a heavy-tailed delivery delay (late sample then catch-up; backlogs delivered within a
+    few ms) that is shared between sensors. Templates sit on the real internal clock; motion is
+    evaluated on a regular synthetic clock and the written timestamp = clock + a real offset block
+    (empirical_log_offsets; the same real time span for all sensors).
   * quaternion: the recorded quaternion, replayed as whole samples (no smoothing, nothing
     added), with the real per-sample freeze pattern (the XDK repeats its fused quaternion
     only while truly static). Output quantised to 1e-4, canonical w >= 0.
@@ -41,7 +43,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from scipy.signal import savgol_filter
+from scipy.signal import butter, savgol_filter, sosfiltfilt, welch
 from scipy.spatial.transform import Rotation
 
 Q_COLS = ("orientation_x", "orientation_y", "orientation_z")
@@ -53,7 +55,8 @@ REAL_ALIASES = {"quat_x": "orientation_x", "quat_y": "orientation_y", "quat_z": 
 Q_DECIMALS, A_DECIMALS = 4, 3          # XDK output resolution (1e-4, 0.001 g); mag is integer
 SG_Q, SG_AM = (5, 2), (7, 2)           # savgol (window, order) for quat / accel+mag smoothing
 SG_Q_RESID = np.sqrt(1 - 17 / 35)      # white-noise residual factor of savgol(5,2)
-BANK_VERSION = 3                       # v2: per-sample real XDK freeze flag; v3: internal-clock template time
+BANK_VERSION = 4                       # v2: per-sample real XDK freeze flag; v3: internal-clock template time;
+                                       # v4: full real logged timestamps (empirical logging offsets)
 
 
 # ── quaternion helpers ─────────────────────────────────────────────────────────
@@ -192,7 +195,8 @@ def detect_cycles(t: np.ndarray, om: np.ndarray, thr: float, period: float) -> n
 # ── bank ───────────────────────────────────────────────────────────────────────
 
 def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
-               rest_pose_tol_deg: float = 2.0, smooth_quat: bool = False) -> dict:
+               rest_pose_tol_deg: float = 2.0, smooth_quat: bool = False,
+               am_split: str = "savgol") -> dict:
     """Fit a joint-template bank from the real recordings of all sensors on one arm.
 
     real_paths : {sensor_name: csv_path}, all recorded on the same clock.
@@ -228,8 +232,15 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
             qc /= np.linalg.norm(qc, axis=1, keepdims=True)
         else:                       # unwrapped real quaternion as recorded
             qc = r["q"].copy()
-        Ac = savgol_filter(r["A"], *SG_AM, axis=0)
-        Mc = savgol_filter(r["M"], *SG_AM, axis=0)
+        if am_split == "lowpass":
+            # zero-phase low-pass whose rest residual matches the real rest noise spectrum
+            fa = rest_matched_cutoff(r["A"], r["rest"])
+            fm = rest_matched_cutoff(r["M"], r["rest"])
+            Ac, Mc = lowpass(r["A"], fa), lowpass(r["M"], fm)
+            r["cutoffs"] = {"accel_hz": fa, "mag_hz": fm}
+        else:
+            Ac = savgol_filter(r["A"], *SG_AM, axis=0)
+            Mc = savgol_filter(r["M"], *SG_AM, axis=0)
         r.update(qc=qc, Ac=Ac, Mc=Mc, rA=r["A"] - Ac, rM=r["M"] - Mc)
 
     for wi, (a, b) in enumerate(windows):
@@ -265,7 +276,8 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
                         "real_paths": {s: os.path.relpath(os.path.abspath(p), os.path.dirname(os.path.abspath(out_path)))
                                        for s, p in real_paths.items()},
                         "n_windows_detected": int(len(windows)), "n_windows_kept": int(len(keep)),
-                        "smooth_quat": bool(smooth_quat), "noise": {}}
+                        "smooth_quat": bool(smooth_quat), "am_split": am_split,
+                        "am_cutoffs": {s: R[s].get("cutoffs") for s in sensors}, "noise": {}}
     arrays["windows"] = (keep - t0).astype(np.float64)
     for s in sensors:
         r = R[s]
@@ -280,10 +292,48 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
         arrays[f"{s}/pose_start"] = np.array([_pose_at(s, a) for a, _ in keep])
         arrays[f"{s}/pose_end"] = np.array([_pose_at(s, b) for _, b in keep])
         meta["noise"][s] = _noise_params(r)
+        # whole real logged time axis (s, relative to t0): source of the empirical logging offsets
+        arrays[f"{s}/log_t"] = (r["t"] - t0).astype(np.float64)
     arrays["meta"] = np.frombuffer(json.dumps(meta).encode(), dtype=np.uint8)
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     np.savez_compressed(out_path, **arrays)
     return meta
+
+
+CUTOFF_GRID_HZ = (0.3, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0)
+
+
+def lowpass(X: np.ndarray, cutoff_hz: float, fs: float = 10.0, order: int = 4) -> np.ndarray:
+    """Zero-phase Butterworth low-pass (sosfiltfilt) along the sample axis."""
+    return sosfiltfilt(butter(order, cutoff_hz, fs=fs, output="sos"), X, axis=0)
+
+
+def _rest_runs(rest: np.ndarray, min_len: int = 42, trim: int = 5) -> list:
+    m = np.diff(np.r_[0, rest.astype(int), 0])
+    return [(a + trim, b - trim) for a, b in zip(np.where(m == 1)[0], np.where(m == -1)[0]) if b - a >= min_len]
+
+
+def rest_matched_cutoff(X: np.ndarray, rest: np.ndarray, grid=CUTOFF_GRID_HZ, fs: float = 10.0) -> float:
+    """Cutoff whose low-pass residual, on the real rest periods, has the spectrum closest to the
+    real rest noise (sample minus a linear trend per rest run): minimum over the grid of the mean
+    |log2 PSD ratio| above 0.5 Hz (Welch, 32 samples)."""
+    runs = [(a, b) for a, b in _rest_runs(rest) if b - a >= 32]
+    noise = []
+    for a, b in runs:
+        seg = X[a:b]
+        j = np.arange(len(seg))
+        co = np.polyfit(j, seg, 1)
+        noise.append((seg - (np.outer(j, co[0]) + co[1]))[:32])
+    f, Pn = welch(np.vstack(noise), fs=fs, nperseg=32, axis=0)
+    band = f >= 0.5
+    best, err_best = grid[0], np.inf
+    for fc in grid:
+        res = X - lowpass(X, fc, fs)
+        _, Pr = welch(np.vstack([res[a:a + 32] for a, b in runs]), fs=fs, nperseg=32, axis=0)
+        err = float(np.mean(np.abs(np.log2(Pr[band].mean(1) / Pn[band].mean(1)))))
+        if err < err_best:
+            best, err_best = fc, err
+    return float(best)
 
 
 def _noise_params(r: dict) -> dict:
@@ -297,8 +347,9 @@ def _noise_params(r: dict) -> dict:
     if m.sum() < 100:
         m = ~rest & (speed < 10)
     sig_q = float(np.sqrt(np.mean(resid[m] ** 2)) / SG_Q_RESID)
-    # logged timestamps = regular internal clock + logging jitter (real dt lag-1 autocorr ~ -0.5,
-    # step angle uncorrelated with dt), so the per-timestamp jitter is sd(dt)/sqrt(2)
+    # sd of the "gaussian" log_jitter model (bank v3 behaviour): treats the timestamp offset as
+    # i.i.d., per-timestamp sd = sd(dt)/sqrt(2). The real offset is heavy tailed and bursty; the
+    # default "empirical" model replays real offset blocks instead (empirical_log_offsets).
     d = np.diff(t)
     d = d[(d > 0.5 * np.median(d)) & (d < 1.5 * np.median(d))]
     return {"p_update_rest": float(1.0 - same[rr].mean()), "sig_rotvec_rad": 2.0 * sig_q,
@@ -315,9 +366,10 @@ class JointBank:
         self.period = self.meta["period_s"]
         self.recording_s = self.meta["recording_s"]
         self.data = {s: {k: z[f"{s}/{k}"] for k in ("t", "qc", "Ac", "Mc", "rA", "rM", "rest",
-                                                     "pose_start", "pose_end", "frozen")
+                                                     "pose_start", "pose_end", "frozen", "log_t")
                          if f"{s}/{k}" in z.files} for s in self.sensors}
         self.has_frozen = all("frozen" in self.data[s] for s in self.sensors)
+        self.has_log_t = all("log_t" in self.data[s] for s in self.sensors)
 
     def real_path(self, sensor: str) -> str:
         return os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(self.path)),
@@ -417,11 +469,166 @@ def _interp_segment(seg: dict, tau: np.ndarray, nearest: bool = False):
     return q, A, M, seg["rest"][near], frozen
 
 
+# ── logging-offset model (timestamp = internal clock tick + offset) ─────────────
+
+def clock_period_ms(t: np.ndarray, span: int = 200, calm_ms: float = 4.0) -> float:
+    """XDK internal sample period (ms) from calm-to-calm spans of `span` samples without missing
+    ticks. (The median logged dt is biased: late samples skew it, e.g. 100.6 ms vs 100.0.)"""
+    tm = np.asarray(t, float) * 1000.0
+    p0 = float(np.median((tm[20:] - tm[:-20]) / 20))                 # robust first guess (short spans:
+                                                                     # most hold no missing tick)
+    dt = np.diff(tm)
+    calm = np.r_[False, (np.abs(dt[:-1] - p0) < calm_ms) & (np.abs(dt[1:] - p0) < calm_ms), False]
+    idx = np.where(calm[:-span])[0]
+    idx = idx[calm[idx + span]]
+    per = (tm[idx + span] - tm[idx]) / span
+    per = per[np.abs(per - p0) < 0.5 * p0 / span]                    # drop spans that contain a missing tick
+    return float(np.median(per)) if len(per) else p0
+
+
+def _calm(tm: np.ndarray, P: float, calm_ms: float) -> np.ndarray:
+    dt = np.diff(tm)
+    return np.r_[False, (np.abs(dt[:-1] - P) < calm_ms) & (np.abs(dt[1:] - P) < calm_ms), False]
+
+
+def _anchor_ticks(tm, P, calm, a, L, extra, tol_ms):
+    """{tick: sample index} for ticks L..L+extra after calm sample a where the sample is calm and
+    its offset is back within tol_ms of the start level."""
+    hi = min(len(tm), a + L + extra + L // 10 + 20)
+    g = np.round((tm[a:hi] - tm[a]) / P).astype(np.int64)
+    res = tm[a:hi] - tm[a] - g * P
+    ok = np.where((g >= L) & (g <= L + extra) & calm[a:hi] & (np.abs(res) <= tol_ms))[0]
+    out = {}
+    for i in ok:
+        out.setdefault(int(g[i]), int(i))
+    return out
+
+
+def _offset_block(tm, P, a, b, L):
+    """(offsets ms, present) for ticks 0..L-1 of the real block from calm sample a to anchor
+    sample a+b (tick L). Ticks are assigned backwards from the anchor (the last sample of a backlog
+    is the punctual one): u_i = min(u_{i+1} - 1, round((t_i - t_a) / P)). present[k] is False for
+    a tick the real logger dropped (its offset is interpolated). None if the assignment is
+    inconsistent."""
+    u = np.round((tm[a:a + b + 1] - tm[a]) / P).astype(np.int64)
+    u[-1] = L
+    for i in range(b - 1, -1, -1):
+        u[i] = min(u[i + 1] - 1, u[i])
+    if u[0] != 0:
+        return None
+    o = tm[a:a + b + 1] - tm[a] - u * P
+    present = np.zeros(L, bool)
+    present[u[u < L]] = True
+    return np.interp(np.arange(L), u, o), present
+
+
+def empirical_log_offsets(bank: "JointBank", n_ticks: int, seed: int, block: int = 600,
+                          extra: int = 60, calm_ms: float = 4.0, max_tries: int = 100000,
+                          with_presence: bool = False):
+    """Per-tick logging offsets (ms) for every sensor, block-resampled from the real recording.
+
+    Real logged timestamps = regular internal tick + a delivery offset that is heavy tailed and
+    comes in bursts (late sample then catch-up; backlogs of several samples delivered within a few
+    ms), and the bursts are shared between sensors (same gateway). So whole real blocks of offsets
+    are replayed, taken from the SAME real time span for all sensors: a block starts at a random
+    real time tau, per sensor at its first calm sample (|dt - P| < calm_ms on both sides) after tau,
+    and ends at the first tick L' in [block, block + extra] where every sensor has a calm sample
+    whose offset is back within calm_ms of the start level, so consecutive blocks join with a
+    step that is itself calm. Ticks the real logger dropped get interpolated offsets; with
+    with_presence=True a second dict {sensor: present[tick]} is returned so the engine can drop
+    the same ticks (real drop rate and pattern). The draw depends on (bank, seed) only, so
+    separate runs of sensor_1/2/3 get the same block sequence."""
+    rng = np.random.default_rng([seed, 7])
+    prep = {}
+    for s in bank.sensors:
+        tm = bank.data[s]["log_t"] * 1000.0
+        P = clock_period_ms(tm / 1000.0)
+        calm = _calm(tm, P, calm_ms)
+        prep[s] = (tm, P, calm, np.where(calm)[0])
+    lo = max(v[0][0] for v in prep.values())
+    hi = min(v[0][-1] for v in prep.values()) - 1.2 * (block + extra) * 100.0
+    out = {s: [] for s in bank.sensors}
+    pres = {s: [] for s in bank.sensors}
+    got, tries = 0, 0
+    while got < n_ticks:
+        tries += 1
+        if tries > max_tries:
+            raise RuntimeError("could not draw clean logging-offset blocks")
+        tau = rng.uniform(lo, hi)
+        starts, anchors = {}, None
+        for s, (tm, P, calm, ci) in prep.items():
+            j = np.searchsorted(ci, np.searchsorted(tm, tau))
+            if j >= len(ci):
+                anchors = {}
+                break
+            starts[s] = int(ci[j])
+            at = _anchor_ticks(tm, P, calm, starts[s], block, extra, calm_ms)
+            anchors = set(at) if anchors is None else anchors & set(at)
+            starts[s] = (starts[s], at)
+        if not anchors:
+            continue
+        L = min(anchors)
+        blk = {s: _offset_block(prep[s][0], prep[s][1], starts[s][0], starts[s][1][L], L) for s in prep}
+        if any(v is None for v in blk.values()):
+            continue
+        for s in bank.sensors:
+            out[s].append(blk[s][0])
+            pres[s].append(blk[s][1])
+        got += L
+    offs = {s: np.concatenate(v)[:n_ticks] for s, v in out.items()}
+    if with_presence:
+        return offs, {s: np.concatenate(v)[:n_ticks] for s, v in pres.items()}
+    return offs
+
+
+def _dtw_map(a: np.ndarray, b: np.ndarray, band: int = 30) -> np.ndarray:
+    """For each row of a, the index of b it aligns to under DTW (Sakoe-Chiba band, rows standardised
+    by a's per-channel sd). Used to put a donor cycle's residual at the same motion phase."""
+    sd = np.where(a.std(0) > 1e-9, a.std(0), 1.0)
+    a, b = a / sd, b / sd
+    n, m = len(a), len(b)
+    D = np.full((n + 1, m + 1), np.inf)
+    D[0, 0] = 0.0
+    for i in range(1, n + 1):
+        c = int(round((i - 1) * (m - 1) / max(n - 1, 1)))
+        lo, hi = max(1, c + 1 - band), min(m, c + 1 + band)
+        cost = np.sum((b[lo - 1:hi] - a[i - 1]) ** 2, axis=1)
+        row = D[i, :]
+        prev = D[i - 1, :]
+        for jj, j in enumerate(range(lo, hi + 1)):
+            row[j] = cost[jj] + min(prev[j], prev[j - 1], row[j - 1])
+    # backtrack
+    i, j, out = n, m, np.zeros(n, np.int64)
+    while i > 0:
+        out[i - 1] = j - 1
+        k = np.argmin([D[i - 1, j - 1], D[i - 1, j], D[i, j - 1]])
+        if k == 0:
+            i, j = i - 1, j - 1
+        elif k == 1:
+            i -= 1
+        else:
+            j -= 1
+        j = max(j, 1)
+    return out
+
+
+def _shape_distance(sa: dict, sb: dict, n: int = 100) -> float:
+    """Distance between two cycles' smooth accel+mag shapes on a common normalised time axis."""
+    u = np.linspace(0, 1, n)
+    f = lambda sg, key: np.column_stack([np.interp(u * sg["tau"][-1], sg["tau"], sg[key][:, c]) for c in range(3)])
+    da = np.c_[f(sa, "A"), f(sa, "M")]
+    db = np.c_[f(sb, "A"), f(sb, "M")]
+    sd = np.where(da.std(0) > 1e-9, da.std(0), 1.0)
+    return float(np.mean(((da - db) / sd) ** 2))
+
+
 class JointTemplateEngine:
     def __init__(self, bank_path: str, sensor: str, local_window_s: float = 150.0,
                  crossfade_s: float = 1.0, warp_sd: float = 0.01, pose_tol_deg: float = 2.0,
                  yaw_tol_deg: float = 3.0, rotvec_noise_scale: float = None,
-                 regular_clock: bool = True, frequency_hz: float = 10.0, resample: str = "nearest"):
+                 regular_clock: bool = True, frequency_hz: float = 10.0, resample: str = "nearest",
+                 log_jitter: str = None, log_block: int = 600, residual: str = "donor",
+                 log_drops: bool = None):
         self.bank = JointBank(bank_path)
         if sensor not in self.bank.sensors:
             raise ValueError(f"sensor '{sensor}' not in bank {self.bank.sensors}")
@@ -441,12 +648,61 @@ class JointTemplateEngine:
             raise ValueError("resample must be 'linear' or 'nearest'")
         self.resample = resample
         self.frequency_hz = frequency_hz
+        # logged-timestamp offset model: "empirical" (real offset blocks, bank v4), "gaussian"
+        # (bank v3 behaviour) or "none" (perfect ticks; diagnosis only)
+        if log_jitter is None:
+            log_jitter = "empirical" if self.bank.has_log_t else "gaussian"
+        if log_jitter not in ("empirical", "gaussian", "none"):
+            raise ValueError("log_jitter must be 'empirical', 'gaussian' or 'none'")
+        if log_jitter == "empirical" and not self.bank.has_log_t:
+            raise ValueError("log_jitter='empirical' needs a v4 bank (rebuild with build_joint_bank.py)")
+        self.log_jitter = log_jitter
+        self.log_block = log_block
+        # drop the ticks the real logger dropped in the same offset blocks (empirical only)
+        self.log_drops = (log_jitter == "empirical") if log_drops is None else bool(log_drops)
+        if self.log_drops and log_jitter != "empirical":
+            raise ValueError("log_drops needs log_jitter='empirical'")
+        self.keep = None
+        # accel/mag noise texture: "donor" = residual of another real cycle (production);
+        # "own" = the template's own residual, i.e. raw accel/mag replay (diagnosis only)
+        # "similar" = donor is the most similar cycle (accel+mag shape) in the same candidate set;
+        # "aligned" = random donor, residual mapped to the template by motion phase (DTW on accel)
+        # "lattice" = random donor, but its residual taken on the output lattice
+        # (raw_donor - round(smooth_donor)) and added to round(smooth_template): the real raw value
+        # already holds one quantisation error, adding a float residual and rounding again doubles it
+        if residual not in ("donor", "own", "similar", "aligned", "lattice"):
+            raise ValueError("residual must be 'donor', 'own', 'similar', 'aligned' or 'lattice'")
+        self.residual = residual
         self.schedule, self.info = None, None
+
+    def _similar_donor(self, template: int, phase: str) -> int:
+        """Most similar other cycle (smooth accel+mag shape) among the schedule's donor candidates."""
+        cache = self.__dict__.setdefault("_sim_cache", {})
+        if (template, phase) not in cache:
+            starts = self.bank.windows[:, 0]
+            cand = (np.where(np.abs(starts - starts[template]) <= self.local_window_s)[0] if phase == "local"
+                    else np.arange(len(starts)))
+            cand = [j for j in cand if j != template]
+            if not cand:
+                cache[(template, phase)] = template
+            else:
+                seg = self.bank.segment(self.sensor, template)
+                dist = [_shape_distance(seg, self.bank.segment(self.sensor, j)) for j in cand]
+                cache[(template, phase)] = int(cand[int(np.argmin(dist))])
+        return cache[(template, phase)]
+
+    def _aligned_map(self, template: int, donor: int) -> np.ndarray:
+        cache = self.__dict__.setdefault("_dtw_cache", {})
+        if (template, donor) not in cache:
+            a = self.bank.segment(self.sensor, template)["A"]
+            b = self.bank.segment(self.sensor, donor)["A"]
+            cache[(template, donor)] = _dtw_map(a, b)
+        return cache[(template, donor)]
 
     @classmethod
     def from_config(cls, cfg: dict) -> "JointTemplateEngine":
         keys = ("local_window_s", "crossfade_s", "warp_sd", "pose_tol_deg", "yaw_tol_deg", "rotvec_noise_scale",
-                "regular_clock", "frequency_hz", "resample")
+                "regular_clock", "frequency_hz", "resample", "log_jitter", "log_block", "residual", "log_drops")
         return cls(cfg["bank"], cfg["sensor"], **{k: cfg[k] for k in keys if k in cfg})
 
     def generate(self, timestamps_ms: np.ndarray, duration_s: float, seed: int,
@@ -458,15 +714,32 @@ class JointTemplateEngine:
         noise = self.bank.meta["noise"][self.sensor]
         log_ts = None
         if self.regular_clock:
-            # The XDK samples on a regular internal clock; only the LOGGED timestamp jitters
-            # (real: step angle uncorrelated with dt, dt lag-1 autocorr ~ -0.5). Motion is evaluated
-            # on that clock (gaps kept as whole missing ticks); timestamps = clock + logging jitter.
+            # The XDK samples on a regular internal clock; only the LOGGED timestamp is offset
+            # (real: step angle uncorrelated with dt). Motion is evaluated on that clock (gaps
+            # kept as whole missing ticks); timestamps = clock + logging offset.
             nominal = 1000.0 / self.frequency_hz
             tsm = np.asarray(timestamps_ms, float)
             steps = np.r_[np.round((tsm[0] - origin) / nominal), np.maximum(1, np.round(np.diff(tsm) / nominal))]
             clock = origin + np.cumsum(steps) * nominal
-            jit = np.random.default_rng([seed, sensor_index, 7]).normal(0, noise.get("log_jitter_ms", 0.0), len(clock))
-            log_ts = np.round(clock + np.clip(jit, -0.45 * nominal, 0.45 * nominal))
+            if self.log_jitter == "empirical":
+                # offsets indexed by tick number, so sensors stay aligned across missing ticks
+                tick = np.cumsum(steps).astype(np.int64)
+                tick -= tick[0]
+                off, pres = empirical_log_offsets(self.bank, int(tick[-1]) + 1, seed, self.log_block,
+                                                  with_presence=True)
+                log_ts = np.round(clock + off[self.sensor][tick])
+                if self.log_drops:
+                    self.keep = pres[self.sensor][tick]
+            elif self.log_jitter == "gaussian":
+                jit = np.random.default_rng([seed, sensor_index, 7]).normal(0, noise.get("log_jitter_ms", 0.0), len(clock))
+                log_ts = np.round(clock + np.clip(jit, -0.45 * nominal, 0.45 * nominal))
+            else:
+                log_ts = np.round(clock)
+            log_ts = np.maximum.accumulate(log_ts)                  # never out of order
+            dup = np.r_[False, np.diff(log_ts) <= 0]
+            while dup.any():                                        # keep timestamps strictly increasing
+                log_ts[dup] += 1
+                dup = np.r_[False, np.diff(log_ts) <= 0]
             ts = (clock - origin) / 1000.0
         else:
             ts = (np.asarray(timestamps_ms, float) - origin) / 1000.0
@@ -491,10 +764,28 @@ class JointTemplateEngine:
                 el = ts[m] - c["start_s"]
                 q, a, mg, rs, fz = _interp_segment(seg, el / w, self.resample == "nearest")
                 # residual texture of another real cycle at the same phase (nearest sample)
-                don = self.bank.segment(self.sensor, c["residual_donor"])
+                donor = c["residual_donor"]
+                if self.residual == "similar":
+                    donor = self._similar_donor(c["template"], c["phase"])
+                don = self.bank.segment(self.sensor, donor)
                 tau_d = np.clip(el / w * don["len"] / seg["len"], 0, don["tau"][-1])
                 k = np.clip(np.searchsorted(don["tau"], tau_d), 0, len(don["tau"]) - 1)
+                if self.residual == "aligned":
+                    tt = seg["tau"]
+                    ko = np.clip(np.searchsorted(tt, np.clip(el / w, tt[0], tt[-1])), 0, len(tt) - 1)
+                    k = self._aligned_map(c["template"], donor)[ko]
                 ra, rm = don["rA"][k], don["rM"][k]
+                if self.residual == "lattice":
+                    ad, md = don["A"][k], don["M"][k]
+                    ra = np.round(ad + ra, A_DECIMALS) - np.round(ad, A_DECIMALS)
+                    rm = np.round(md + rm) - np.round(md)
+                    a, mg = np.round(a, A_DECIMALS), np.round(mg)
+                if self.residual == "own":          # raw replay: same sample as the template shape
+                    tt = seg["tau"]
+                    tau = np.clip(el / w, tt[0], tt[-1])
+                    ko = np.clip(np.searchsorted(tt, tau), 0, len(tt) - 1)
+                    ko = np.where((ko > 0) & (np.abs(tt[np.maximum(ko - 1, 0)] - tau) < np.abs(tt[ko] - tau)), ko - 1, ko)
+                    ra, rm = seg["rA"][ko], seg["rM"][ko]
                 if prev_end is not None:            # crossfade from the previous cycle's end (at rest)
                     al = np.clip(el / self.crossfade_s, 0, 1)
                     al = (al * al * (3 - 2 * al))[:, None]

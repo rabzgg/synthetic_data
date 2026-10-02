@@ -229,11 +229,18 @@ the same cycle schedule.
    cycle at synthetic minute *t* is drawn from real cycles within ±150 s of session
    minute *t*, so slow orientation drift is carried. Cycle starts sit on the 10 Hz
    sample clock and real cycles are replayed at their native length (no time warp).
-3. Timing, measured on the real XDK: it samples on a regular internal clock and only
-   the logged timestamp jitters (step angle uncorrelated with dt, dt lag-1
-   autocorrelation −0.4 to −0.5). The engine therefore keeps the template on the real
-   internal clock, evaluates motion on a regular synthetic clock (gaps kept), and
-   writes timestamp = clock + logging jitter (Gaussian, sd from the real recording).
+3. Timing, measured on the real XDK: it samples on a regular internal clock
+   (100.003 ms, all sensors) and only the logged timestamp is offset (step angle
+   uncorrelated with dt). The offset is a delivery delay: a late sample followed by a
+   catch-up, or a backlog of several samples held ~400 ms and delivered within a few ms.
+   Backlogs are shared between sensors (s1–s3 coincide 92 % vs 14 % by chance).
+   The engine keeps the template on the real internal clock, evaluates motion on a
+   regular synthetic clock (gaps kept), and writes timestamp = clock + offset, where
+   the offsets are whole real blocks (~60 s) taken from the same real time span for
+   all sensors and joined at calm samples (`"log_jitter": "empirical"`, default with
+   bank v4; `"gaussian"` = previous model, `"none"` = perfect ticks for diagnosis).
+   Ticks the real logger dropped inside those blocks (0.3–0.7 %) are dropped too
+   (`"log_drops"`, on with empirical jitter); the generator's own gap model still applies.
    With the flag on, this replaces the generator's timestamp column.
 4. Each sensor renders its own slice of the chosen cycles as whole real samples
    (nearest sample on the internal clock). Splices sit mid-rest with a 1 s crossfade.
@@ -243,8 +250,9 @@ the same cycle schedule.
      of samples below 0.2°/s, ~0 % above), so the engine replays the real per-sample
      freeze pattern of the template. A random hold over a wide "rest" band created
      false counter-rotation between sensors (s1–s2 52 % vs real 1 %); this is fixed.
-   - accel/mag: smoothed template shape + the residual of a *different* real
-     cycle at the same phase. Real accel noise is clustered in time and is
+   - accel/mag: smoothed template shape (savgol 7,2) + the residual of a *different* real
+     cycle at the same phase. (`build_joint_bank.py --am-split lowpass`, a rest-matched
+     zero-phase low-pass split, was tried in review round 3 and not adopted.) Real accel noise is clustered in time and is
      2–5× larger while the arm moves; a stationary Gaussian broke Check 7b (61 %).
    - output: canonical w ≥ 0 (a flip negates all components), quat 1e-4,
      accel 0.001 g, mag integer.
@@ -268,11 +276,16 @@ joint-template generation unless `--no-physics-gate` is given.
   near the end-of-recording pose (only 25 of 120 cycles are pose-compatible there).
 - Noise is resampled real residuals, not a parametric model.
 - The copy-paste check is uninformative for sensor_3 (its real cycles are near-identical).
-- A classifier can still tell synthetic from real (C2ST 0.69 / 0.70 / 0.77 vs a
-  real-vs-real baseline of 0.44 / 0.42 / 0.40). The C2ST gate fails. Accel and angular-velocity
-  windows are the most separable feature groups; orientation and gravity are not separable.
-- Synthetic logging jitter is Gaussian; the real one is heavy-tailed and autocorrelated.
-  sensor_2 omega p99 ends up 1.2–2.2 % low, just outside its ±1.4 % data-derived tolerance.
+- A classifier can still tell synthetic from real: C2ST 0.69 / 0.68 / 0.69 against a
+  permutation-null threshold of 0.583 / 0.606 / 0.566.
+  - C2ST is a reported metric, not a blocking gate check (user decision). The physics gate
+    passes.
+  - The separable groups are accel and mag. Orientation and gravity are not separable, and
+    angular velocity is close (0.65 / 0.58 / 0.53).
+  - See `results/joint_template/ablation/README.md` and `results/joint_template/round3/README.md`.
+- Omega p99 sits +2.1 / +0.9 / +0.2 % from real. Its tolerance (±7.0 / ±2.1 / ±1.2 %) was
+  re-derived with the empirical jitter; it was ±3.6 / ±1.4 / ±0.9 % with Gaussian jitter.
+- The one 74 s outage in the real recording is not reproduced.
 - Sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing here identifies which link a sensor is on.
 
 **Retired / parked for arm_robot:** the planned Phase 2 (derive gravity from the

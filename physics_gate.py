@@ -14,10 +14,11 @@ real recording at gate time):
                when no thresholds file is given)
   jumps        0 one-sample quaternion jumps that are NOT a full q -> -q flip
   copy         % of cycle-length windows with max corr > 0.99 vs the real recording <= 5 %
-  c2st         [per sensor] classifier two-sample test, real vs synthetic (motion features, 10 s
-               windows, block folds): balanced accuracy <= real-vs-real baseline + margin
-               (gate_thresholds.json; margin = 2 sqrt(sd_seed^2 + sd_baseline^2))
                (sensor_3 excluded, see COPY_EXCLUDE)
+  c2st         [per sensor, REPORTED ONLY — does not decide the gate] classifier two-sample test,
+               real vs synthetic (motion features, 10 s windows, block folds): balanced accuracy
+               vs a threshold = 95th percentile of a label-permutation null (same windows, same
+               folds) + 2 sd over seeds (gate_thresholds.json)
   check7b      [cross-sensor] all-three moving-mask agreement >= 85 %
   check7c      [cross-sensor] activity cross-correlation lag = 0 ms for every pair
 
@@ -217,9 +218,11 @@ def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport,
         sr = SI.real_span(SI.signals(real_path, use_abs_time=True), span, start)
         acc = SI.c2st_syn(sr, ss)
         thr = thresholds["c2st"][sensor]
-        report.add(Check("c2st", sensor, acc, f"<= {thr['threshold']:.3f} (real-vs-real {thr['baseline_mean']:.3f}"
-                         f" + margin {thr['margin']:.3f})", acc <= thr["threshold"],
-                         f"real span {start/60:.0f}-{(start+span)/60:.0f} min"))
+        # reported metric, not a blocking check (user decision); threshold from a label-permutation null
+        report.add(Check("c2st", sensor, acc, f"<= {thr['threshold']:.3f} (permutation null p95 {thr['null_p95']:.3f}"
+                         f" + 2 sd seeds {2 * thr['seed_sd']:.3f})", acc <= thr["threshold"],
+                         f"real span {start/60:.0f}-{(start+span)/60:.0f} min; reported, does not block",
+                         informational=True))
 
 
 def cross_sensor_checks(syn_paths: dict, real_paths: dict, report: GateReport):

@@ -22,6 +22,8 @@ from core.joint_template import build_bank
 ap = argparse.ArgumentParser(description="Fit a joint-template bank from real arm recordings.")
 ap.add_argument("--real", action="append", required=True, help="sensor_name=path.csv (repeat per sensor)")
 ap.add_argument("--output", required=True, help="output .npz bank")
+ap.add_argument("--am-split", choices=["savgol", "lowpass"], default="savgol",
+                help="accel/mag shape vs residual split: savgol(7,2) or rest-matched zero-phase low-pass")
 ap.add_argument("--smooth-quat", action="store_true",
                 help="savgol-smooth the template quaternion (old behaviour; default stores it as recorded)")
 args = ap.parse_args()
@@ -34,7 +36,7 @@ for item in args.real:
         sys.exit(1)
     paths[name] = path
 
-meta = build_bank(paths, args.output, smooth_quat=args.smooth_quat)
+meta = build_bank(paths, args.output, smooth_quat=args.smooth_quat, am_split=args.am_split)
 print(f"Saved bank   : {args.output}  ({os.path.getsize(args.output)/1e6:.1f} MB)")
 print(f"  sensors    : {meta['sensors']}")
 print(f"  period     : {meta['period_s']:.2f}s   smooth_quat={meta['smooth_quat']}")

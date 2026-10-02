@@ -1,0 +1,4 @@
+sensor_1: null 0.503 ± 0.024 (p95 0.544) -> perm threshold 0.585 | old threshold 0.621 (real-vs-real 0.444) | synthetic 0.691: perm FAIL, old FAIL
+sensor_2: null 0.506 ± 0.026 (p95 0.548) -> perm threshold 0.594 | old threshold 0.577 (real-vs-real 0.419) | synthetic 0.680: perm FAIL, old FAIL
+sensor_3: null 0.503 ± 0.024 (p95 0.540) -> perm threshold 0.583 | old threshold 0.523 (real-vs-real 0.397) | synthetic 0.694: perm FAIL, old FAIL
+wrote out/ablation/S1_empirical/c2st_permutation.json

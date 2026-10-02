@@ -1,0 +1,6 @@
+savgol  sensor_1: accel step corr -0.168 (p5 -0.212, p95 -0.119), donor/raw step var 1.212 | mag step corr -0.043 (p5 -0.076, p95 -0.014), donor/raw step var 1.057
+savgol  sensor_2: accel step corr -0.032 (p5 -0.074, p95 +0.008), donor/raw step var 1.050 | mag step corr -0.056 (p5 -0.153, p95 +0.037), donor/raw step var 1.040
+savgol  sensor_3: accel step corr -0.024 (p5 -0.046, p95 -0.002), donor/raw step var 1.026 | mag step corr -0.054 (p5 -0.077, p95 -0.029), donor/raw step var 1.056
+lowpass sensor_1: accel step corr +0.044 (p5 +0.037, p95 +0.053), donor/raw step var 0.991 | mag step corr +0.034 (p5 +0.029, p95 +0.040), donor/raw step var 0.995
+lowpass sensor_2: accel step corr +0.043 (p5 +0.035, p95 +0.049), donor/raw step var 0.994 | mag step corr +0.010 (p5 +0.009, p95 +0.012), donor/raw step var 1.005
+lowpass sensor_3: accel step corr +0.014 (p5 +0.012, p95 +0.016), donor/raw step var 0.995 | mag step corr +0.038 (p5 +0.035, p95 +0.042), donor/raw step var 0.994

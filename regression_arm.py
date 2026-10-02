@@ -109,8 +109,10 @@ def main():
     res = joint_gate(args.seeds, args.duration)
     print("\n=== summary ===")
     for seed, rep in res.items():
-        failed = [f"{c.sensor}/{c.name}" for c in rep.checks if not c.passed]
-        print(f"  seed {seed}: {'PASS' if rep.passed else 'FAIL ' + ', '.join(failed)}")
+        failed = [f"{c.sensor}/{c.name}" for c in rep.checks if not c.passed and not c.informational]
+        info = [f"{c.sensor}/{c.name}" for c in rep.checks if not c.passed and c.informational]
+        print(f"  seed {seed}: {'PASS' if rep.passed else 'FAIL ' + ', '.join(failed)}"
+              + (f"  (reported, not blocking, above threshold: {', '.join(info)})" if info else ""))
         ok &= rep.passed
     if args.json:
         json.dump({str(seed): rep.to_dict() for seed, rep in res.items()}, open(args.json, "w"), indent=1)

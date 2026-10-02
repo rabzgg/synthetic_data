@@ -7,7 +7,8 @@ Level 2 (which arm link a sensor is on) is NOT answered: the mapping is [USER TO
 1. C2ST per sensor: random forest separating real (first 60 min) from synthetic (60 min), motion
    features only (quat, accel, mag, body angular velocity, gravity from quat; no temp / light /
    humidity / pressure / id / timestamp), 10 s windows, block-of-cycles folds. 0.5 = cannot tell apart.
-   - baseline: real vs real (interleaved halves of the same 60 min) from gate_thresholds.json
+   - null: label-permutation null (same windows, same folds) from gate_thresholds.json;
+     threshold = null p95 + 2 sd over seeds. C2ST is a reported metric, not a blocking gate check.
    - control: the old per-column generator (deck files) must be far above the baseline
 2. Fingerprints F1-F5: d(synthetic_k, real_k) next to d(real_k half A, real_k half B).
 3. F6 counter-rotation about the vertical (quaternions slerped to 10 Hz, per-sensor thresholds).
@@ -58,7 +59,7 @@ for k in K:
         cols = [st * 16 + c for st in range(5) for c in chs]
         groups[g] = SI.c2st(XR[:, cols], SI.block_fold(cR), XS[:, cols], SI.block_fold(cS))
     t = thr["c2st"][k]
-    rep["c2st"][k] = {"baseline_mean": t["baseline_mean"], "baseline_sd": t["baseline_sd"], "threshold": t["threshold"],
+    rep["c2st"][k] = {"null_mean": t["null_mean"], "null_sd": t["null_sd"], "null_p95": t["null_p95"], "threshold": t["threshold"],
                       "synthetic": c_syn, "synthetic_mean": float(np.mean(c_syn)), "synthetic_sd": float(np.std(c_syn, ddof=1)),
                       "deck_control": c_deck, "has_power": bool(c_deck > t["threshold"]),
                       "synthetic_passes": bool(np.mean(c_syn) <= t["threshold"]),
@@ -102,10 +103,12 @@ L = ["# Sensor identity report (Level 1)", "",
      "Can synthetic sensor_k be told apart from real sensor_k? Sensor -> arm-link mapping is "
      "**[USER TO VERIFY]**; nothing here makes a Level-2 claim.", "",
      "## C2ST (balanced accuracy; 0.5 = indistinguishable)", "",
-     "| sensor | real vs real (baseline) | threshold | synthetic (5 seeds) | old generator (control) | test has power | synthetic passes |",
+     "C2ST is reported, it does not block generation. Threshold = 95th percentile of a label-permutation "
+     "null (same windows, same folds) + 2 sd over seeds.", "",
+     "| sensor | permutation null | threshold | synthetic (5 seeds) | old generator (control) | test has power | synthetic below threshold |",
      "|---|---|---|---|---|---|---|"]
 for k, r in rep["c2st"].items():
-    L.append(f"| {k} | {r['baseline_mean']:.3f} ± {r['baseline_sd']:.3f} | {r['threshold']:.3f} | "
+    L.append(f"| {k} | {r['null_mean']:.3f} ± {r['null_sd']:.3f} (p95 {r['null_p95']:.3f}) | {r['threshold']:.3f} | "
              f"{r['synthetic_mean']:.3f} ± {r['synthetic_sd']:.3f} | {r['deck_control']:.3f} | "
              f"{'yes' if r['has_power'] else 'NO'} | {'yes' if r['synthetic_passes'] else '**no**'} |")
 L += ["", f"C2ST restricted to one feature group (seed {args.seeds[0]}):", "",
@@ -129,4 +132,4 @@ for key in rep["f6"]["real"]:
     L.append(f"| {key} | {rep['f6']['real'][key]:.1f} | {rep['f6']['synthetic_mean'][key]:.1f} ± "
              f"{rep['f6']['synthetic_sd'][key]:.1f} | {rep['f6']['deck'][key]:.1f} |")
 open(os.path.join(args.out, "identity_report.md"), "w").write("\n".join(L) + "\n")
-print("wrote", os.path.join(args.out, "identity_report.md"))
+print("wrote", os.path.relpath(os.path.join(args.out, "identity_report.md"), ROOT))

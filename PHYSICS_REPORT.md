@@ -106,10 +106,18 @@ Result: exactly what expected, nothing more and nothing less.
 - **Claim:** physical consistency is inherited from the real recording; whole
   orientation–accel–mag cycles are taken together and the three sensors share the
   same schedule.
-- All physics checks pass on 5 seeds and on every hour of a 3-hour run, **except two**:
-  - the classifier two-sample test (C2ST) fails on all sensors: a classifier can
-    still tell synthetic from real;
-  - sensor_2 omega p99 is 1.2–2.2 % low against a ±1.4 % data-derived tolerance.
+- **The physics gate passes on all 5 seeds and on every hour of a 3-hour run.**
+- The classifier two-sample test (C2ST) is a **reported metric, not a blocking check**
+  (user decision). It is above its threshold on all sensors (0.64–0.71): a classifier can
+  still tell synthetic from real, mainly by accel and mag.
+- Review rounds:
+  - Round 2 (`results/joint_template/ablation/README.md`): one ablation per cause.
+    Timestamps are a confirmed cause, fixed with real offset blocks.
+  - Round 3 (`results/joint_template/round3/README.md`):
+    - the leak-free accel/mag split was tried once, failed for C2ST and was not adopted;
+    - the omega tolerance was re-derived;
+    - the C2ST threshold now comes from a permutation null;
+    - dropped ticks now come from real blocks.
 - The sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing below says which link
   a sensor is on.
 
@@ -130,7 +138,8 @@ Result: exactly what expected, nothing more and nothing less.
 |---|---|---|
 | quaternion repeats exactly (freeze) | 93–95 % of samples below 0.2°/s, ~0 % above | the real per-sample freeze pattern of the replayed cycle |
 | quaternion noise | whatever the recording has | recorded quaternion as is (no smoothing, nothing added) |
-| sample timing | regular internal clock; only the logged timestamp jitters (step angle vs dt corr ≈ 0, dt lag-1 autocorr −0.4 to −0.5) | regular clock, timestamp = clock + Gaussian logging jitter (sd from real) |
+| sample timing | regular internal clock (100.003 ms); only the logged timestamp is offset (step angle vs dt corr ≈ 0): heavy-tailed delivery delay — late sample then catch-up, backlogs of several samples delivered within a few ms — shared between sensors (s1–s3 92 % vs 14 % chance) | regular clock, timestamp = clock + real offset blocks (~60 s) from the same real time span for all sensors |
+| dropped samples | 0.31–0.68 % of ticks (block measure), plus one 74 s outage in all sensors | the ticks dropped in the same real offset blocks (0.3–0.7 %); the outage is not reproduced |
 | accel step while the whole arm is still | typically 1 LSB (0.001 g), std 0.004–0.009 g (clustered) | residual of another real cycle, same phase |
 | accel noise while the arm moves | 2–5× larger (vibration) | (same) |
 | resolution | quat 1e-4, accel 0.001 g, mag integer | same |
@@ -141,39 +150,53 @@ For accel noise:
 - Phase-aligned residual swap gives ~92 %.
 
 ### Physics gate (`physics_gate.py`; real in brackets)
-Thresholds:
+Blocking checks:
 - validity: 0 % of samples with s > 1 + 1e-3
 - gravity: median quiet error < 2°
-- omega p99: within a per-sensor data-derived tolerance: real 60-min-window variation
-  + 2 sd over seeds (`derive_gate_thresholds.py` → `configs/robot_arm/gate_thresholds.json`).
-  This gives ±3.6 % / ±1.4 % / ±0.9 % (was ±25 %).
+- omega p99: within a per-sensor data-derived tolerance, computed as real 60-min-window
+  variation + 2 sd over seeds (`derive_gate_thresholds.py` → `configs/robot_arm/gate_thresholds.json`).
+
+  | sensor | previous (seed term from Gaussian jitter) | **now (seed term from empirical jitter)** |
+  |---|---|---|
+  | sensor_1 | ±3.6 % (3.3 natural + 0.4 seeds) | **±7.0 %** (3.3 + 3.7) |
+  | sensor_2 | ±1.4 % (0.6 + 0.8) | **±2.1 %** (0.6 + 1.5) |
+  | sensor_3 | ±0.9 % (0.5 + 0.4) | **±1.2 %** (0.5 + 0.7) |
+
+  - **Why it changed:** the previous seed term came from the Gaussian jitter model, which was
+    replaced by real offset blocks. With real offset blocks, the p99 depends on which real
+    backlogs a seed draws.
+  - Both values are kept in `gate_thresholds.json` (`rel_tol`, `rel_tol_previous`, `change_reason`).
+  - Caveat: the seed term comes from the same 5 seeds the gate is then run on.
 - jumps: 0 one-sample non-flip quaternion jumps. Gap transitions must be ≤ real p99 + 25 %.
 - Check 7b ≥ 85 %, Check 7c lag 0 ms
 - copy: ≤ 5 % of windows with corr > 0.99 (sensor_1, sensor_2; sensor_3 is excluded
   because its real cycles are near-identical)
-- C2ST per sensor: ≤ real-vs-real baseline + 2·sqrt(sd_seed² + sd_baseline²).
-  This gives 0.621 / 0.577 / 0.523.
 
-| seed | grav s1/s2/s3 (1.11/0.33/0.33°) | omega p99 s1/s2/s3 (44.9/16.4/43.1) | C2ST s1/s2/s3 | 7b (94.3) | 7c | result |
+Reported, **not blocking** (user decision):
+- C2ST per sensor, against a threshold of the 95th percentile of a label-permutation null
+  (same windows, same block folds, 100 shuffles) + 2 sd over seeds: 0.583 / 0.606 / 0.566.
+- The old threshold (real-vs-real baseline + margin: 0.621 / 0.577 / 0.523) was removed.
+
+| seed | grav s1/s2/s3 (1.11/0.33/0.33°) | omega p99 s1/s2/s3 (44.9/16.4/43.1) | 7b (94.3) | 7c | physics gate | C2ST s1/s2/s3 (reported) |
 |---|---|---|---|---|---|---|
-| 42 | 1.23 / 0.33 / 0.34 | 44.0 / **16.14** / 42.8 | **0.68 / 0.68 / 0.79** | 92.4 | 0 ms | FAIL: C2ST ×3, s2 omega |
-| 43 | 1.28 / 0.33 / 0.34 | 44.0 / **16.16** / 43.0 | **0.72 / 0.71 / 0.74** | 92.4 | 0 ms | FAIL: C2ST ×3, s2 omega |
-| 44 | 1.33 / 0.33 / 0.35 | 43.8 / **16.05** / 42.9 | **0.72 / 0.72 / 0.76** | 92.2 | 0 ms | FAIL: C2ST ×3, s2 omega |
-| 45 | 1.29 / 0.33 / 0.34 | 43.8 / 16.21 / 42.8 | **0.68 / 0.67 / 0.75** | 92.7 | 0 ms | FAIL: C2ST ×3 |
-| 46 | 1.19 / 0.33 / 0.34 | 44.0 / **16.10** / 42.8 | **0.68 / 0.69 / 0.79** | 93.1 | 0 ms | FAIL: C2ST ×3, s2 omega |
+| 42 | 1.26 / 0.33 / 0.34 | 46.3 / 16.5 / 43.0 | 92.2 | 0 ms | PASS | 0.68 / 0.67 / 0.71 |
+| 43 | 1.28 / 0.33 / 0.34 | 46.7 / 16.7 / 43.3 | 92.2 | 0 ms | PASS | 0.71 / 0.69 / 0.69 |
+| 44 | 1.33 / 0.33 / 0.35 | 45.3 / 16.5 / 43.2 | 92.1 | 0 ms | PASS | 0.71 / 0.71 / 0.70 |
+| 45 | 1.31 / 0.33 / 0.34 | 44.8 / 16.4 / 43.0 | 92.5 | 0 ms | PASS | 0.66 / 0.68 / 0.68 |
+| 46 | 1.20 / 0.33 / 0.34 | 46.6 / 16.7 / 43.3 | 92.8 | 0 ms | PASS | 0.69 / 0.64 / 0.68 |
 
 Validity, jumps, gap jumps and copy are 0 in every seed and every hour.
 
 Against `baseline_before.json` (deck, seed 42):
-- sensor_1 gravity 36.2 → 1.23°; omega p99 722 → 44.0°/s; % s > 1 (strict) 4.86 → 0.13 (real 0.14).
+- sensor_1 gravity 36.2 → 1.26°; omega p99 722 → 46.3°/s.
 - sensor_3 gravity 27.9 → 0.34°.
 
 ### Longer than the recording (3 h, seed 42; recording = 94.9 min)
-| hour | grav s1 | omega p99 s1 / s2 | C2ST s1/s2/s3 | 7b | 7c | result |
+| hour | grav s1 | omega p99 s1 / s2 / s3 | 7b | 7c | physics gate | C2ST s1/s2/s3 (reported) |
 |---|---|---|---|---|---|---|
-| 1 (0–60 min) | 1.25° | 44.0 / **16.14** | 0.66 / 0.68 / 0.78 | 92.4 % | 0 ms | FAIL: C2ST ×3, s2 omega |
-| 2 (60–120, crosses end of recording) | 1.28° | 44.1 / **16.15** | 0.64 / 0.71 / 0.61 | 92.2 % | 0 ms | FAIL: C2ST ×3, s2 omega |
-| 3 (120–180, all past the recording) | 1.29° | 44.0 / **16.10** | 0.84 / 0.84 / 0.82 | 92.1 % | 0 ms | FAIL: C2ST ×3, s2 omega |
+| 1 (0–60 min) | 1.30° | 46.3 / 16.5 / 43.0 | 92.2 % | 0 ms | PASS | 0.67 / 0.67 / 0.70 |
+| 2 (60–120, crosses end of recording) | 1.31° | 46.3 / 16.6 / 43.4 | 91.9 % | 0 ms | PASS | 0.62 / 0.70 / 0.59 |
+| 3 (120–180, all past the recording) | 1.35° | 45.3 / 16.4 / 43.0 | 92.0 % | 0 ms | PASS | 0.82 / 0.84 / 0.83 |
 
 - Splices after the recording: tilt ≤ 0.19°, full pose ≤ 2.97°, no fallbacks.
 - Only 25 of 120 cycles are pose-compatible with the end-of-recording pose, so the
@@ -190,24 +213,26 @@ C2ST setup:
 - Folds are contiguous blocks of 10 cycles. With cycle-interleaved folds, slow drift
   made the real-vs-real baseline collapse to 0.18, far below chance.
 
-| sensor | real vs real | threshold | synthetic (5 seeds) | old generator |
+| sensor | permutation null (mean ± sd, p95) | threshold | synthetic (5 seeds) | old generator |
 |---|---|---|---|---|
-| sensor_1 | 0.444 ± 0.086 | 0.621 | **0.694 ± 0.022** | 0.977 |
-| sensor_2 | 0.419 ± 0.076 | 0.577 | **0.695 ± 0.021** | 0.999 |
-| sensor_3 | 0.397 ± 0.059 | 0.523 | **0.766 ± 0.020** | 1.000 |
+| sensor_1 | 0.502 ± 0.026, 0.541 | 0.583 | **0.692 ± 0.021** | 0.977 |
+| sensor_2 | 0.505 ± 0.027, 0.549 | 0.606 | **0.680 ± 0.028** | 0.999 |
+| sensor_3 | 0.504 ± 0.024, 0.540 | 0.566 | **0.688 ± 0.013** | 1.000 |
 
 What C2ST shows:
 - The test has power: the old generator is caught almost perfectly.
-- Synthetic fails it.
-- By feature group (seed 42): quaternion 0.47–0.50 and gravity 0.52 are
-  indistinguishable from real. Accel (0.62–0.65), angular velocity (0.61–0.72) and,
-  for sensors 2/3, mag (0.69–0.71) carry the difference.
-- The real-vs-real baseline sits below 0.5 (0.40–0.44). The threshold uses it as
-  specified; against 0.5 the result is the same.
+- Synthetic is above the threshold on all sensors. This is reported; it does not block.
+- By feature group (5 seeds), quaternion and gravity are indistinguishable from real (0.50–0.55).
+  - Angular velocity is close after the timestamp fix (0.65 / 0.58 / 0.53).
+  - Accel (0.63–0.66) and, for sensors 2/3, mag (0.67–0.68) carry the difference.
+- A real-vs-real split of the same 60 min scores 0.40–0.44, below chance (slow drift).
+  The permutation null cannot reproduce that, so it centres on 0.50.
 
 Fingerprint distances F1–F5, synthetic vs real next to real half A vs half B:
-- Synthetic is within about 1–5× of the split-half distance, for example F3 0.07 vs 0.13
-  and F4 0.018 vs 0.006 for sensor_1.
+- Synthetic is mostly within about 1–5× of the split-half distance, for example F3 0.07 vs
+  0.13 for sensor_1.
+- Exception: F4 (angular speed distribution) for sensor_1 is 0.047 vs 0.006 (8×; it was 0.018
+  with Gaussian jitter). This reflects the +2 % omega p99 offset of sensor_1.
 - The old generator is 100–1000× away.
 - The earlier "sensor recognition" classifier was removed: the old generator passed it too.
 
@@ -215,9 +240,9 @@ F6, counter-rotation about the vertical (quaternions slerped to 10 Hz):
 
 | pair | real | synthetic (5 seeds) | old generator |
 |---|---|---|---|
-| 1–2, per sample, threshold 50 % of each sensor's p95 \|wz\| | 1.2 % | 0.9 ± 0.5 % | 52.6 % |
-| 1–2, per sample, fixed 3°/s | 1.1 % | 5.4 ± 0.3 % | 50.0 % |
-| 2–3, per motion episode | 3.2 % | 0.9 ± 0.9 % | 65.0 % |
+| 1–2, per sample, threshold 50 % of each sensor's p95 \|wz\| | 1.2 % | 2.1 ± 0.5 % | 52.6 % |
+| 1–2, per sample, fixed 3°/s | 1.1 % | 5.4 ± 0.4 % | 50.0 % |
+| 2–3, per motion episode | 3.2 % | 1.1 ± 0.8 % | 65.0 % |
 
 - The 26.7 % previously reported for real 1–2 was a measurement artifact: wz
   interpolated across gaps, and a 3°/s threshold on a sensor whose yaw is mostly
@@ -247,9 +272,16 @@ F6, counter-rotation about the vertical (quaternions slerped to 10 Hz):
 - Drift is not extrapolated outside the recording (log warning when the requested duration is longer).
 - Noise is resampled real residuals, not a parametric model.
 - The copy-paste check is uninformative for sensor_3.
-- C2ST fails: synthetic accel, angular-velocity and mag windows are still separable from real.
-- sensor_2 omega p99 is just outside its tight data-derived tolerance (Gaussian
-  logging jitter vs heavy-tailed real jitter).
+- C2ST (reported, not blocking) is above its threshold: synthetic accel and mag windows
+  are still separable from real.
+  - Swapping in another cycle's residual loses the smooth–residual step covariance of a real
+    cycle.
+  - A leak-free low-pass split restores the step variance but does not reduce accel C2ST (round 3).
+  - The cause of the remaining accel separability is open.
+- sensor_1 omega p99 sits about +2 % above real; the re-derived ±7 % tolerance contains it.
+- The 74 s outage in the real recording (all sensors) is not reproduced.
+- Earlier statement corrected: dt lag-1 autocorrelation over the full recording is −0.1 to −0.2
+  (−0.4 to −0.5 held only for the first 100 rows).
 - With the flag OFF, `ppt/arm_robot/sensor_1_syn.csv` already differed from a fresh
   run in the `temperature` column *before* this work (an older, unrelated change).
   sensor_2/3 are byte-identical.
