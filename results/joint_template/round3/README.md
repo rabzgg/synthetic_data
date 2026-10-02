@@ -76,7 +76,10 @@ Same formula in `derive_gate_thresholds.py`: natural variation of the real p99 o
   With real offset blocks, p99 depends on which real backlogs a seed draws, so it varies more
   between seeds.
 - Both values are stored side by side (`rel_tol`, `rel_tol_previous`, `change_reason`).
-- **Caveat:** the seed term is estimated from the same 5 seeds the gate is then run on.
+- The seed term was estimated from the same 5 seeds the gate was first run on, so it was checked
+  on 10 held-out seeds (100–109) without changing it. All blocking checks pass on 10/10 for every
+  sensor. The largest omega deviation is 0.78 / 0.66 / 0.43 of the tolerance. See
+  PHYSICS_REPORT.md and `../gate/heldout_seeds_100_109.log`.
 - sensor_1 synthetic sits +2.1 % above real on average; the wider band now contains that.
 
 ## 3. C2ST threshold (permutation) and status (reported, not blocking)

@@ -106,7 +106,9 @@ Result: exactly what expected, nothing more and nothing less.
 - **Claim:** physical consistency is inherited from the real recording; whole
   orientation–accel–mag cycles are taken together and the three sensors share the
   same schedule.
-- **The physics gate passes on all 5 seeds and on every hour of a 3-hour run.**
+- **The physics gate passes on all 5 seeds, on every hour of a 3-hour run, and on 10
+  held-out seeds (100–109) that were not used to derive any threshold.**
+- Recommended duration: ≤ the recording length (94.9 min). See Limitations.
 - The classifier two-sample test (C2ST) is a **reported metric, not a blocking check**
   (user decision). It is above its threshold on all sensors (0.64–0.71): a classifier can
   still tell synthetic from real, mainly by accel and mag.
@@ -186,6 +188,18 @@ Reported, **not blocking** (user decision):
 | 46 | 1.20 / 0.33 / 0.34 | 46.6 / 16.7 / 43.3 | 92.8 | 0 ms | PASS | 0.69 / 0.64 / 0.68 |
 
 Validity, jumps, gap jumps and copy are 0 in every seed and every hour.
+
+Held-out check of the omega tolerance (seeds 100–109, never used to derive it; thresholds file
+unchanged; `results/joint_template/gate/heldout_seeds_100_109.log`, `gate_heldout_seeds_100_109.json`):
+
+| sensor | omega p99 vs real (10 seeds) | tolerance | largest deviation / tolerance | all blocking checks pass |
+|---|---|---|---|---|
+| sensor_1 | −1.7 .. +5.5 % (mean +1.4 %) | ±7.0 % | 0.78 | **10 / 10** |
+| sensor_2 | −0.1 .. +1.4 % (mean +0.8 %) | ±2.1 % | 0.66 | **10 / 10** |
+| sensor_3 | −0.5 .. +0.5 % (mean +0.1 %) | ±1.2 % | 0.43 | **10 / 10** |
+
+- By the agreed rule (≥ 9/10 per sensor), the tolerance holds.
+- On the same seeds: 7b is 91.8–92.7 %, 7c is 0 ms, and C2ST (reported) is 0.650–0.742.
 
 Against `baseline_before.json` (deck, seed 42):
 - sensor_1 gravity 36.2 → 1.26°; omega p99 722 → 46.3°/s.
@@ -268,18 +282,22 @@ F6, counter-rotation about the vertical (quaternions slerped to 10 Hz):
   residuals are autocorrelated.
 
 ### Limitations
+- **Recommended duration: ≤ the recording length (94.9 min).**
+  - Past that, the physics gate still passes, but C2ST rises to 0.82–0.84 (hour 3 of the
+    3-hour run), because drift outside the recording is not modelled.
+  - Cycles past the recording come from the pose-compatible pool, and a warning is logged.
 - It replays patterns that were recorded; it cannot produce a motion the arm never made.
-- Drift is not extrapolated outside the recording (log warning when the requested duration is longer).
 - Noise is resampled real residuals, not a parametric model.
 - The copy-paste check is uninformative for sensor_3.
-- C2ST (reported, not blocking) is above its threshold: synthetic accel and mag windows
-  are still separable from real.
-  - Swapping in another cycle's residual loses the smooth–residual step covariance of a real
-    cycle.
-  - A leak-free low-pass split restores the step variance but does not reduce accel C2ST (round 3).
-  - The cause of the remaining accel separability is open.
+- **C2ST accel/mag: cause unknown.** C2ST is reported, not blocking. It sits above its
+  threshold because synthetic accel and mag windows are still separable from real.
+  - The savgol mechanism was fixed (round 3): with a leak-free low-pass split, the in-cycle
+    step correlation is ≈ 0 and the step variance equals real.
+  - But accel C2ST fell only 0.01–0.03, so that mechanism is not the main cause.
+  - No further accel/mag work is planned in this PR.
 - sensor_1 omega p99 sits about +2 % above real; the re-derived ±7 % tolerance contains it.
-- The 74 s outage in the real recording (all sensors) is not reproduced.
+- The 74 s outage in the real recording (all three sensors at once) is not reproduced. It is
+  an anomaly, not normal logging behaviour. Normal dropped ticks (0.3–0.7 %) are reproduced.
 - Earlier statement corrected: dt lag-1 autocorrelation over the full recording is −0.1 to −0.2
   (−0.4 to −0.5 held only for the first 100 rows).
 - With the flag OFF, `ppt/arm_robot/sensor_1_syn.csv` already differed from a fresh

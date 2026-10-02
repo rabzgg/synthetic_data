@@ -4,11 +4,21 @@ Everything here was produced by the scripts in the repo root, with the flag
 `motion.joint_template` ON (configs `configs/robot_arm/sensor_k_joint.json`).
 All runs are deterministic: the same seed reproduces the same files.
 
-**Status:** the physics gate passes on all 5 seeds and on every hour of a 3-hour run.
+**Status:** the physics gate passes on all 5 seeds, on every hour of a 3-hour run, and on
+10 held-out seeds (100–109, 10/10 per sensor).
 C2ST is reported, not blocking: a classifier can still tell synthetic from real on all
 three sensors (0.69 / 0.68 / 0.69 vs thresholds 0.583 / 0.606 / 0.566).
 
 See PHYSICS_REPORT.md, "Joint template".
+
+**Limitations (see PHYSICS_REPORT.md for detail):**
+- Recommended duration: ≤ the recording length (94.9 min). Past that, the physics gate still
+  passes, but C2ST rises to 0.82–0.84 because drift outside the recording is not modelled.
+- C2ST accel/mag: cause unknown.
+  - The savgol mechanism was fixed: step correlation ≈ 0, step variance = real.
+  - But C2ST fell only 0.01–0.03, so that mechanism is not the main cause.
+- The 74 s outage in the real recording is not reproduced. It is an anomaly, not normal behaviour.
+- Sensor → arm-link mapping: **[USER TO VERIFY]**.
 
 `gate/`, `identity/` and `csv/` hold the **current** engine: empirical timestamp offsets,
 real dropped ticks, savgol accel/mag split. The thresholds are from round 3. The earlier
@@ -22,6 +32,7 @@ states are in git history.
 |---|---|---|
 | `derive_gate_thresholds.log`, `gate_thresholds.json` | `python3 derive_gate_thresholds.py` | data-derived omega p99 tolerance and C2ST threshold per sensor (copy of `configs/robot_arm/gate_thresholds.json`) |
 | `regression_arm.log`, `gate_5seeds.json` | `python3 regression_arm.py --json gate/gate_5seeds.json` | flag-OFF check vs deck files, full gate for seeds 42–46 (C2ST shown as INFO), comparison with `baseline_before.json` |
+| `heldout_seeds_100_109.log`, `gate_heldout_seeds_100_109.json` | `python3 regression_arm.py --seeds 100 ... 109 --skip-flag-off --json ...` | held-out check of the omega tolerance: full gate on 10 seeds not used to derive it |
 | `long_duration_3h.log`, `gate_3h_per_hour.json` | `python3 long_duration_test.py --hours 3 --seed 42 --json gate/gate_3h_per_hour.json` | 3-hour run (recording is 94.9 min), gate per hour, splice continuity |
 
 ## identity/

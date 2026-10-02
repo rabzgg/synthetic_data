@@ -272,20 +272,23 @@ joint-template generation unless `--no-physics-gate` is given.
 
 **Limitations (must stay in any write-up):**
 - It replays patterns that were recorded; it cannot produce a motion the arm never made.
-- Drift is not extrapolated outside the recording. Past 95 min the pose stays
-  near the end-of-recording pose (only 25 of 120 cycles are pose-compatible there).
+- Recommended duration ≤ the recording (94.9 min). Drift is not extrapolated outside the
+  recording: past 95 min the pose stays near the end-of-recording pose (only 25 of 120
+  cycles are pose-compatible there). The physics gate still passes, but C2ST rises to
+  0.82–0.84.
 - Noise is resampled real residuals, not a parametric model.
 - The copy-paste check is uninformative for sensor_3 (its real cycles are near-identical).
 - A classifier can still tell synthetic from real: C2ST 0.69 / 0.68 / 0.69 against a
   permutation-null threshold of 0.583 / 0.606 / 0.566.
   - C2ST is a reported metric, not a blocking gate check (user decision). The physics gate
     passes.
-  - The separable groups are accel and mag. Orientation and gravity are not separable, and
-    angular velocity is close (0.65 / 0.58 / 0.53).
+  - The separable groups are accel and mag, and the cause is unknown. Fixing the savgol
+    step covariance (round 3) changed accel C2ST by only 0.01–0.03. Orientation and gravity
+    are not separable, and angular velocity is close (0.65 / 0.58 / 0.53).
   - See `results/joint_template/ablation/README.md` and `results/joint_template/round3/README.md`.
 - Omega p99 sits +2.1 / +0.9 / +0.2 % from real. Its tolerance (±7.0 / ±2.1 / ±1.2 %) was
   re-derived with the empirical jitter; it was ±3.6 / ±1.4 / ±0.9 % with Gaussian jitter.
-- The one 74 s outage in the real recording is not reproduced.
+- The one 74 s outage in the real recording is not reproduced (an anomaly, not normal logging).
 - Sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing here identifies which link a sensor is on.
 
 **Retired / parked for arm_robot:** the planned Phase 2 (derive gravity from the
