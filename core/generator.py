@@ -6,12 +6,10 @@ import json
 import copy
 from scipy.signal import argrelmax # type: ignore
 
-# ─────────────────────────────────────────────────────────────
-# ENVIRONMENT PRESETS
+# Environment presets.
 # Keys: season → column → (base, daily_amplitude, humidity_inverse)
 # temp/humidity values are in the same unit as the sensor output
 # (raw XDK units: temperature in millidegrees-ish, ~24000 = 24°C × 1000)
-# ─────────────────────────────────────────────────────────────
 SEASON_PRESETS = {
     #              base_temp  amp_temp  base_hum  amp_hum
     "summer":      dict(base_temp=30.0, amp_temp=4.0,  base_hum=70.0, amp_hum=8.0),
@@ -24,12 +22,10 @@ SEASON_PRESETS = {
 
 INDOOR_DAMPING = 0.35   # indoor AC damps seasonal swing to 35% of outdoor
 
-# ─────────────────────────────────────────────────────────────
-# ANOMALY TEMPLATES
+# Anomaly templates.
 # Define what each named anomaly does per column category.
 # Categories: "temperature", "humidity", "pressure", "light",
 #             "acceleration", "orientation", "magnetic"
-# ─────────────────────────────────────────────────────────────
 ANOMALY_TEMPLATES = {
     "overheat": {
         # sensor internal heat spike: temp shoots up, everything else noisy
@@ -1038,7 +1034,7 @@ class SyntheticXDKGenerator:
                 raw = SensorRealism(**realism_config).apply(raw, self.rng)
             data[col_name] = raw
 
-        # ── Joint-template motion (arm_robot). Flag, default OFF. Replaces the
+        # Joint-template motion (arm_robot). Flag, default OFF. Replaces the
         # motion columns (quat, accel, mag) with whole real cycles replayed jointly,
         # on a cycle schedule shared by every sensor of the arm. The per-column
         # engines above still run, so the RNG stream — and therefore every
@@ -1062,10 +1058,9 @@ class SyntheticXDKGenerator:
                       f"({jt.bank.recording_s:.0f}s); drift outside the recording window is not modelled. "
                       f"Cycles past the recording come from the whole pool with pose-continuous splices.")
 
-        # ── Physics fix (Phase 1) — enforce quaternion validity. Flag, default OFF.
-        # Runs AFTER every column's clipping, as a cross-column GROUP step: the
-        # unit-norm couples the orientation axes, so a per-column SensorRealism
-        # pass cannot see it. Deck numbers use the old behavior (flag off = no-op).
+        # Enforce quaternion validity (flag, default OFF). Runs after every column's
+        # clipping as a cross-column step: the unit norm couples the orientation axes,
+        # so a per-column SensorRealism pass cannot see it.
         if s.get("physics", {}).get("enforce_quaternion_norm", False):
             ox, oy, oz = "orientation_x", "orientation_y", "orientation_z"
             if all(c in data for c in (ox, oy, oz)):
@@ -1275,13 +1270,13 @@ class AutoFitter:
         hints = domain_hints or {}
         df = self.df
 
-        # --- Step 1: Timestamp analysis ---
+        # Step 1: Timestamp analysis
         ts_stats = self._analyze_timestamps()
 
-        # --- Step 2: Detect cycling in acceleration (check if environment has rhythm) ---
+        # Step 2: Detect cycling in acceleration (check if environment has rhythm)
         rhythm_config, cycling_states = self._detect_rhythm()
 
-        # --- Step 2b: Detect gated logging ---
+        # Step 2b: Detect gated logging
         # If a sizeable share of the recording window is >60s timestamp gaps,
         # the device only logs while active (XDK stops recording when the
         # compressor is off). The generator then drops OFF rows the same way.
@@ -1299,7 +1294,7 @@ class AutoFitter:
                     "_gap_fraction": round(gap_fraction, 3),
                 }
 
-        # --- Step 3: Build column configs ---
+        # Step 3: Build column configs
         columns = {}
         for col in self.sensor_columns:
             if col == 'timestamp':
@@ -1308,7 +1303,7 @@ class AutoFitter:
             if config is not None:
                 columns[col] = config
 
-        # --- Step 4: Build anomaly schedule from hints ---
+        # Step 4: Build anomaly schedule from hints
         anomalies = []
         if "anomaly_times" in hints:
             for i, (t_start, t_end) in enumerate(hints["anomaly_times"]):
@@ -1318,7 +1313,7 @@ class AutoFitter:
                     "state": f"anomaly_{i}"
                 })
 
-        # --- Step 5: Assemble scenario ---
+        # Step 5: Assemble scenario
         scenario = {
             "domain": hints.get("domain", "auto_fitted"),
             "sensor_position": hints.get("sensor_position", "unknown"),
@@ -1336,18 +1331,16 @@ class AutoFitter:
         if 'sensor_id' in df.columns:
             scenario["sensor_id"] = int(df['sensor_id'].iloc[0])
 
-        # --- Step 6: Pre-populate anomaly state mappings
+        # Step 6: Pre-populate anomaly state mappings
         self._populate_anomaly_states(scenario)
 
-        # --- Step 7: If user provided anomaly_times, fit anomaly params from actual data ---
+        # Step 7: If user provided anomaly_times, fit anomaly params from actual data
         if "anomaly_times" in hints:
             self._fit_anomaly_params_from_data(scenario, hints["anomaly_times"])
 
         return scenario
 
-    # -----------------------------------------------------------------
     # LABELED FITTING (supervised states, e.g. dog-robot pose labels)
-    # -----------------------------------------------------------------
 
     def fit_labeled(self, labels: np.ndarray, domain_hints: dict = None) -> dict:
         """
@@ -1900,9 +1893,7 @@ class AutoFitter:
 
         return on_durations, off_durations
 
-    # -----------------------------------------------------------------
     # PER-COLUMN FITTING
-    # -----------------------------------------------------------------
 
     def _fit_column(self, col: str, cycling_states) -> Optional[dict]:
         data = self.df[col].values
@@ -1916,14 +1907,14 @@ class AutoFitter:
         start_val = float(np.nanmean(data[:min(50, n)]))
         end_val = float(np.nanmean(data[max(0, n-50):]))
 
-        # --- Check 0a: Stable columns (pressure) FIRST ---
+        # Check 0a: Stable columns (pressure) FIRST
         # Must come before the relative_std static check: pressure has a large absolute
         # value (~98000 Pa) so its relative_std (~7e-5) wrongly triggers the static guard
         # and produces a noise=0 flat line.
         if col in self.STABLE:
             return self._fit_stable_signal(col, data)
 
-        # --- Check 0: Static column (sensor not moving, XDK repeats same value) ---
+        # Check 0: Static column (sensor not moving, XDK repeats same value)
         # Use the stable tail (skip first 10% which may contain settling transient)
         stable = data[max(1, n // 10):]
         stable_std = float(np.std(stable))
@@ -1941,7 +1932,7 @@ class AutoFitter:
                 }
             }
 
-        # --- Check 0a2: derived rolling-statistic column ---
+        # Check 0a2: derived rolling-statistic column
         # A column named like a rolling stat that correlates strongly with the
         # rolling std of an acceleration channel IS that statistic, computed
         # by the firmware. Fit it as a derived column so the synthetic version
@@ -1951,7 +1942,7 @@ class AutoFitter:
             if derived is not None:
                 return derived
 
-        # --- Check 0b: few-level event column (e.g. room light switching off once) ---
+        # Check 0b: few-level event column (e.g. room light switching off once)
         # A column that sits on a handful of discrete levels and switches rarely
         # is a level-shift EVENT column. Every other route misreads it: trending
         # fits a slow ramp between the levels, and the per-state route sees
@@ -1965,7 +1956,7 @@ class AutoFitter:
             if transitions <= 5:
                 return self._fit_level_event(col, clean, len(levels), transitions)
 
-        # --- Check 0c: Environmental sinusoidal (day/night U-shape or ∩-shape) ---
+        # Check 0c: Environmental sinusoidal (day/night U-shape or ∩-shape)
         # Require ≥18h of data: shorter windows can't distinguish a true daily cycle
         # from fast-rise-then-plateau (which triggers false ∩-shape reversal detection).
         if col in self.ENVIRONMENTAL:
@@ -1974,25 +1965,25 @@ class AutoFitter:
             if duration_h >= 18.0 and self._has_reversal(data, start_val, end_val):
                 return self._fit_sinusoidal(col, data)
 
-        # --- Check 1: Trending (gradual_curve) ---
+        # Check 1: Trending (gradual_curve)
         if self._is_trending(col, data, start_val, end_val, std_val):
             return self._fit_gradual_curve(col, data, start_val, cycling_states)
 
-        # --- Check 2: Responds to cycling? (priority over event detection) ---
+        # Check 2: Responds to cycling? (priority over event detection)
         if cycling_states is not None:
             state_aware = self._fit_state_aware(col, data, cycling_states)
             if state_aware is not None:
                 return state_aware
 
-        # --- Check 3: Periodic motion (must come BEFORE events) ---
+        # Check 3: Periodic motion (must come BEFORE events)
         if self._is_periodic_motion(data):
             return self._fit_cycle_template(col, data)
 
-        # --- Check 4: Event spikes ---
+        # Check 4: Event spikes
         if self._has_events(data):
             return self._fit_event_spike(col, data)
 
-        # --- Default: constant_noise ---
+        # Default: constant_noise
         return self._fit_constant_noise(col, data, cycling_states)
 
     def _fit_derived_rolling(self, col: str, data: np.ndarray) -> Optional[dict]:
@@ -2065,7 +2056,7 @@ class AutoFitter:
             config["realism"] = {"clip_min": 0}
         return config
 
-    # ----- Pattern detection helpers -----
+    # Pattern detection helpers
 
     def _is_trending(self, col: str, data: np.ndarray,
                      start_val: float, end_val: float, std_val: float) -> bool:
@@ -2242,8 +2233,8 @@ class AutoFitter:
                 # Monotonic trend (e.g. pressure drifting). Use pure-drift mode:
                 # constant slope (sign follows the data — falls if data falls, rises
                 # if data rises), with a common-sense clamp so it never runs to absurd
-                # values. This replaces the old far_target exponential trick, which
-                # made the signal flatten out instead of keep drifting.
+                # values. An exponential approach to a far target would flatten the
+                # signal instead of letting it keep drifting.
                 ts = self.df['timestamp'].values
                 duration_s = float((ts[-1] - ts[0]) / 1000.0)
                 if duration_s < 1.0:
@@ -2463,7 +2454,7 @@ class AutoFitter:
 
         return config
 
-    # ----- Engine fitting functions -----
+    # Engine fitting functions
 
     def _fit_cycle_template(self, col: str, data: np.ndarray) -> dict:
         """
@@ -2478,7 +2469,7 @@ class AutoFitter:
         t_seconds = (ts - ts[0]) / 1000.0
         total_dur = t_seconds[-1]
 
-        # --- Resting value and range ---
+        # Resting value and range
         hist, edges = np.histogram(data, bins=30)
         peak_bin = np.argmax(hist)
         resting_value = float((edges[peak_bin] + edges[peak_bin + 1]) / 2)
@@ -2488,7 +2479,7 @@ class AutoFitter:
         motion_target = active_low if excursion_down else active_high
         excursion = float(motion_target - resting_value)
 
-        # --- Period via autocorrelation ---
+        # Period via autocorrelation
         centered = data - np.mean(data)
         corr = np.correlate(centered, centered, mode='full')[n - 1:]
         if corr[0] != 0:
@@ -2511,7 +2502,7 @@ class AutoFitter:
         else:
             period_s = 20.0
 
-        # --- Drift ---
+        # Drift
         rest_threshold = abs(excursion) * 0.15
         rest_mask = np.abs(data - resting_value) < rest_threshold
         drift_rate = 0.0
@@ -2523,14 +2514,14 @@ class AutoFitter:
             except Exception:
                 pass
 
-        # --- Noise ---
+        # Noise
         if rest_mask.sum() > 50:
             rest_diffs = np.diff(data[rest_mask])
             noise_std = float(max(np.std(rest_diffs) / np.sqrt(2), 0.0005))
         else:
             noise_std = float(np.std(data) * 0.02)
 
-        # --- Extract cycle templates ---
+        # Extract cycle templates
         episode_mask = np.abs(data - resting_value) >= rest_threshold
         episode_starts = np.where(np.diff(episode_mask.astype(int)) > 0)[0]
 
@@ -2771,7 +2762,7 @@ class AutoFitter:
         """
         Fit LINEAR drift parameters (engine uses linear, not exponential).
 
-        rate is now in units-per-second (climb speed), computed simply as
+        rate is in units per second (climb speed), computed simply as
         total_change / duration. This produces a steady climb that, combined with
         stickiness + quantization, yields a realistic stair-step instead of an
         exponential curve that flattens near the target.
@@ -2808,7 +2799,7 @@ class AutoFitter:
         residual = data - rolling.values
         noise_std = float(np.nanstd(residual))
 
-        # --- Auto-detect stickiness & quantization from the real data ---
+        # Auto-detect stickiness & quantization from the real data
         # Stickiness = fraction of consecutive-identical samples. A sticky XDK column
         # (humidity, mag) holds its reading for long stretches. We feed that fraction
         # straight into the engine so the synthetic output holds values the same way.
@@ -2841,7 +2832,7 @@ class AutoFitter:
             if len(nz_diffs) >= 5:
                 noise_std = float(np.std(nz_diffs))
 
-        # --- Detect pure drift vs approach-then-plateau ---
+        # Detect pure drift vs approach-then-plateau
         # Pure drift (e.g. pressure falling for days): the signal keeps moving in one
         # direction with NO plateau. Approach-plateau (e.g. humidity 60->68 then holds):
         # the last chunk flattens out. We compare the slope of the first half vs the
@@ -2882,10 +2873,10 @@ class AutoFitter:
         if cycling_states is not None:
             # Per-phase targets = measured means in the PLATEAU region (after
             # settling), so the synthetic oscillates between the levels the
-            # real signal actually reaches per phase. The old heuristic
-            # (target +/- 10% of the total warm-up change) scaled the
-            # oscillation with the warm-up span, which has nothing to do with
-            # the per-phase wave amplitude.
+            # real signal actually reaches per phase. A target of +/- 10% of
+            # the total warm-up change would scale the oscillation with the
+            # warm-up span, which has nothing to do with the per-phase wave
+            # amplitude.
             valid = (cycling_states != "unknown")
             plateau = t_seconds >= settle_s
             for phase in ["phase_on", "phase_off"]:
@@ -3023,7 +3014,7 @@ class AutoFitter:
 
         return config
 
-    # ----- Realism estimation -----
+    # Realism estimation
 
     def _get_realism(self, col: str, data: np.ndarray) -> Optional[dict]:
         """Estimate sensor realism parameters from the data."""

@@ -8,7 +8,7 @@ motion column independently, each with its own template pick and its own
 period. For a rotating sensor that breaks the coupling between the quaternion
 axes (s = x²+y²+z² > 1, partial hemisphere flips → omega p99 722°/s), between
 orientation and accel (gravity error 36°) and between the three sensors on the
-arm (Check 7). See PHYSICS_REPORT.md, "Joint template".
+arm (Check 7). See docs/PHYSICS_REPORT.md, "Joint template".
 
 This engine instead replays WHOLE real cycles: one template is one real arm
 cycle holding [quat, accel, mag] of every sensor over the same time span, and
@@ -25,7 +25,7 @@ The schedule is a pure function of (bank, duration_s, seed), so separate
 main.py runs for sensor_1/2/3 with the same --seed and --duration produce the
 same schedule without talking to each other.
 
-Noise and timing model (measured on the real XDK, see PHYSICS_REPORT.md):
+Noise and timing model (measured on the real XDK, see docs/PHYSICS_REPORT.md):
   * timing: the XDK samples on a regular internal clock (100.003 ms) and only the logged timestamp
     is offset: a heavy-tailed delivery delay (late sample then catch-up; backlogs delivered within a
     few ms) that is shared between sensors. Templates sit on the real internal clock; motion is
@@ -59,7 +59,7 @@ BANK_VERSION = 4                       # v2: per-sample real XDK freeze flag; v3
                                        # v4: full real logged timestamps (empirical logging offsets)
 
 
-# ── quaternion helpers ─────────────────────────────────────────────────────────
+# quaternion helpers
 
 def canonicalize(q: np.ndarray) -> np.ndarray:
     """[w,x,y,z] rows -> w >= 0. A flip negates ALL four components together."""
@@ -97,7 +97,7 @@ def tilt_deg(qa: np.ndarray, qb: np.ndarray) -> np.ndarray:
     return np.degrees(np.arccos(np.clip(np.sum(ga * gb, axis=-1), -1.0, 1.0)))
 
 
-# ── real-data loading / analysis ───────────────────────────────────────────────
+# real-data loading / analysis
 
 def _abs_seconds(ts: pd.Series) -> np.ndarray:
     tn = pd.to_numeric(ts, errors="coerce")
@@ -192,7 +192,7 @@ def detect_cycles(t: np.ndarray, om: np.ndarray, thr: float, period: float) -> n
     return np.array(cycles)
 
 
-# ── bank ───────────────────────────────────────────────────────────────────────
+# bank
 
 def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
                rest_pose_tol_deg: float = 2.0, smooth_quat: bool = False,
@@ -258,7 +258,7 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
         raise ValueError(f"only {len(keep)} usable cycles found; need >= 5")
 
     # Heading drift of the XDK fusion: the rest orientation turns about the world vertical while
-    # mag_body and gravity_body stay constant (results/joint_template/drift). With dedrift_yaw the
+    # mag_body and gravity_body stay constant (docs/PHYSICS_REPORT.md). With dedrift_yaw the
     # measured yaw is removed from every sample (bank at the heading of the first cycles) and a
     # linear yaw(t) model is stored for the engine to put back.
     yaw_meta = {}
@@ -435,7 +435,7 @@ class JointBank:
                 "frozen": d["frozen"][lo:hi] if "frozen" in d else None}
 
 
-# ── schedule (shared by all sensors) ───────────────────────────────────────────
+# schedule (shared by all sensors)
 
 def build_schedule(bank: JointBank, duration_s: float, seed: int, local_window_s: float = 150.0,
                    warp_sd: float = 0.01, pose_tol_deg: float = 2.0, yaw_tol_deg: float = 3.0,
@@ -498,7 +498,7 @@ def build_schedule(bank: JointBank, duration_s: float, seed: int, local_window_s
     return sched, info
 
 
-# ── engine ─────────────────────────────────────────────────────────────────────
+# engine
 
 def _interp_segment(seg: dict, tau: np.ndarray, nearest: bool = False):
     tt = seg["tau"]
@@ -519,7 +519,7 @@ def _interp_segment(seg: dict, tau: np.ndarray, nearest: bool = False):
     return q, A, M, seg["rest"][near], frozen
 
 
-# ── logging-offset model (timestamp = internal clock tick + offset) ─────────────
+# logging-offset model (timestamp = internal clock tick + offset)
 
 def clock_period_ms(t: np.ndarray, span: int = 200, calm_ms: float = 4.0) -> float:
     """XDK internal sample period (ms) from calm-to-calm spans of `span` samples without missing
@@ -884,7 +884,7 @@ class JointTemplateEngine:
             for i in range(1, n):
                 if hold[i]:
                     Qq[i] = Qq[i - 1]
-        else:                                   # v1 banks: random hold at rest (old behaviour)
+        else:                                   # v1 banks have no freeze flag: random hold at rest
             upd = rng.random(n) < noise["p_update_rest"]
             for i in range(1, n):
                 if rest[i] and rest[i - 1] and not upd[i]:

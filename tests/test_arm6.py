@@ -15,9 +15,9 @@ import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-import physics_gate as G
-import real_bootstrap as RB
-import validate_physics as V
+from validation import physics_gate as G
+from validation import real_bootstrap as RB
+from validation import validate_physics as V
 from core.generator import SyntheticXDKGenerator
 from core.joint_template import A_COLS, M_COLS
 
