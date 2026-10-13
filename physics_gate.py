@@ -10,13 +10,16 @@ real recording at gate time):
   validity     0 % samples with s = x²+y²+z² > 1 + 1e-3 (after quantisation)
   gravity      median quiet-sample gravity angle error < 2°
   omega        omega p99 within a per-sensor tolerance of the real p99, derived from data
-               (gate_thresholds.json: real 60-min-window variation + 2 sd over seeds; ±25 % only
-               when no thresholds file is given)
+               (gate_thresholds.json; six-sensor config: real first 60 min ± 2·sqrt(σ_seed² + σ_real²),
+               σ_real from a block bootstrap over arm cycles; older files: whole recording ± real
+               60-min-window variation + 2 sd over seeds; ±25 % only when no thresholds file is given)
   jumps        0 one-sample quaternion jumps that are NOT a full q -> -q flip
   copy         % of cycle-length windows with max corr > 0.99 vs the real recording <= 5 %.
                Data rule (copy_informative): the check is "not informative" for a sensor when its own
                held-out real data (after the first 60 min) already scores >= 97 % on it against the
                real first 60 min -- genuine data would fail it. Then it is reported, not applied.
+               (The 0.97 is the FRACTION of held-out windows counted as copies.) sensor_4: copy is
+               reported, not blocking, by user decision (COPY_REPORTED_DECISION).
   grav_moving  [per sensor, REPORTED ONLY] gravity error while moving (quat R^T z vs accel), median and
                p95 within a data-derived tolerance of real first 60 min (imu_consistency.py)
   mag_world    [per sensor] spread of the world-frame mag direction R·(m − b) while moving, b = hard-iron
@@ -26,7 +29,7 @@ real recording at gate time):
                vs a threshold = 95th percentile of a label-permutation null (same windows, same
                folds) + 2 sd over seeds (gate_thresholds.json)
   check7a      [cross-sensor, every pair; only with a "cross_sensor" section in gate_thresholds.json]
-               activity correlation >= real first 60 min - (|half A - half B| + 2 sd over seeds)
+               activity correlation >= real first 60 min - 2·sqrt(σ_seed² + σ_real²) (block bootstrap)
   check7b      [cross-sensor] moving-mask agreement of ALL sensors: >= the data-derived bound from
                gate_thresholds.json "cross_sensor" (same formula as 7a); >= 85 % without that section
   check7c      [cross-sensor] activity cross-correlation lag for every pair: |lag| <= the largest |lag|
@@ -59,6 +62,12 @@ THRESHOLDS = {
     "copy_max_pct": 5.0,
 }
 COPY_UNINFORMATIVE_FRAC = 0.97   # held-out real scoring >= 97 % on the copy check -> check not informative
+# Copy reported, not blocking, by explicit user decision (not by the data rule above):
+COPY_REPORTED_DECISION = {
+    "sensor_4": "user decision 2026-10-13: sensor_4's magnetometer is strongly disturbed while the arm moves; "
+                "a residual from another cycle breaks mag <-> orientation consistency. We chose physical "
+                "consistency over novelty for this channel (mag residual from the same cycle).",
+}
 COPY_REF_SPAN_S = 3600.0         # reference = real first 60 min; held-out = the rest of the recording
 MOTION9 = ["orientation_x", "orientation_y", "orientation_z", "acceleration_x", "acceleration_y",
            "acceleration_z", "mag_x", "mag_y", "mag_z"]
@@ -218,14 +227,19 @@ def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport,
 
     om_s = np.percentile(V.omega_series(ds)["all"], 99)
     om_real_all = V.omega_series(dr)["all"]
-    om_r = np.percentile(om_real_all, 99)
-    tol = thresholds["omega_p99"][sensor]["rel_tol"] if thresholds else T["omega_rel_tol"]
+    om_full = np.percentile(om_real_all, 99)
+    th_om = thresholds["omega_p99"][sensor] if thresholds else None
+    tol = th_om["rel_tol"] if th_om else T["omega_rel_tol"]
+    # reference: the stored real p99 of the reference span (real first 60 min) when the thresholds
+    # carry one; older files: p99 of the whole real recording
+    om_r = th_om["real_p99"] if th_om and "reference_span_s" in th_om else om_full
+    ref_lbl = th_om.get("reference", "real") if th_om and "reference_span_s" in th_om else "real"
     src = "data-derived" if thresholds else "default"
     lo, hi = om_r * (1 - tol), om_r * (1 + tol)
-    report.add(Check("omega_p99", sensor, om_s, f"in [{lo:.2f}, {hi:.2f}] °/s (real {om_r:.2f} ±{100*tol:.1f}%, {src})",
+    report.add(Check("omega_p99", sensor, om_s, f"in [{lo:.2f}, {hi:.2f}] °/s ({ref_lbl} {om_r:.2f} ±{100*tol:.1f}%, {src})",
                      lo <= om_s <= hi))
 
-    gap_limit = om_r * (1 + T["omega_rel_tol"])
+    gap_limit = om_full * (1 + T["omega_rel_tol"])
     nj, ngv, ngap = nonflip_jumps(ds, gap_limit)
     report.add(Check("jumps", sensor, nj, "= 0 non-flip quaternion jumps (one-sample steps)", nj == 0,
                      f"{ngap} transition(s) across timestamp gaps checked by angular speed"))
@@ -235,7 +249,10 @@ def per_sensor_checks(syn_path, real_path, sensor, period_s, report: GateReport,
     cp = copy_pct(ds, dr, period_s)
     ci = copy_informative(real_path, period_s)
     req = f"<= {T['copy_max_pct']} % windows corr>{T['copy_corr']}"
-    if ci["informative"]:
+    if sensor in COPY_REPORTED_DECISION:
+        report.add(Check("copy", sensor, cp, req, cp <= T["copy_max_pct"],
+                         "reported, does not block: " + COPY_REPORTED_DECISION[sensor], informational=True))
+    elif ci["informative"]:
         report.add(Check("copy", sensor, cp, req, cp <= T["copy_max_pct"],
                          f"held-out real scores {100 * ci['heldout_copy_frac']:.1f} %"))
     else:

@@ -2,11 +2,15 @@
 derive_gate_thresholds.py — derive the data-driven physics-gate thresholds for the arm.
 
 Nothing here is a guess; every number comes from the real recording or from seed variation of
-the CURRENT engine (whatever the joint configs produce):
+the CURRENT engine (whatever the joint configs produce). Reference span = real first 60 min (the
+span a 60-min synthetic file replays), from the common start of all sensors of the bank.
 
-omega p99 tolerance (per sensor)
-    tol = max over real 60-min windows of |p99(window) - p99(full)| / p99(full)      (natural variation)
-        + 2 * std over seeds of synthetic p99 / p99(full)                             (generator variation)
+Real sampling uncertainty (real_bootstrap.py): moving-block bootstrap over arm cycles of the
+reference span (blocks of 10 cycles, 200 resamples): sigma_real = sd of the statistic over resamples.
+
+omega p99 (per sensor) and 7a activity correlation (per sensor pair) — one rule for all:
+    tol = 2 * sqrt(sigma_seed^2 + sigma_real^2)        sigma_seed = sd over seeds of the synthetic value
+    omega: real p99 of the reference span ± tol;   7a: synthetic >= real - tol (one-sided)
 
 C2ST threshold (per sensor; real first 60 min vs synthetic 60 min, motion features, block folds)
     threshold = 95th percentile of a label-permutation null + 2 * std over seeds of the synthetic C2ST
@@ -14,24 +18,23 @@ C2ST threshold (per sensor; real first 60 min vs synthetic 60 min, motion featur
     across the pooled windows (real + synthetic seed `--null-seed`), `--n-perm` times.
     C2ST is a REPORTED metric, not a blocking gate check (physics_gate.py marks it informational).
 
-IMU cross-column consistency (per sensor; imu_consistency.py), reference = real first 60 min:
+IMU cross-column consistency (per sensor; imu_consistency.py):
     rel_tol = |real half A - real half B| / ref + 2 * std over seeds / ref   (A, B = contiguous 30-min halves)
     metrics: gravity error while moving (median, p95) and mag world-frame spread while moving.
     "blocking" per metric is set from BLOCKING_IMU below (decided from the 5 + 10 held-out seed run).
 
-Cross-sensor (all sensors of the bank; validate_physics.check_inter_sensor), reference = real first 60 min:
-    7a activity correlation per pair, 7b agreement of ALL moving masks:
-        min = real - (|real half A - real half B| + 2 * std over seeds)        (one-sided: lower bound)
-    7c cross-correlation lag: max_abs = largest |lag| of any pair in the real reference or its halves
+Cross-sensor 7b (agreement of ALL moving masks): min = real - (|half A - half B| + 2 * std over seeds)
+Cross-sensor 7c (cross-correlation lag): max_abs = largest |lag| of any pair in the real reference or its halves
 Copy check: copy_informative per sensor (physics_gate: held-out real vs real first 60 min), recorded.
 
-The previous file is read first; its omega tolerance is kept next to the new one
-("rel_tol_previous") with the reason for the change (--omega-change-reason).
+The previous file is read first; replaced omega / 7a values are kept under "previous" for comparison.
 
 Writes <config-dir>/gate_thresholds.json (next to the bank), read by physics_gate.py.
 Usage: python3 derive_gate_thresholds.py [--seeds 42 43 44 45 46] [--n-perm 100]
-       python3 derive_gate_thresholds.py --only-imu   (reuse out/derive_thresholds/*.csv; update only "imu_consistency")
-       python3 derive_gate_thresholds.py --config-dir configs/robot_arm_456   (another arm bank, e.g. sensors 4-6)
+       python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6          (six-sensor bank)
+       python3 derive_gate_thresholds.py --config-dir ... --update omega cross_sensor
+            (reuse the existing seed files; recompute only these sections, keep the rest)
+       python3 derive_gate_thresholds.py --only-imu   (= --update imu_consistency)
 """
 import argparse
 import json
@@ -45,23 +48,27 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 import imu_consistency as IC
 import physics_gate as G
+import real_bootstrap as RB
 import sensor_identity as SI
 import validate_physics as V
-from core.joint_template import JointBank
+from core.joint_template import JointBank, _abs_seconds
 
+SECTIONS = ("omega", "c2st", "imu_consistency", "copy_informative", "cross_sensor")
 ap = argparse.ArgumentParser()
 ap.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44, 45, 46])
 ap.add_argument("--span", type=float, default=3600.0)
 ap.add_argument("--n-perm", type=int, default=100)
 ap.add_argument("--null-seed", type=int, default=42)
-ap.add_argument("--omega-change-reason", default=None,
-                help="why the omega tolerance changed; stored next to the previous value")
-ap.add_argument("--only-imu", action="store_true",
-                help="reuse the existing seed files and keep omega/C2ST; derive only the IMU consistency section")
+ap.add_argument("--only-imu", action="store_true", help="same as --update imu_consistency")
+ap.add_argument("--update", nargs="+", choices=SECTIONS, default=None,
+                help="reuse the existing seed files and recompute only these sections")
 ap.add_argument("--config-dir", default=os.path.join("configs", "robot_arm"),
                 help="folder with the <sensor>_joint.json configs and their bank")
 ap.add_argument("--output", default=None, help="default: <config-dir>/gate_thresholds.json")
 args = ap.parse_args()
+if args.only_imu:
+    args.update = ["imu_consistency"]
+todo = set(args.update or SECTIONS)
 CFG_DIR = os.path.join(ROOT, args.config_dir)
 args.output = args.output or os.path.join(CFG_DIR, "gate_thresholds.json")
 
@@ -69,6 +76,7 @@ args.output = args.output or os.path.join(CFG_DIR, "gate_thresholds.json")
 # mag spread passes -> blocking; gravity-while-moving fails on the synthetic data (the donor accel
 # residual shifts it by 0.01-0.1 deg; raw accel replay matches real) -> reported only.
 BLOCKING_IMU = {"grav_moving_median_deg": False, "grav_moving_p95_deg": False, "mag_world_spread_moving_deg": True}
+TOL_RULE = "2*sqrt(sigma_seed^2 + sigma_real^2); sigma_real = block bootstrap (10 cycles, 200x) of real first 60 min"
 
 prev = json.load(open(args.output)) if os.path.exists(args.output) else None
 cfg1 = json.load(open(os.path.join(CFG_DIR, sorted(f for f in os.listdir(CFG_DIR) if f.endswith("_joint.json"))[0])))["motion"]
@@ -81,23 +89,54 @@ for s in args.seeds:
     for k in bank.sensors:
         p = os.path.join(OUT, f"{k}_seed{s}.csv")
         syn[s][k] = p
-        if args.only_imu:
+        if args.update:
             if not os.path.exists(p):
-                raise SystemExit(f"--only-imu needs {p}; run without --only-imu first")
+                raise SystemExit(f"--update needs {p}; run without --update first")
             continue
         subprocess.run(["python3", "main.py", "--config", os.path.join(CFG_DIR, f"{k}_joint.json"), "--output", p,
                         "--duration", str(args.span), "--seed", str(s), "--no-physics-gate"],
                        cwd=ROOT, check=True, capture_output=True)
 
-res = {"derived_from": {"seeds": args.seeds, "span_s": args.span, "bank_version": bank.meta.get("version"),
-                        "bank_am_split": bank.meta.get("am_split", "savgol"),
-                        "log_jitter": cfg1.get("log_jitter", "empirical" if bank.has_log_t else "gaussian"),
-                        "c2st_null": {"n_perm": args.n_perm, "pooled_with_seed": args.null_seed}},
-       "omega_p99": {}, "c2st": {}, "imu_consistency": {}, "copy_informative": {}}
-if args.only_imu:
+if args.update:
+    if prev is None:
+        raise SystemExit("--update needs an existing thresholds file")
     res = dict(prev)
-    res["imu_consistency"] = {}
-for k in bank.sensors:
+else:
+    res = {"derived_from": {"seeds": args.seeds, "span_s": args.span, "bank_version": bank.meta.get("version"),
+                            "bank_am_split": bank.meta.get("am_split", "savgol"),
+                            "log_jitter": cfg1.get("log_jitter", "empirical" if bank.has_log_t else "gaussian"),
+                            "c2st_null": {"n_perm": args.n_perm, "pooled_with_seed": args.null_seed}}}
+for sec in todo:
+    res[{"omega": "omega_p99"}.get(sec, sec)] = {}
+T0 = bank.meta["t0_abs"]                       # common start of all sensors (absolute s)
+
+
+def _previous(old):
+    return {k: v for k, v in (old or {}).items() if k != "previous"} or None
+
+
+def omega_section(k):
+    d = V.load(bank.real_path(k))
+    tm, om = RB.omega_with_time(d, V.elapsed_seconds, V.quat_cols, V.reconstruct_quat)
+    tm = tm + _abs_seconds(d["timestamp"])[0]
+    w = (tm >= T0) & (tm < T0 + args.span)
+    ref = float(np.percentile(om[w], 99))
+    boot = [np.percentile(om[i], 99) for i in RB.block_masks(tm, T0, args.span, bank.period)]
+    seed_p99 = [float(np.percentile(V.omega_series(V.load(syn[s][k]))["all"], 99)) for s in args.seeds]
+    s_real, s_seed = RB.sd_boot(boot), float(np.std(seed_p99, ddof=1))
+    tol = 2 * np.sqrt(s_seed ** 2 + s_real ** 2)
+    o = {"real_p99": ref, "reference": f"real first {args.span / 60:.0f} min", "reference_span_s": args.span,
+         "real_p99_full_recording": float(np.percentile(om, 99)), "sigma_real": s_real, "sigma_seed": s_seed,
+         "rel_tol": float(tol / ref), "rule": TOL_RULE, "seed_p99": seed_p99,
+         "previous": _previous((prev or {}).get("omega_p99", {}).get(k))}
+    print(f"{k}: omega p99 real {ref:.2f} (full {o['real_p99_full_recording']:.2f}) sigma_real {s_real:.3f} "
+          f"sigma_seed {s_seed:.3f} -> ±{100 * o['rel_tol']:.1f}%"
+          + (f" (previous ±{100 * o['previous']['rel_tol']:.1f}% around {o['previous']['real_p99']:.2f})" if o["previous"] else ""),
+          flush=True)
+    return o
+
+
+def imu_section(k):
     ref = IC.real_reference(bank.real_path(k), args.span)
     sm = {s: IC.synthetic_metrics(syn[s][k], ref["b"]) for s in args.seeds}
     imu = {"hard_iron_b": [float(x) for x in ref["b"]], "reference": f"real first {args.span / 60:.0f} min"}
@@ -112,39 +151,32 @@ for k in bank.sensors:
         print(f"{k}: {m} real {r:.3f} tol ±{100 * (nat + gen):.1f}% (halves {100 * nat:.1f}% + seeds {100 * gen:.1f}%), "
               f"synthetic {np.mean(vals):.3f} ({100 * (np.mean(vals) - r) / r:+.1f}%), "
               f"{'blocking' if BLOCKING_IMU[m] else 'reported'}", flush=True)
-    res["imu_consistency"][k] = imu
-    if args.only_imu:
-        continue
-    d = V.load(bank.real_path(k))
-    te = V.elapsed_seconds(d)
-    full = float(np.percentile(V.omega_series(d)["all"], 99))
-    wins = [np.percentile(V.omega_series(d[(te >= a) & (te < a + args.span)].reset_index(drop=True))["all"], 99)
-            for a in np.arange(0, te[-1] - args.span + 1, 300)]
-    nat = float(np.max(np.abs(np.array(wins) - full)) / full)
-    seed_p99 = [float(np.percentile(V.omega_series(V.load(syn[s][k]))["all"], 99)) for s in args.seeds]
-    gen = float(2 * np.std(seed_p99, ddof=1) / full)
-    om = {"real_p99": full, "rel_tol": nat + gen, "natural_rel_dev": nat, "seed_2sd_rel": gen, "seed_p99": seed_p99}
-    if prev and k in prev.get("omega_p99", {}):
-        p = prev["omega_p99"][k]
-        om["rel_tol_previous"] = p.get("rel_tol_previous", p["rel_tol"]) if args.omega_change_reason is None else p["rel_tol"]
-        om["seed_2sd_rel_previous"] = p.get("seed_2sd_rel_previous", p["seed_2sd_rel"]) if args.omega_change_reason is None else p["seed_2sd_rel"]
-        om["change_reason"] = args.omega_change_reason or p.get("change_reason")
-    res["omega_p99"][k] = om
+    return imu
 
-    res["copy_informative"][k] = G.copy_informative(bank.real_path(k), bank.period)
+
+def c2st_section(k):
     sr = SI.real_span(SI.signals(bank.real_path(k), True), args.span)
     sc = [SI.c2st_syn(sr, SI.signals(syn[s][k], False)) for s in args.seeds]
     null = SI.c2st_permutation_null(sr, SI.signals(syn[args.null_seed][k], False), n_perm=args.n_perm)
     sd_seed = float(np.std(sc, ddof=1))
     p95 = float(np.percentile(null, 95))
-    res["c2st"][k] = {"threshold": p95 + 2 * sd_seed, "null_p95": p95, "null_mean": float(np.mean(null)),
-                      "null_sd": float(np.std(null, ddof=1)), "seed_sd": sd_seed, "seed_values": sc,
-                      "blocking": False}
-    print(f"{k}: omega tol ±{100 * om['rel_tol']:.1f}% (natural {100 * nat:.1f}% + seeds {100 * gen:.1f}%)"
-          + (f", previous ±{100 * om['rel_tol_previous']:.1f}%" if "rel_tol_previous" in om else "")
-          + f"  C2ST threshold {res['c2st'][k]['threshold']:.3f} (null p95 {p95:.3f} + 2 sd seeds {2 * sd_seed:.3f}); "
+    print(f"{k}: C2ST threshold {p95 + 2 * sd_seed:.3f} (null p95 {p95:.3f} + 2 sd seeds {2 * sd_seed:.3f}); "
           f"synthetic {np.mean(sc):.3f}±{sd_seed:.3f}", flush=True)
-if not args.only_imu and len(bank.sensors) >= 2:
+    return {"threshold": p95 + 2 * sd_seed, "null_p95": p95, "null_mean": float(np.mean(null)),
+            "null_sd": float(np.std(null, ddof=1)), "seed_sd": sd_seed, "seed_values": sc, "blocking": False}
+
+
+for k in bank.sensors:
+    if "imu_consistency" in todo:
+        res["imu_consistency"][k] = imu_section(k)
+    if "omega" in todo:
+        res["omega_p99"][k] = omega_section(k)
+    if "copy_informative" in todo:
+        res["copy_informative"][k] = G.copy_informative(bank.real_path(k), bank.period)
+    if "c2st" in todo:
+        res["c2st"][k] = c2st_section(k)
+
+if "cross_sensor" in todo and len(bank.sensors) >= 2:
     order = sorted(bank.sensors)
     labels = [k.replace("sensor_", "s") for k in order]
     rp = [bank.real_path(k) for k in order]
@@ -153,26 +185,40 @@ if not args.only_imu and len(bank.sensors) >= 2:
     hb = V.check_inter_sensor(rp, None, labels=labels, real_span=(args.span / 2, args.span / 2))["real"]
     sy = [V.check_inter_sensor(rp, [syn[s][k] for k in order], syn_use_abs=True, labels=labels)["syn"]
           for s in args.seeds]
-    cs = {"sensors": order, "reference": f"real first {args.span / 60:.0f} min", "activity_corr": {}}
-
-    def bound(r, a, b, vals):
-        nat, gen = abs(a - b), float(2 * np.std(vals, ddof=1))
-        return {"real": r, "real_half_a": a, "real_half_b": b, "natural_dev": nat, "seed_2sd": gen,
-                "min": r - nat - gen, "seed_values": vals}
+    # activity on the real reference grid (same signal as check_inter_sensor) for the bootstrap
+    grid = np.arange(T0, T0 + args.span, 0.1)
+    acts = {lab: V._activity_on_grid(p, True, grid)[0] for lab, p in zip(labels, rp)}
+    boots = list(RB.block_masks(grid, T0, args.span, bank.period))
+    prev_cs = (prev or {}).get("cross_sensor", {})
+    cs = {"sensors": order, "reference": f"real first {args.span / 60:.0f} min", "activity_corr": {},
+          "activity_corr_rule": TOL_RULE}
     for pair in ref["activity_corr"]:
-        cs["activity_corr"][pair] = bound(ref["activity_corr"][pair], ha["activity_corr"][pair],
-                                          hb["activity_corr"][pair], [x["activity_corr"][pair] for x in sy])
-    cs["all_agree_pct"] = bound(ref["all_agree_pct"], ha["all_agree_pct"], hb["all_agree_pct"],
-                                [x["all_agree_pct"] for x in sy])
+        a, b = acts[pair.split("-")[0]], acts[pair.split("-")[1]]
+        bc = [np.corrcoef(a[i], b[i])[0, 1] for i in boots]
+        vals = [x["activity_corr"][pair] for x in sy]
+        s_real, s_seed = RB.sd_boot(bc), float(np.std(vals, ddof=1))
+        r = ref["activity_corr"][pair]
+        tol = 2 * np.sqrt(s_seed ** 2 + s_real ** 2)
+        cs["activity_corr"][pair] = {"real": r, "sigma_real": s_real, "sigma_seed": s_seed, "tol": float(tol),
+                                     "min": float(r - tol), "seed_values": vals,
+                                     "previous": _previous(prev_cs.get("activity_corr", {}).get(pair))}
+    nat = abs(ha["all_agree_pct"] - hb["all_agree_pct"])
+    vals = [x["all_agree_pct"] for x in sy]
+    gen = float(2 * np.std(vals, ddof=1))
+    cs["all_agree_pct"] = {"real": ref["all_agree_pct"], "real_half_a": ha["all_agree_pct"],
+                           "real_half_b": hb["all_agree_pct"], "natural_dev": nat, "seed_2sd": gen,
+                           "min": ref["all_agree_pct"] - nat - gen, "seed_values": vals}
     real_lags = {f"{n}:{p}": v["lag_ms"] for n, side in (("ref", ref), ("half_a", ha), ("half_b", hb))
                  for p, v in side["xcorr_lag"].items()}
     cs["lag_ms"] = {"max_abs": float(max(abs(v) for v in real_lags.values())),
                     "real_nonzero": {k: v for k, v in real_lags.items() if v != 0},
                     "seed_max_abs": [float(max(abs(v["lag_ms"]) for v in x["xcorr_lag"].values())) for x in sy]}
     res["cross_sensor"] = cs
+    for pair, v in cs["activity_corr"].items():
+        print(f"7a {pair}: real {v['real']:.3f} sigma_real {v['sigma_real']:.4f} sigma_seed {v['sigma_seed']:.4f} "
+              f"-> min {v['min']:.3f}" + (f" (previous {v['previous']['min']:.3f})" if v["previous"] else ""), flush=True)
     a = cs["all_agree_pct"]
     print(f"cross-sensor ({len(order)} sensors): 7b agreement real {a['real']:.1f}% -> min {a['min']:.1f}% "
-          f"(synthetic {np.mean(a['seed_values']):.1f}%); 7a min over pairs "
-          f"{min(v['min'] for v in cs['activity_corr'].values()):.3f}; 7c |lag| <= {cs['lag_ms']['max_abs']:.0f} ms", flush=True)
+          f"(synthetic {np.mean(a['seed_values']):.1f}%); 7c |lag| <= {cs['lag_ms']['max_abs']:.0f} ms", flush=True)
 json.dump(res, open(args.output, "w"), indent=1)
 print(f"wrote {os.path.relpath(args.output, ROOT)}")

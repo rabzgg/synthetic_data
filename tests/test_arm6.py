@@ -16,6 +16,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import physics_gate as G
+import real_bootstrap as RB
 import validate_physics as V
 from core.generator import SyntheticXDKGenerator
 from core.joint_template import A_COLS, M_COLS
@@ -105,6 +106,35 @@ class TestCopyRule(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             self.assertFalse(G.copy_informative(self._real(td, True), 37.0)["informative"])
             self.assertTrue(G.copy_informative(self._real(td, False), 37.0)["informative"])
+
+
+class TestBlockBootstrap(unittest.TestCase):
+    def test_blocks_are_whole_consecutive_cycles(self):
+        period, n_cyc = 37.0, 97
+        t = np.arange(0, n_cyc * period, 0.1)
+        cyc = np.floor(t / period).astype(int)
+        masks = list(RB.block_masks(t, 0.0, n_cyc * period, period, n_boot=20, seed=3))
+        self.assertEqual(len(masks), 20)
+        per_cycle = np.bincount(cyc)
+        for m in masks:
+            counts = np.bincount(cyc[m], minlength=n_cyc)
+            used = np.flatnonzero(counts)
+            np.testing.assert_array_equal(counts[used] % per_cycle[used], 0)     # whole cycles only
+            self.assertEqual(len(m), per_cycle[:n_cyc].mean() * n_cyc)          # as many cycles as the span
+        again = list(RB.block_masks(t, 0.0, n_cyc * period, period, n_boot=20, seed=3))
+        np.testing.assert_array_equal(masks[5], again[5])
+
+    def test_sd_tracks_between_cycle_variation(self):
+        """The bootstrap sd of a mean shrinks when cycles agree with each other."""
+        rng = np.random.default_rng(0)
+        period, n_cyc = 37.0, 97
+        t = np.arange(0, n_cyc * period, 0.1)
+        cyc = np.floor(t / period).astype(int)
+        sd = {}
+        for spread in (0.1, 1.0):
+            x = rng.normal(0, spread, n_cyc)[cyc] + rng.normal(0, 0.01, len(t))
+            sd[spread] = RB.sd_boot([x[m].mean() for m in RB.block_masks(t, 0.0, n_cyc * period, period)])
+        self.assertGreater(sd[1.0], 5 * sd[0.1])
 
 
 if __name__ == "__main__":
