@@ -29,7 +29,10 @@ real recording at gate time):
                vs a threshold = 95th percentile of a label-permutation null (same windows, same
                folds) + 2 sd over seeds (gate_thresholds.json)
   check7a      [cross-sensor, every pair; only with a "cross_sensor" section in gate_thresholds.json]
-               activity correlation >= real first 60 min - 2·sqrt(σ_seed² + σ_real²) (block bootstrap)
+               activity correlation >= real first 60 min - max(2·sqrt(σ_seed² + σ_real²), margin).
+               σ_real from a block bootstrap. margin = practical equivalence margin 0.02 from
+               "activity_corr_margin", set POST HOC (after seeing results; user decision 2026-10-13).
+               The raw statistical result (bound real - 2·sqrt(...)) is printed next to the status.
   check7b      [cross-sensor] moving-mask agreement of ALL sensors: >= the data-derived bound from
                gate_thresholds.json "cross_sensor" (same formula as 7a); >= 85 % without that section
   check7c      [cross-sensor] activity cross-correlation lag for every pair: |lag| <= the largest |lag|
@@ -298,10 +301,18 @@ def cross_sensor_checks(syn_paths: dict, real_paths: dict, report: GateReport, t
     c = V.check_inter_sensor([real_paths[k] for k in order], [syn_paths[k] for k in order],
                              syn_use_abs=True, labels=labels)["syn"]
     if cs:
+        margin = cs.get("activity_corr_margin", {}).get("value")
         for pair, v in c["activity_corr"].items():
-            lo = cs["activity_corr"][pair]["min"]
-            report.add(Check("check7a", pair, v, f">= {lo:.3f} (real {cs['activity_corr'][pair]['real']:.3f}, data-derived)",
-                             v is not None and v >= lo))
+            t = cs["activity_corr"][pair]
+            lo, lo_stat = t["min"], t.get("min_statistical", t["min"])
+            if margin is None:
+                req, note = f">= {lo:.3f} (real {t['real']:.3f}, data-derived)", ""
+            else:
+                # practical margin (post hoc): the raw statistical result is reported next to the status
+                req = f">= {lo:.3f} (real {t['real']:.3f} - max(stat tol {t['tol']:.3f}, margin {margin}))"
+                note = (f"statistical bound {lo_stat:.3f}: "
+                        f"{'pass' if v is not None and v >= lo_stat else 'FAIL'}; margin set post hoc")
+            report.add(Check("check7a", pair, v, req, v is not None and v >= lo, note))
         lo = cs["all_agree_pct"]["min"]
         report.add(Check("check7b", "all", c["all_agree_pct"],
                          f">= {lo:.1f} % ({len(order)} sensors; real {cs['all_agree_pct']['real']:.1f} %, data-derived)",

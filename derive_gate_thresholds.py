@@ -23,6 +23,9 @@ IMU cross-column consistency (per sensor; imu_consistency.py):
     metrics: gravity error while moving (median, p95) and mag world-frame spread while moving.
     "blocking" per metric is set from BLOCKING_IMU below (decided from the 5 + 10 held-out seed run).
 
+7a practical equivalence margin (ACTIVITY_CORR_MARGIN, set POST HOC after seeing the gate results):
+    7a passes when synthetic >= real - max(tol, 0.02); the statistical bound real - tol is kept as
+    "min_statistical" and physics_gate reports it next to the pass status.
 Cross-sensor 7b (agreement of ALL moving masks): min = real - (|half A - half B| + 2 * std over seeds)
 Cross-sensor 7c (cross-correlation lag): max_abs = largest |lag| of any pair in the real reference or its halves
 Copy check: copy_informative per sensor (physics_gate: held-out real vs real first 60 min), recorded.
@@ -34,6 +37,8 @@ Usage: python3 derive_gate_thresholds.py [--seeds 42 43 44 45 46] [--n-perm 100]
        python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6          (six-sensor bank)
        python3 derive_gate_thresholds.py --config-dir ... --update omega cross_sensor
             (reuse the existing seed files; recompute only these sections, keep the rest)
+       python3 derive_gate_thresholds.py --config-dir ... --update corr_margin
+            (only re-apply ACTIVITY_CORR_MARGIN to the existing 7a section; nothing is recomputed)
        python3 derive_gate_thresholds.py --only-imu   (= --update imu_consistency)
 """
 import argparse
@@ -53,7 +58,7 @@ import sensor_identity as SI
 import validate_physics as V
 from core.joint_template import JointBank, _abs_seconds
 
-SECTIONS = ("omega", "c2st", "imu_consistency", "copy_informative", "cross_sensor")
+SECTIONS = ("omega", "c2st", "imu_consistency", "copy_informative", "cross_sensor", "corr_margin")
 ap = argparse.ArgumentParser()
 ap.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44, 45, 46])
 ap.add_argument("--span", type=float, default=3600.0)
@@ -76,6 +81,14 @@ args.output = args.output or os.path.join(CFG_DIR, "gate_thresholds.json")
 # mag spread passes -> blocking; gravity-while-moving fails on the synthetic data (the donor accel
 # residual shifts it by 0.01-0.1 deg; raw accel replay matches real) -> reported only.
 BLOCKING_IMU = {"grav_moving_median_deg": False, "grav_moving_p95_deg": False, "mag_world_spread_moving_deg": True}
+# 7a practical equivalence margin. User decision 2026-10-13 (option B), set AFTER seeing the results.
+ACTIVITY_CORR_MARGIN = {
+    "value": 0.02,
+    "rule": "check 7a passes if synthetic >= real - max(tol, value); min_statistical = real - tol is still reported",
+    "set": "post hoc: chosen AFTER seeing the gate results (user decision 2026-10-13, option B)",
+    "reason": "An activity-correlation difference of ~0.01 does not change the physical behaviour of the arm. "
+              "Measured cause of the gap: the donor accel residual (raw replay passes 7a).",
+}
 TOL_RULE = "2*sqrt(sigma_seed^2 + sigma_real^2); sigma_real = block bootstrap (10 cycles, 200x) of real first 60 min"
 
 prev = json.load(open(args.output)) if os.path.exists(args.output) else None
@@ -106,13 +119,24 @@ else:
                             "bank_am_split": bank.meta.get("am_split", "savgol"),
                             "log_jitter": cfg1.get("log_jitter", "empirical" if bank.has_log_t else "gaussian"),
                             "c2st_null": {"n_perm": args.n_perm, "pooled_with_seed": args.null_seed}}}
-for sec in todo:
+for sec in todo - {"corr_margin"}:
     res[{"omega": "omega_p99"}.get(sec, sec)] = {}
 T0 = bank.meta["t0_abs"]                       # common start of all sensors (absolute s)
 
 
 def _previous(old):
     return {k: v for k, v in (old or {}).items() if k != "previous"} or None
+
+
+def apply_corr_margin(cs):
+    """7a bound = real - max(statistical tol, margin); the statistical bound stays as min_statistical."""
+    m = ACTIVITY_CORR_MARGIN["value"]
+    cs["activity_corr_margin"] = dict(ACTIVITY_CORR_MARGIN)
+    for pair, v in cs["activity_corr"].items():
+        v["min_statistical"] = float(v["real"] - v["tol"])
+        v["min"] = float(v["real"] - max(v["tol"], m))
+        v["bound_from"] = "margin" if m > v["tol"] else "statistical"
+        print(f"7a {pair}: statistical min {v['min_statistical']:.3f}, with margin {m} -> min {v['min']:.3f}", flush=True)
 
 
 def omega_section(k):
@@ -202,6 +226,7 @@ if "cross_sensor" in todo and len(bank.sensors) >= 2:
         cs["activity_corr"][pair] = {"real": r, "sigma_real": s_real, "sigma_seed": s_seed, "tol": float(tol),
                                      "min": float(r - tol), "seed_values": vals,
                                      "previous": _previous(prev_cs.get("activity_corr", {}).get(pair))}
+    apply_corr_margin(cs)
     nat = abs(ha["all_agree_pct"] - hb["all_agree_pct"])
     vals = [x["all_agree_pct"] for x in sy]
     gen = float(2 * np.std(vals, ddof=1))
@@ -220,5 +245,9 @@ if "cross_sensor" in todo and len(bank.sensors) >= 2:
     a = cs["all_agree_pct"]
     print(f"cross-sensor ({len(order)} sensors): 7b agreement real {a['real']:.1f}% -> min {a['min']:.1f}% "
           f"(synthetic {np.mean(a['seed_values']):.1f}%); 7c |lag| <= {cs['lag_ms']['max_abs']:.0f} ms", flush=True)
+if "corr_margin" in todo and "cross_sensor" not in todo:
+    if "cross_sensor" not in res:
+        raise SystemExit("--update corr_margin needs an existing cross_sensor section")
+    apply_corr_margin(res["cross_sensor"])
 json.dump(res, open(args.output, "w"), indent=1)
 print(f"wrote {os.path.relpath(args.output, ROOT)}")
