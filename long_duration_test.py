@@ -1,7 +1,7 @@
 """
 long_duration_test.py — generate longer than the recording and gate each hour separately.
 
-Usage: python3 long_duration_test.py [--hours 3] [--seed 42]
+Usage: python3 long_duration_test.py [--hours 3] [--seed 42] [--config-dir configs/robot_arm_456 --tag _456]
 Exit code != 0 if any hour fails the gate.
 """
 import argparse
@@ -21,23 +21,41 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--hours", type=int, default=3)
 ap.add_argument("--seed", type=int, default=42)
 ap.add_argument("--json", default=None, help="write schedule info + every gate check per hour")
+ap.add_argument("--bank", default=None, help="use this bank instead of configs/robot_arm/joint_bank_arm.npz "
+                "(e.g. a --dedrift-yaw bank); the gate still compares with the real recordings")
+ap.add_argument("--tag", default="", help="suffix for the output folder (out/long_duration<tag>)")
+ap.add_argument("--config-dir", default=os.path.join("configs", "robot_arm"),
+                help="folder with <sensor>_joint.json + bank + gate_thresholds.json")
 args = ap.parse_args()
+import json as _json
+CFG_DIR = os.path.join(ROOT, args.config_dir)
+_first = sorted(f for f in os.listdir(CFG_DIR) if f.endswith("_joint.json"))[0]
 dur = args.hours * 3600
-OUT = os.path.join(ROOT, "out", "long_duration")
+OUT = os.path.join(ROOT, "out", "long_duration" + args.tag)
 os.makedirs(OUT, exist_ok=True)
-bank = JointBank(os.path.join(ROOT, "configs", "robot_arm", "joint_bank_arm.npz"))
+bank_path = os.path.abspath(args.bank) if args.bank else \
+    os.path.join(CFG_DIR, _json.load(open(os.path.join(CFG_DIR, _first)))["motion"]["bank"])
+bank = JointBank(bank_path)
+cfgs = {}
+for k in bank.sensors:
+    cfgs[k] = os.path.join(CFG_DIR, f"{k}_joint.json")
+    if args.bank:
+        c = _json.load(open(cfgs[k]))
+        c["motion"]["bank"] = bank_path
+        cfgs[k] = os.path.join(OUT, f"cfg_{k}.json")
+        _json.dump(c, open(cfgs[k], "w"), indent=1)
 
 paths = {}
-for k in (1, 2, 3):
-    p = os.path.join(OUT, f"sensor_{k}_{args.hours}h_seed{args.seed}.csv")
-    r = subprocess.run(["python3", "main.py", "--config", f"configs/robot_arm/sensor_{k}_joint.json",
+for k in bank.sensors:
+    p = os.path.join(OUT, f"{k}_{args.hours}h_seed{args.seed}.csv")
+    r = subprocess.run(["python3", "main.py", "--config", cfgs[k],
                         "--output", p, "--duration", str(dur), "--seed", str(args.seed), "--no-physics-gate"],
                        cwd=ROOT, capture_output=True, text=True)
     if r.returncode != 0:
         print(r.stdout[-2000:], r.stderr[-2000:]); sys.exit(2)
     warn = [l for l in r.stdout.splitlines() if l.startswith("WARNING")]
-    print(f"sensor_{k}: {warn[0] if warn else 'NO WARNING PRINTED'}")
-    paths[f"sensor_{k}"] = p
+    print(f"{k}: {warn[0] if warn else 'NO WARNING PRINTED'}")
+    paths[k] = p
 
 # splice continuity, split by phase
 sched, info = build_schedule(bank, dur, args.seed)
@@ -74,7 +92,7 @@ for h in range(args.hours):
     # last 60 min of the recording (cycles there are drawn pose-continuously from the whole pool)
     start = min(h * 3600.0, max(0.0, bank.recording_s - 3600.0))
     span = min(3600.0, bank.recording_s - start)
-    thr = load_thresholds(os.path.join(ROOT, "configs", "robot_arm", "gate_thresholds.json"))
+    thr = load_thresholds(os.path.join(CFG_DIR, "gate_thresholds.json"))
     rep = check_physics_gate(hp, real, bank.period, cross_sensor=True, thresholds=thr, c2st_span=(start, span))
     print(f"\n=== hour {h+1} ({h*60}-{(h+1)*60} min; recording ends at {bank.recording_s/60:.1f} min) ===")
     print(rep.format())

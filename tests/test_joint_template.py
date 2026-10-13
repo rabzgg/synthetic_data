@@ -163,6 +163,29 @@ class TestClock(unittest.TestCase):
         self.assertLess(same[moving].mean(), 0.01)
 
 
+class TestYawDrift(unittest.TestCase):
+    def test_rest_yaw_series_recovers_heading_drift(self):
+        """A known heading drift (0.4°/cycle about the world vertical) at a tilted rest pose is
+        measured back; a cycle at another rest pose (different gravity) is skipped."""
+        from scipy.spatial.transform import Rotation
+        from core.joint_template import rest_yaw_series
+        rng = np.random.default_rng(0)
+        base = Rotation.from_euler("xyz", [20, -10, 30], degrees=True)
+        starts = np.arange(30) * 37.0
+        t = np.repeat(starts, 11) + np.tile(np.linspace(-0.5, 0.5, 11), 30)
+        yaw_true = 0.4 * np.repeat(np.arange(30), 11)
+        rot = Rotation.from_euler("z", yaw_true[:, None], degrees=True) * base
+        other = np.repeat(np.arange(30) == 12, 11)                     # cycle 12 rests at another pose
+        rot = Rotation.from_quat(np.where(other[:, None], (Rotation.from_euler("x", [[40]], degrees=True) * rot).as_quat(), rot.as_quat()))
+        xyzw = rot.as_quat()
+        q = np.c_[xyzw[:, 3], xyzw[:, :3]]
+        A = rot.inv().apply([0, 0, 1]) + rng.normal(0, 1e-3, (len(t), 3))
+        tc, yaw = rest_yaw_series(t, q, A, np.ones(len(t), bool), starts)
+        self.assertEqual(len(tc), 29)
+        expected = 0.4 * (tc / 37.0) - 0.4                            # relative to the mean of cycles 0-2
+        np.testing.assert_allclose(yaw, expected, atol=1e-6)
+
+
 class TestFlagOff(unittest.TestCase):
     def test_non_motion_columns_unchanged_and_flag_off_is_noop(self):
         on, gen_on = _generate(2, joint=True)

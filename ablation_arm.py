@@ -104,7 +104,7 @@ def measure(paths, seeds, with_copy=True):
             rel = (p99 - om["real_p99"]) / om["real_p99"]
             e = {"dt": dt_stats(p), "omega_p99": p99, "omega_rel": rel, "omega_pass": bool(abs(rel) <= om["rel_tol"]),
                  "c2st": SI.c2st(XR, SI.block_fold(cR), XS, SI.block_fold(cS)), "c2st_groups": groups}
-            if with_copy and k not in G.COPY_EXCLUDE:
+            if with_copy and G.copy_informative(bank.real_path(k), bank.period)["informative"]:
                 e["copy_pct"] = G.copy_pct(G._load(p), d_real, bank.period)
             r["seeds"][str(seed)] = e
             print(f"{k} seed {seed}: omega p99 {p99:.2f} ({100 * rel:+.1f}%, tol ±{100 * om['rel_tol']:.1f}%)  "

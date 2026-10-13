@@ -331,28 +331,36 @@ def _activity_on_grid(path, use_abs, grid, ref0=None):
     act = pd.Series(amag_grid).rolling(10, center=True, min_periods=1).std().to_numpy()
     return act, (x[m].min(), x[m].max())
 
-def check_inter_sensor(real_paths, syn_paths, hz=10.0, syn_use_abs=False):
+def check_inter_sensor(real_paths, syn_paths, hz=10.0, syn_use_abs=False, labels=None, real_span=None):
     """syn_use_abs=True: synthetic files share one generator clock (joint-template engine),
-    so align them on absolute timestamps like the real side. Default keeps the old behaviour."""
-    def one_side(paths, use_abs):
+    so align them on absolute timestamps like the real side. Default keeps the old behaviour.
+    Any number of sensors (>= 2): 7a/7c over every pair, 7b = % of time ALL sensors agree.
+    labels: names used in the pair keys (default s1, s2, ... by position).
+    real_span: (start_s, length_s) from the common real start; restricts the real side (e.g. the
+    first 60 min a 60-min synthetic file is compared with). syn_paths may be None (real side only)."""
+    from itertools import combinations
+    labels = labels or [f"s{i+1}" for i in range(len(real_paths))]
+    def one_side(paths, use_abs, span=None):
         # common window + crop accounting
         spans = []
         for p in paths:
             s = _abs_seconds(load(p)["timestamp"])
             spans.append((s.min(), s.max()) if use_abs else (0.0, s.max()-s.min()))
         lo = max(a for a, _ in spans); hi = min(b for _, b in spans)
+        if span is not None:
+            lo, hi = lo + span[0], min(hi, lo + span[0] + span[1])
         overlap = max(0.0, hi - lo); total = np.mean([b-a for a, b in spans])
         grid = np.arange(lo, hi, 1.0/hz)
         acts = [_activity_on_grid(p, use_abs, grid)[0] for p in paths]
         # 7a: pairwise Pearson of activity
-        pairs = [(0, 1), (0, 2), (1, 2)]
+        pairs = list(combinations(range(len(acts)), 2))
         corr = {}
         for i, j in pairs:
             a, b = acts[i], acts[j]; mm = np.isfinite(a) & np.isfinite(b)
-            corr[f"s{i+1}-s{j+1}"] = float(np.corrcoef(a[mm], b[mm])[0, 1]) if mm.sum() > 10 else None
-        # 7b: moving mask = activity above its own median; % of time all 3 agree
-        masks = [a > np.nanmedian(a) for a in acts]
-        agree_all = float(100*np.mean((masks[0] == masks[1]) & (masks[1] == masks[2])))
+            corr[f"{labels[i]}-{labels[j]}"] = float(np.corrcoef(a[mm], b[mm])[0, 1]) if mm.sum() > 10 else None
+        # 7b: moving mask = activity above its own median; % of time ALL sensors agree
+        masks = np.array([a > np.nanmedian(a) for a in acts])
+        agree_all = float(100*np.mean(np.all(masks == masks[0], axis=0)))
         # 7c: cross-correlation peak lag (samples->ms), max |lag| 5 s
         maxlag = int(5*hz); lags = {}
         for i, j in pairs:
@@ -363,12 +371,12 @@ def check_inter_sensor(real_paths, syn_paths, hz=10.0, syn_use_abs=False):
             for L in range(-maxlag, maxlag+1):
                 c = np.dot(a, np.roll(b, L))/denom
                 if c > best_c: best_c, best_l = c, L
-            lags[f"s{i+1}-s{j+1}"] = {"lag_ms": float(best_l*1000/hz), "peak_corr": float(best_c)}
+            lags[f"{labels[i]}-{labels[j]}"] = {"lag_ms": float(best_l*1000/hz), "peak_corr": float(best_c)}
         return {"overlap_min": float(overlap/60), "mean_file_min": float(total/60),
                 "crop_pct": float(100*(1 - overlap/total)) if total else None,
                 "activity_corr": corr, "all_agree_pct": agree_all, "xcorr_lag": lags}
-    return {"real": one_side(real_paths, use_abs=True),
-            "syn": one_side(syn_paths, use_abs=syn_use_abs)}
+    return {"real": one_side(real_paths, use_abs=True, span=real_span),
+            "syn": one_side(syn_paths, use_abs=syn_use_abs) if syn_paths else None}
 
 # ── frame resolution (A4): 4-combo test on a moving dataset ─────────────────────
 

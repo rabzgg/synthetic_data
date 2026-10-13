@@ -1,0 +1,26 @@
+sensor_1: grav_moving_median_deg real 3.718 tol ±1.4% (halves 0.7% + seeds 0.7%), synthetic 3.758 (+1.1%), reported
+sensor_1: grav_moving_p95_deg real 8.287 tol ±0.5% (halves 0.1% + seeds 0.4%), synthetic 8.403 (+1.4%), reported
+sensor_1: mag_world_spread_moving_deg real 7.991 tol ±4.7% (halves 4.3% + seeds 0.4%), synthetic 7.985 (-0.1%), blocking
+sensor_1: omega tol ±5.9% (natural 3.3% + seeds 2.6%)  C2ST threshold 0.592 (null p95 0.534 + 2 sd seeds 0.058); synthetic 0.677±0.029
+sensor_2: grav_moving_median_deg real 1.226 tol ±2.2% (halves 0.6% + seeds 1.7%), synthetic 1.285 (+4.9%), reported
+sensor_2: grav_moving_p95_deg real 3.790 tol ±4.2% (halves 3.3% + seeds 1.0%), synthetic 3.712 (-2.0%), reported
+sensor_2: mag_world_spread_moving_deg real 3.545 tol ±2.2% (halves 1.6% + seeds 0.6%), synthetic 3.547 (+0.1%), blocking
+sensor_2: omega tol ±1.9% (natural 0.6% + seeds 1.3%)  C2ST threshold 0.592 (null p95 0.543 + 2 sd seeds 0.050); synthetic 0.606±0.025
+sensor_3: grav_moving_median_deg real 0.760 tol ±0.9% (halves 0.1% + seeds 0.7%), synthetic 0.773 (+1.7%), reported
+sensor_3: grav_moving_p95_deg real 2.999 tol ±5.6% (halves 4.0% + seeds 1.6%), synthetic 3.013 (+0.5%), reported
+sensor_3: mag_world_spread_moving_deg real 3.859 tol ±1.5% (halves 0.7% + seeds 0.8%), synthetic 3.865 (+0.2%), blocking
+sensor_3: omega tol ±0.9% (natural 0.5% + seeds 0.5%)  C2ST threshold 0.605 (null p95 0.540 + 2 sd seeds 0.065); synthetic 0.573±0.032
+sensor_4: grav_moving_median_deg real 0.822 tol ±3.2% (halves 1.9% + seeds 1.4%), synthetic 0.818 (-0.4%), reported
+sensor_4: grav_moving_p95_deg real 2.815 tol ±3.2% (halves 2.4% + seeds 0.8%), synthetic 2.924 (+3.8%), reported
+sensor_4: mag_world_spread_moving_deg real 14.171 tol ±2.1% (halves 1.8% + seeds 0.3%), synthetic 14.193 (+0.2%), blocking
+sensor_4: omega tol ±2.0% (natural 0.9% + seeds 1.0%)  C2ST threshold 0.586 (null p95 0.537 + 2 sd seeds 0.048); synthetic 0.604±0.024
+sensor_5: grav_moving_median_deg real 0.515 tol ±4.2% (halves 2.8% + seeds 1.4%), synthetic 0.522 (+1.4%), reported
+sensor_5: grav_moving_p95_deg real 2.200 tol ±2.1% (halves 0.9% + seeds 1.2%), synthetic 2.139 (-2.8%), reported
+sensor_5: mag_world_spread_moving_deg real 2.775 tol ±1.1% (halves 0.6% + seeds 0.5%), synthetic 2.775 (+0.0%), blocking
+sensor_5: omega tol ±3.8% (natural 2.0% + seeds 1.7%)  C2ST threshold 0.593 (null p95 0.548 + 2 sd seeds 0.045); synthetic 0.600±0.023
+sensor_6: grav_moving_median_deg real 0.767 tol ±1.2% (halves 0.6% + seeds 0.6%), synthetic 0.766 (-0.2%), reported
+sensor_6: grav_moving_p95_deg real 2.155 tol ±4.9% (halves 3.5% + seeds 1.4%), synthetic 2.085 (-3.3%), reported
+sensor_6: mag_world_spread_moving_deg real 10.821 tol ±4.1% (halves 3.3% + seeds 0.7%), synthetic 10.805 (-0.1%), blocking
+sensor_6: omega tol ±1.4% (natural 0.5% + seeds 0.9%)  C2ST threshold 0.595 (null p95 0.541 + 2 sd seeds 0.054); synthetic 0.650±0.027
+cross-sensor (6 sensors): 7b agreement real 78.7% -> min 76.7% (synthetic 83.1%); 7a min over pairs 0.823; 7c |lag| <= 100 ms
+wrote configs/robot_arm_6/gate_thresholds.json

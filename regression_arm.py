@@ -12,6 +12,7 @@ regression_arm.py — regression harness for the robot-arm generator.
 Exit code != 0 if the flag-off check or any gate fails.
 
 Usage: python3 regression_arm.py [--seeds 42 43 44 45 46] [--duration 3600] [--json out.json]
+       python3 regression_arm.py --config-dir configs/robot_arm_456   (joint gate only: no deck files there)
 """
 import argparse
 import json
@@ -58,18 +59,20 @@ def flag_off_check() -> bool:
     return ok
 
 
-def joint_gate(seeds, duration) -> dict:
-    bank = JointBank(os.path.join(ROOT, "configs", "robot_arm", "joint_bank_arm.npz"))
+def joint_gate(seeds, duration, cfg_dir="configs/robot_arm") -> dict:
+    cfg_dir = os.path.join(ROOT, cfg_dir)
+    first = sorted(f for f in os.listdir(cfg_dir) if f.endswith("_joint.json"))[0]
+    bank = JointBank(os.path.join(cfg_dir, json.load(open(os.path.join(cfg_dir, first)))["motion"]["bank"]))
     real = {s: bank.real_path(s) for s in bank.sensors}
     results = {}
     for seed in seeds:
         syn = {}
-        for k in (1, 2, 3):
-            out = os.path.join(OUT, f"joint_sensor_{k}_seed{seed}.csv")
-            run(["python3", "main.py", "--config", f"configs/robot_arm/sensor_{k}_joint.json", "--output", out,
+        for s in bank.sensors:
+            out = os.path.join(OUT, f"joint_{s}_seed{seed}.csv")
+            run(["python3", "main.py", "--config", os.path.join(cfg_dir, f"{s}_joint.json"), "--output", out,
                  "--duration", str(duration), "--seed", str(seed), "--no-physics-gate"])
-            syn[f"sensor_{k}"] = out
-        thr = load_thresholds(os.path.join(ROOT, "configs", "robot_arm", "gate_thresholds.json"))
+            syn[s] = out
+        thr = load_thresholds(os.path.join(cfg_dir, "gate_thresholds.json"))
         rep = check_physics_gate(syn, real, bank.period, cross_sensor=True, thresholds=thr)
         results[seed] = rep
         print(f"\n--- seed {seed} ---\n{rep.format()}")
@@ -99,14 +102,17 @@ def main():
     ap.add_argument("--duration", type=float, default=3600)
     ap.add_argument("--skip-flag-off", action="store_true")
     ap.add_argument("--json", default=None, help="write every gate check per seed to this JSON file")
+    ap.add_argument("--config-dir", default=os.path.join("configs", "robot_arm"),
+                    help="folder with <sensor>_joint.json + bank + gate_thresholds.json")
     args = ap.parse_args()
+    deck = os.path.normpath(args.config_dir) == os.path.join("configs", "robot_arm")
     os.makedirs(OUT, exist_ok=True)
     ok = True
-    if not args.skip_flag_off:
+    if not args.skip_flag_off and deck:
         print("=== 1. flag OFF vs deck files ===")
         ok &= flag_off_check()
     print("\n=== 2. joint template: physics gate per seed ===")
-    res = joint_gate(args.seeds, args.duration)
+    res = joint_gate(args.seeds, args.duration, args.config_dir)
     print("\n=== summary ===")
     for seed, rep in res.items():
         failed = [f"{c.sensor}/{c.name}" for c in rep.checks if not c.passed and not c.informational]
@@ -117,8 +123,9 @@ def main():
     if args.json:
         json.dump({str(seed): rep.to_dict() for seed, rep in res.items()}, open(args.json, "w"), indent=1)
         print(f"\nwrote {args.json}")
-    print("\n=== 3. vs baseline_before.json ===")
-    baseline_compare(args.seeds[0])
+    if deck:
+        print("\n=== 3. vs baseline_before.json ===")
+        baseline_compare(args.seeds[0])
     sys.exit(0 if ok else 1)
 
 

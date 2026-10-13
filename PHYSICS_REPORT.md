@@ -107,7 +107,9 @@ Result: exactly what expected, nothing more and nothing less.
   orientation–accel–mag cycles are taken together and the three sensors share the
   same schedule.
 - **The physics gate passes on all 5 seeds, on every hour of a 3-hour run, and on 10
-  held-out seeds (100–109) that were not used to derive any threshold.**
+  held-out seeds (100–109) that were not used to derive any threshold.** Since 2026-10-06 it
+  includes a blocking mag ↔ orientation check. Gravity-while-moving is reported only; it is
+  0.01–0.1° off, from the donor accel residual.
 - Recommended duration: ≤ the recording length (94.9 min). See Limitations.
 - The classifier two-sample test (C2ST) is a **reported metric, not a blocking check**
   (user decision). It is above its threshold on all sensors (0.64–0.71): a classifier can
@@ -120,6 +122,20 @@ Result: exactly what expected, nothing more and nothing less.
     - the omega tolerance was re-derived;
     - the C2ST threshold now comes from a permutation null;
     - dropped ticks now come from real blocks.
+- **Six sensors (2026-10-13, `results/joint_template/arm6/README.md`; config `configs/robot_arm_6/`).**
+  - All six XDKs of the arm (sensor_1–6) share one bank and one cycle schedule: 144 of 150
+    cycles kept.
+  - The cross-sensor checks now cover every pair and an all-sensor agreement, with data-derived
+    blocking limits. The old 3-sensor version had let two independently generated groups pass
+    unchecked.
+  - Mag residual from the same cycle (`mag_residual: own`): mag_world passes on all six sensors.
+  - Copy check: a data-based rule replaces the per-sensor exclusion; sensor_3 and sensor_5 are
+    not informative.
+  - **The six-sensor gate fails on every seed**:
+    - activity correlation of some pairs is 0.004–0.012 below real (donor accel residual);
+    - sensor_4 copy 3–46 % (the price of the mag fix);
+    - omega p99 of sensor_6 on 7 of 15 seeds.
+  - The sensor_1–3 results below are the 3-sensor bank.
 - The sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing below says which link
   a sensor is on.
 
@@ -173,8 +189,22 @@ Blocking checks:
 - Check 7b ≥ 85 %, Check 7c lag 0 ms
 - copy: ≤ 5 % of windows with corr > 0.99 (sensor_1, sensor_2; sensor_3 is excluded
   because its real cycles are near-identical)
+- **mag ↔ orientation** (`mag_world`, added 2026-10-06): spread of the world-frame mag
+  direction R·(m − b) while moving, b = hard-iron offset from real.
+  - It must be within |real half A − half B| + 2 sd over seeds of real first 60 min:
+    7.99° ±4.6 % / 3.55° ±2.5 % / 3.86° ±1.6 %.
+  - Synthetic passes on 5/5 seeds, 10/10 held-out seeds and every hour of the 3-hour run.
+  - The old generator fails it (54.6° / 6.7° / 26.8°).
 
-Reported, **not blocking** (user decision):
+Reported, **not blocking**:
+- **Gravity consistency while moving** (`grav_moving_med`, `grav_moving_p95`, added 2026-10-06).
+  The angle between the quaternion's gravity and accel on moving samples, median and p95, against
+  real first 60 min with the same kind of tolerance.
+  - It fails sensor_1 p95 (8.36–8.40 vs 8.29° ±0.6 %), sensor_2 median (1.27–1.31 vs 1.23° ±2.7 %)
+    and in part sensor_3 median (0.75–0.77 vs 0.76° ±0.8 %).
+  - The cause is the donor accel residual: raw accel replay matches real exactly.
+  - The old generator is 2.5–35× off.
+  - Details: `results/joint_template/imu_consistency/README.md`.
 - C2ST per sensor, against a threshold of the 95th percentile of a label-permutation null
   (same windows, same block folds, 100 shuffles) + 2 sd over seeds: 0.583 / 0.606 / 0.566.
 - The old threshold (real-vs-real baseline + margin: 0.621 / 0.577 / 0.523) was removed.

@@ -66,6 +66,33 @@
      "informational": false
     },
     {
+     "name": "grav_moving_med",
+     "sensor": "sensor_1",
+     "value": 3.72559671304132,
+     "threshold": "in [3.634, 3.802]\u00b0 (real real first 60 min 3.718 \u00b12.3%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_1",
+     "value": 8.368711164428431,
+     "threshold": "in [8.241, 8.333]\u00b0 (real real first 60 min 8.287 \u00b10.6%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_1",
+     "value": 7.975999714592627,
+     "threshold": "in [7.621, 8.362]\u00b0 (real real first 60 min 7.991 \u00b14.6%, data-derived)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
      "name": "c2st",
      "sensor": "sensor_1",
      "value": 0.6676174754299755,
@@ -124,6 +151,33 @@
      "sensor": "sensor_2",
      "value": 0.0,
      "threshold": "<= 5.0 % windows corr>0.99",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "grav_moving_med",
+     "sensor": "sensor_2",
+     "value": 1.2808407467420744,
+     "threshold": "in [1.193, 1.259]\u00b0 (real real first 60 min 1.226 \u00b12.7%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_2",
+     "value": 3.717090175357179,
+     "threshold": "in [3.637, 3.942]\u00b0 (real real first 60 min 3.790 \u00b14.0%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_2",
+     "value": 3.5975817255703975,
+     "threshold": "in [3.455, 3.635]\u00b0 (real real first 60 min 3.545 \u00b12.5%, data-derived)",
      "passed": true,
      "note": "",
      "informational": false
@@ -189,6 +243,33 @@
      "threshold": "excluded",
      "passed": true,
      "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+     "informational": false
+    },
+    {
+     "name": "grav_moving_med",
+     "sensor": "sensor_3",
+     "value": 0.7690091270312366,
+     "threshold": "in [0.754, 0.767]\u00b0 (real real first 60 min 0.760 \u00b10.8%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_3",
+     "value": 3.035948738815325,
+     "threshold": "in [2.845, 3.153]\u00b0 (real real first 60 min 2.999 \u00b15.1%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_3",
+     "value": 3.8833153094384487,
+     "threshold": "in [3.797, 3.921]\u00b0 (real real first 60 min 3.859 \u00b11.6%, data-derived)",
+     "passed": true,
+     "note": "",
      "informational": false
     },
     {
@@ -278,6 +359,33 @@
      "informational": false
     },
     {
+     "name": "grav_moving_med",
+     "sensor": "sensor_1",
+     "value": 3.7152248309951315,
+     "threshold": "in [3.634, 3.802]\u00b0 (real real first 60 min 3.718 \u00b12.3%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_1",
+     "value": 8.34787952014343,
+     "threshold": "in [8.241, 8.333]\u00b0 (real real first 60 min 8.287 \u00b10.6%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_1",
+     "value": 7.988640749060029,
+     "threshold": "in [7.621, 8.362]\u00b0 (real real first 60 min 7.991 \u00b14.6%, data-derived)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
      "name": "c2st",
      "sensor": "sensor_1",
      "value": 0.6204097563472564,
@@ -336,6 +444,33 @@
      "sensor": "sensor_2",
      "value": 0.0,
      "threshold": "<= 5.0 % windows corr>0.99",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "grav_moving_med",
+     "sensor": "sensor_2",
+     "value": 1.2815297806336523,
+     "threshold": "in [1.193, 1.259]\u00b0 (real real first 60 min 1.226 \u00b12.7%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_2",
+     "value": 3.7105312382372677,
+     "threshold": "in [3.637, 3.942]\u00b0 (real real first 60 min 3.790 \u00b14.0%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_2",
+     "value": 3.618877533537962,
+     "threshold": "in [3.455, 3.635]\u00b0 (real real first 60 min 3.545 \u00b12.5%, data-derived)",
      "passed": true,
      "note": "",
      "informational": false
@@ -401,6 +536,33 @@
      "threshold": "excluded",
      "passed": true,
      "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+     "informational": false
+    },
+    {
+     "name": "grav_moving_med",
+     "sensor": "sensor_3",
+     "value": 0.7522696457753604,
+     "threshold": "in [0.754, 0.767]\u00b0 (real real first 60 min 0.760 \u00b10.8%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_3",
+     "value": 3.06752489114761,
+     "threshold": "in [2.845, 3.153]\u00b0 (real real first 60 min 2.999 \u00b15.1%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_3",
+     "value": 3.8845418419665063,
+     "threshold": "in [3.797, 3.921]\u00b0 (real real first 60 min 3.859 \u00b11.6%, data-derived)",
+     "passed": true,
+     "note": "",
      "informational": false
     },
     {
@@ -490,6 +652,33 @@
      "informational": false
     },
     {
+     "name": "grav_moving_med",
+     "sensor": "sensor_1",
+     "value": 3.7018769012227937,
+     "threshold": "in [3.634, 3.802]\u00b0 (real real first 60 min 3.718 \u00b12.3%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_1",
+     "value": 8.297455717652204,
+     "threshold": "in [8.241, 8.333]\u00b0 (real real first 60 min 8.287 \u00b10.6%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_1",
+     "value": 7.819001545770675,
+     "threshold": "in [7.621, 8.362]\u00b0 (real real first 60 min 7.991 \u00b14.6%, data-derived)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
      "name": "c2st",
      "sensor": "sensor_1",
      "value": 0.8223770645645645,
@@ -548,6 +737,33 @@
      "sensor": "sensor_2",
      "value": 0.0,
      "threshold": "<= 5.0 % windows corr>0.99",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "grav_moving_med",
+     "sensor": "sensor_2",
+     "value": 1.2801879312012998,
+     "threshold": "in [1.193, 1.259]\u00b0 (real real first 60 min 1.226 \u00b12.7%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_2",
+     "value": 3.6707373408887185,
+     "threshold": "in [3.637, 3.942]\u00b0 (real real first 60 min 3.790 \u00b14.0%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_2",
+     "value": 3.6073791334729917,
+     "threshold": "in [3.455, 3.635]\u00b0 (real real first 60 min 3.545 \u00b12.5%, data-derived)",
      "passed": true,
      "note": "",
      "informational": false
@@ -613,6 +829,33 @@
      "threshold": "excluded",
      "passed": true,
      "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+     "informational": false
+    },
+    {
+     "name": "grav_moving_med",
+     "sensor": "sensor_3",
+     "value": 0.7489673362745304,
+     "threshold": "in [0.754, 0.767]\u00b0 (real real first 60 min 0.760 \u00b10.8%, data-derived)",
+     "passed": false,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "grav_moving_p95",
+     "sensor": "sensor_3",
+     "value": 2.9972061897837334,
+     "threshold": "in [2.845, 3.153]\u00b0 (real real first 60 min 2.999 \u00b15.1%, data-derived)",
+     "passed": true,
+     "note": "reported, does not block",
+     "informational": true
+    },
+    {
+     "name": "mag_world",
+     "sensor": "sensor_3",
+     "value": 3.8530205904190717,
+     "threshold": "in [3.797, 3.921]\u00b0 (real real first 60 min 3.859 \u00b11.6%, data-derived)",
+     "passed": true,
+     "note": "",
      "informational": false
     },
     {
