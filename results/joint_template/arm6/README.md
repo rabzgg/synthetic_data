@@ -2,7 +2,7 @@
 
 Sensor → arm-link mapping: **[USER TO VERIFY]**.
 
-This replaces the two-bank setup of `../joints_456/` (sensor_1–3 and sensor_4–6 as separate banks).
+This replaces the two-bank setup of `../joints_456/` (removed from the tree, in git history at 34b07df; sensor_1–3 and sensor_4–6 as separate banks).
 That setup broke the coupling between the two groups.
 
 ## Update 2026-10-13 (review of d907453): practical margin on 7a
@@ -122,7 +122,7 @@ The thresholds and pass counts below are the ones before the update above.
 - C2ST (reported only): 0.54–0.72, lower than with the separate banks (0.60–0.79).
 
 ## Step 1: one bank, cycle accounting (`bank_cycle_attribution.py` / `.log`)
-`python3 build_joint_bank.py --real sensor_1=… … --real sensor_6=… --output configs/robot_arm_6/joint_bank_arm6.npz`.
+`python3 cli/build_joint_bank.py --real sensor_1=… … --real sensor_6=… --output configs/robot_arm_6/joint_bank_arm6.npz`.
 The script replays the bank's selection rules and names, for every dropped cycle, the rule and the
 sensor responsible:
 
@@ -245,22 +245,20 @@ donor aligned to the same phase (DTW) still gives 15.6°. Each cycle carries its
 - Raw replay is not a production option: it breaks the copy check.
 
 ## Files
+Only the final outputs are kept in this folder. Files cited in the sections above that are not
+listed here (earlier threshold versions, `*_before_*` runs, 3-hour run, bank attribution,
+cross-group log, plots, `../joints_456/`) were removed from the tree in the repo cleanup; they are
+in git history at 34b07df. The full list is in `docs/CHANGELOG.md`. The plots are in
+`data/arm6/plots/`.
+
 | file | content |
 |---|---|
-| `bank_cycle_attribution.py` / `.log` | dropped cycles by rule and sensor, for banks 1–3, 4–6 and 1–6 |
-| `cross_group_activity.log` | activity correlation, agreement and lag: real vs two banks vs one bank |
-| `derive_thresholds.log`, `gate_thresholds_before_bootstrap.json` | `python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6` (first derivation) |
-| `derive_thresholds_bootstrap.log`, `gate_thresholds_before_margin.json` | `python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6 --update omega cross_sensor` (bootstrap tolerances) |
-| `derive_thresholds_margin.log`, `gate_thresholds.json` | `python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6 --update corr_margin` (current: + 7a margin 0.02) |
+| `gate_thresholds.json` | current thresholds: bootstrap tolerances + 7a margin 0.02 (copy of `configs/robot_arm_6/gate_thresholds.json`; `python3 validation/derive_gate_thresholds.py --config-dir configs/robot_arm_6 --update corr_margin`) |
 | `thresholds_old_vs_new.md` | omega and 7a thresholds, old vs new, with pass counts |
-| `calibration_real_window.log`, `calibration_heldout.log` | share of checks failing: genuine real window, held-out seeds |
-| `regression_5seeds.log`, `gate_5seeds.json` | `python3 regression_arm.py --config-dir configs/robot_arm_6 --json …` (seeds 42–46) |
+| `calibration_real_window.log`, `calibration_heldout.log` | share of checks failing: genuine real window, held-out seeds (before the 7a margin) |
+| `regression_5seeds.log`, `gate_5seeds.json` | `python3 validation/regression_arm.py --config-dir configs/robot_arm_6 --skip-flag-off --json …` (seeds 42–46) |
 | `heldout_seeds_100_109.log` / `.json` | same, seeds 100–109 |
 | `gate_with_margin_summary.log` | pass/fail per seed with the 7a margin, and 7a counts below the statistical bound |
-| `*_before_margin.*`, `*_before_bootstrap.*` | the same runs with the earlier thresholds |
-| `long_duration_3h.log`, `gate_3h_per_hour.json` | `python3 long_duration_test.py --config-dir configs/robot_arm_6 --tag _arm6 --json …` |
 | `check7a_diagnosis.log` | 7a per pair: production vs raw replay vs donor mag |
-| `demo_limitation_10min_gate.log` | gate on the 10-min-input demo (fails 12 checks, as expected) |
-| `plots/`, `plots/demo_limitation_10min/` | real vs synthetic orientation and acceleration per sensor (`plot_real_vs_syn_arm.py --sensors 1 2 3 4 5 6`) |
 
-Run everything: `./run_robot_arm_joint.sh 42 3600 out/arm6 configs/robot_arm_6`.
+Run everything: `cli/run_robot_arm_joint.sh 42 3600 out/arm6 configs/robot_arm_6`.

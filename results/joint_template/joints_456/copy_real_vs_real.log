@@ -1,7 +1,0 @@
-copy metric, real held-out part (60-95 min) vs real 0-60 min, 37 s windows, corr > 0.99
-sensor_1: copy   0.0%  median max-corr 0.9581
-sensor_2: copy   0.0%  median max-corr 0.9574
-sensor_3: copy  98.2%  median max-corr 0.9969
-sensor_4: copy   1.8%  median max-corr 0.9717
-sensor_5: copy  98.2%  median max-corr 0.9928
-sensor_6: copy   0.0%  median max-corr 0.9464

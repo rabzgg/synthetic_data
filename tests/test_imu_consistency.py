@@ -12,7 +12,7 @@ from scipy.spatial.transform import Rotation
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-import imu_consistency as IC
+from validation import imu_consistency as IC
 
 
 def _signals(rot, M, A, speed):

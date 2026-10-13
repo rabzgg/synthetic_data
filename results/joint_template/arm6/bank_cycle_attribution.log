@@ -1,6 +1,0 @@
-sensors sensor_1, sensor_2, sensor_3: period 37.00 s, 150 windows detected, 120 kept
-  length (all sensors)             30
-sensors sensor_4, sensor_5, sensor_6: period 37.00 s, 151 windows detected, 147 kept
-  length (all sensors)             4
-sensors sensor_1, sensor_2, sensor_3, sensor_4, sensor_5, sensor_6: period 37.00 s, 150 windows detected, 144 kept
-  length (all sensors)             6
