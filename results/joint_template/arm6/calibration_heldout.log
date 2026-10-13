@@ -1,0 +1,21 @@
+== seeds 42-46 (derivation)
+  old thresholds: gate passed 0/5 seeds; blocking checks failing 25/285 (8.8%)
+    by check: 7a 16/75, copy 5/20, omega_p99 4/30
+  new thresholds: gate passed 0/5 seeds; blocking checks failing 23/280 (8.2%)
+    by check: 7a 21/75, omega_p99 2/30
+== seeds 100-109 (held-out)
+  old thresholds: gate passed 0/10 seeds; blocking checks failing 53/570 (9.3%)
+    by check: 7a 43/150, copy 7/40, omega_p99 3/60
+  new thresholds: gate passed 0/10 seeds; blocking checks failing 62/560 (11.1%)
+    by check: 7a 61/150, omega_p99 1/60
+== held-out, failing blocking checks per seed (new thresholds)
+  seed 100: s1-s2/check7a 0.949, s1-s3/check7a 0.942, s1-s4/check7a 0.904, s1-s6/check7a 0.866, s2-s4/check7a 0.919, s3-s6/check7a 0.887, s4-s5/check7a 0.918
+  seed 101: s1-s2/check7a 0.948, s1-s3/check7a 0.943, s1-s4/check7a 0.906, s1-s6/check7a 0.866, s2-s4/check7a 0.919, s3-s6/check7a 0.888, s4-s5/check7a 0.919
+  seed 102: s1-s2/check7a 0.947, s1-s3/check7a 0.943, s1-s6/check7a 0.866, s3-s6/check7a 0.882
+  seed 103: s1-s2/check7a 0.948, s1-s3/check7a 0.943, s1-s4/check7a 0.906, s1-s6/check7a 0.869, s2-s4/check7a 0.916, s3-s6/check7a 0.885, s4-s5/check7a 0.919
+  seed 104: s1-s2/check7a 0.948, s1-s3/check7a 0.942, s1-s4/check7a 0.905, s1-s6/check7a 0.870, s2-s4/check7a 0.917, s4-s5/check7a 0.918
+  seed 105: s1-s2/check7a 0.947, s1-s4/check7a 0.906, s1-s6/check7a 0.865, s2-s4/check7a 0.918, s3-s6/check7a 0.887, s4-s5/check7a 0.916
+  seed 106: sensor_6/omega_p99 40.803, s1-s2/check7a 0.948, s1-s6/check7a 0.866, s2-s4/check7a 0.917, s3-s6/check7a 0.887, s4-s5/check7a 0.919
+  seed 107: s1-s2/check7a 0.947, s1-s3/check7a 0.942, s1-s4/check7a 0.906, s1-s6/check7a 0.865, s4-s5/check7a 0.918
+  seed 108: s1-s2/check7a 0.947, s1-s3/check7a 0.941, s1-s4/check7a 0.903, s1-s6/check7a 0.864, s2-s4/check7a 0.918, s3-s6/check7a 0.884, s4-s5/check7a 0.918
+  seed 109: s1-s2/check7a 0.947, s1-s3/check7a 0.944, s1-s4/check7a 0.906, s1-s6/check7a 0.865, s2-s4/check7a 0.918, s3-s6/check7a 0.887, s4-s5/check7a 0.918

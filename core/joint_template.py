@@ -196,7 +196,7 @@ def detect_cycles(t: np.ndarray, om: np.ndarray, thr: float, period: float) -> n
 
 def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
                rest_pose_tol_deg: float = 2.0, smooth_quat: bool = False,
-               am_split: str = "savgol") -> dict:
+               am_split: str = "savgol", dedrift_yaw: bool = False) -> dict:
     """Fit a joint-template bank from the real recordings of all sensors on one arm.
 
     real_paths : {sensor_name: csv_path}, all recorded on the same clock.
@@ -257,6 +257,28 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
     if len(keep) < 5:
         raise ValueError(f"only {len(keep)} usable cycles found; need >= 5")
 
+    # Heading drift of the XDK fusion: the rest orientation turns about the world vertical while
+    # mag_body and gravity_body stay constant (results/joint_template/drift). With dedrift_yaw the
+    # measured yaw is removed from every sample (bank at the heading of the first cycles) and a
+    # linear yaw(t) model is stored for the engine to put back.
+    yaw_meta = {}
+    if dedrift_yaw:
+        for s in sensors:
+            r = R[s]
+            tc, yv = rest_yaw_series(r["t"], r["q"], r["A"], r["rest"], np.array([a for a, _ in keep]))
+            tm = (tc - t0) / 60.0
+            slope, icpt = np.polyfit(tm, yv, 1)
+            fit = icpt + slope * tm
+            yaw_s = np.interp(r["t"], tc, yv)                  # measured yaw, held constant outside
+            rq = Rotation.from_euler("z", -yaw_s[:, None], degrees=True) * \
+                Rotation.from_quat(np.c_[r["qc"][:, 1:], r["qc"][:, 0]])
+            xyzw = rq.as_quat()
+            r["qc"] = unwrap(np.c_[xyzw[:, 3], xyzw[:, :3]])
+            yaw_meta[s] = {"slope_deg_per_min": float(slope), "intercept_deg": float(icpt),
+                           "r2": float(1 - np.var(yv - fit) / np.var(yv)) if np.var(yv) > 0 else 0.0,
+                           "residual_sd_deg": float(np.std(yv - fit)), "n_cycles": int(len(tc)),
+                           "t_min": [float(x) for x in tm], "yaw_deg": [float(x) for x in yv]}
+
     # drop cycles that start far from the previous kept cycle's end pose in any sensor
     # (boundary detected mid-motion); the first cycle is kept.
     def _pose_at(s, tt):
@@ -277,7 +299,8 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
                                        for s, p in real_paths.items()},
                         "n_windows_detected": int(len(windows)), "n_windows_kept": int(len(keep)),
                         "smooth_quat": bool(smooth_quat), "am_split": am_split,
-                        "am_cutoffs": {s: R[s].get("cutoffs") for s in sensors}, "noise": {}}
+                        "am_cutoffs": {s: R[s].get("cutoffs") for s in sensors},
+                        "yaw_dedrift": bool(dedrift_yaw), "yaw_drift": yaw_meta, "noise": {}}
     arrays["windows"] = (keep - t0).astype(np.float64)
     for s in sensors:
         r = R[s]
@@ -298,6 +321,33 @@ def build_bank(real_paths: dict, out_path: str, length_tol: float = 0.04,
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     np.savez_compressed(out_path, **arrays)
     return meta
+
+
+def rest_yaw_series(t, q, A, rest, cycle_starts, ref_n: int = 3, pose_tol_deg: float = 2.0, win_s: float = 1.0):
+    """Yaw (deg, twist about the world vertical) of the rest orientation at each cycle boundary,
+    relative to the mean of the first ref_n cycles. Cycles whose accel gravity direction differs by
+    more than pose_tol_deg from the first ones are a different rest pose and are skipped.
+    q: [w, x, y, z] body->world. Returns (times, yaw_deg)."""
+    rows = []
+    for a in cycle_starts:
+        m = rest & (np.abs(t - a) < win_s)
+        if m.sum() < 5:
+            continue
+        qq = q[m]
+        qq = np.where((qq @ qq[0])[:, None] < 0, -qq, qq)
+        g = A[m] / np.linalg.norm(A[m], axis=1, keepdims=True)
+        rows.append((a, Rotation.from_quat(np.c_[qq[:, 1:], qq[:, 0]]).mean(), g.mean(0)))
+    g0 = np.mean([x[2] for x in rows[:ref_n]], 0)
+    g0 /= np.linalg.norm(g0)
+    rows = [x for x in rows if np.degrees(np.arccos(np.clip(x[2] / np.linalg.norm(x[2]) @ g0, -1, 1))) <= pose_tol_deg]
+    ref = Rotation.concatenate([x[1] for x in rows[:ref_n]]).mean()
+    yaw = []
+    for _, rot, _ in rows:
+        qd = (rot * ref.inv()).as_quat()
+        yaw.append(np.degrees(2 * np.arctan2(qd[2], qd[3])))
+    yaw = (np.array(yaw) + 180.0) % 360.0 - 180.0                 # q ~ -q: 2·atan2 can land on the ±360° branch
+    yaw = np.degrees(np.unwrap(np.radians(yaw)))
+    return np.array([x[0] for x in rows]), yaw
 
 
 CUTOFF_GRID_HZ = (0.3, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0)
@@ -628,7 +678,7 @@ class JointTemplateEngine:
                  yaw_tol_deg: float = 3.0, rotvec_noise_scale: float = None,
                  regular_clock: bool = True, frequency_hz: float = 10.0, resample: str = "nearest",
                  log_jitter: str = None, log_block: int = 600, residual: str = "donor",
-                 log_drops: bool = None):
+                 log_drops: bool = None, yaw_drift: str = None, mag_residual: str = None):
         self.bank = JointBank(bank_path)
         if sensor not in self.bank.sensors:
             raise ValueError(f"sensor '{sensor}' not in bank {self.bank.sensors}")
@@ -663,6 +713,15 @@ class JointTemplateEngine:
         if self.log_drops and log_jitter != "empirical":
             raise ValueError("log_drops needs log_jitter='empirical'")
         self.keep = None
+        # heading drift model; a de-drifted bank (build_joint_bank.py --dedrift-yaw) must get it back
+        dd = bool(self.bank.meta.get("yaw_dedrift", False))
+        if yaw_drift is None:
+            yaw_drift = "linear" if dd else "none"
+        if yaw_drift not in ("linear", "none"):
+            raise ValueError("yaw_drift must be 'linear' or 'none'")
+        if yaw_drift == "linear" and not dd:
+            raise ValueError("yaw_drift='linear' needs a bank built with --dedrift-yaw")
+        self.yaw_drift = yaw_drift
         # accel/mag noise texture: "donor" = residual of another real cycle (production);
         # "own" = the template's own residual, i.e. raw accel/mag replay (diagnosis only)
         # "similar" = donor is the most similar cycle (accel+mag shape) in the same candidate set;
@@ -673,6 +732,12 @@ class JointTemplateEngine:
         if residual not in ("donor", "own", "similar", "aligned", "lattice"):
             raise ValueError("residual must be 'donor', 'own', 'similar', 'aligned' or 'lattice'")
         self.residual = residual
+        # mag only: "own" = the template cycle's own mag residual (same cycle, same phase), accel keeps
+        # `residual`. For a mag disturbance tied to the motion phase (motor field), a donor residual
+        # from another cycle no longer matches the orientation. None = same as `residual`.
+        if mag_residual not in (None, "own"):
+            raise ValueError("mag_residual must be None or 'own'")
+        self.mag_residual = mag_residual
         self.schedule, self.info = None, None
 
     def _similar_donor(self, template: int, phase: str) -> int:
@@ -702,7 +767,7 @@ class JointTemplateEngine:
     @classmethod
     def from_config(cls, cfg: dict) -> "JointTemplateEngine":
         keys = ("local_window_s", "crossfade_s", "warp_sd", "pose_tol_deg", "yaw_tol_deg", "rotvec_noise_scale",
-                "regular_clock", "frequency_hz", "resample", "log_jitter", "log_block", "residual", "log_drops")
+                "regular_clock", "frequency_hz", "resample", "log_jitter", "log_block", "residual", "log_drops", "yaw_drift", "mag_residual")
         return cls(cfg["bank"], cfg["sensor"], **{k: cfg[k] for k in keys if k in cfg})
 
     def generate(self, timestamps_ms: np.ndarray, duration_s: float, seed: int,
@@ -780,12 +845,14 @@ class JointTemplateEngine:
                     ra = np.round(ad + ra, A_DECIMALS) - np.round(ad, A_DECIMALS)
                     rm = np.round(md + rm) - np.round(md)
                     a, mg = np.round(a, A_DECIMALS), np.round(mg)
-                if self.residual == "own":          # raw replay: same sample as the template shape
+                if self.residual == "own" or self.mag_residual == "own":   # same sample as the template shape
                     tt = seg["tau"]
                     tau = np.clip(el / w, tt[0], tt[-1])
                     ko = np.clip(np.searchsorted(tt, tau), 0, len(tt) - 1)
                     ko = np.where((ko > 0) & (np.abs(tt[np.maximum(ko - 1, 0)] - tau) < np.abs(tt[ko] - tau)), ko - 1, ko)
-                    ra, rm = seg["rA"][ko], seg["rM"][ko]
+                    if self.residual == "own":      # raw replay (diagnosis only)
+                        ra = seg["rA"][ko]
+                    rm = seg["rM"][ko]
                 if prev_end is not None:            # crossfade from the previous cycle's end (at rest)
                     al = np.clip(el / self.crossfade_s, 0, 1)
                     al = (al * al * (3 - 2 * al))[:, None]
@@ -804,6 +871,10 @@ class JointTemplateEngine:
         # orientation: motion noise in rotation space, canonical sign, XDK quantisation, rest hold
         r = Rotation.from_quat(np.c_[Q[:, 1:], Q[:, 0]]) * \
             Rotation.from_rotvec(rng.normal(0, noise["sig_rotvec_rad"] * self.rotvec_noise_scale, (n, 3)))
+        if self.yaw_drift == "linear":
+            # XDK heading drift: turn about the world vertical by yaw(t); accel/mag body untouched
+            yd = self.bank.meta["yaw_drift"][self.sensor]
+            r = Rotation.from_euler("z", (yd["intercept_deg"] + yd["slope_deg_per_min"] * ts / 60.0)[:, None], degrees=True) * r
         xyzw = r.as_quat()
         Q = canonicalize(np.c_[xyzw[:, 3], xyzw[:, :3]])
         Qq = np.round(Q[:, 1:], Q_DECIMALS)

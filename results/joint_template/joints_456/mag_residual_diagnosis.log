@@ -1,0 +1,16 @@
+mag residual (raw - savgol(7,2)) sd per axis [uT], real full recording
+sensor_1: rest [1.36 1.56 0.89]  moving [0.65 0.62 0.7 ]
+sensor_2: rest [2.03 2.27 1.24]  moving [3.44 3.88 2.6 ]
+sensor_3: rest [0.49 0.69 0.55]  moving [0.66 0.86 0.98]
+sensor_4: rest [1.53 0.89 1.48]  moving [10.47 10.85 14.29]
+sensor_5: rest [0.56 0.81 0.6 ]  moving [1.53 2.21 1.86]
+sensor_6: rest [0.52 1.09 1.53]  moving [ 1.76  7.43 10.22]
+
+mag_world spread [deg], real first 60 min vs seed 42 variants (same hard-iron b)
+sensor_4: real 14.17  production (random donor) 15.72  raw replay (own residual, diagnosis) 14.21  similar donor 15.73  aligned donor 15.58  lattice donor 15.74
+sensor_5: real 2.78  production (random donor) 2.84  raw replay (own residual, diagnosis) 2.79
+sensor_6: real 10.82  production (random donor) 10.16  raw replay (own residual, diagnosis) 10.86  similar donor 10.13  aligned donor 10.02  lattice donor 10.16
+
+copy check on the raw-replay variant (seed 42), required <= 5 %
+sensor_4: raw replay copy 12.4%  production 0.0%
+sensor_6: raw replay copy 8.2%  production 0.0%

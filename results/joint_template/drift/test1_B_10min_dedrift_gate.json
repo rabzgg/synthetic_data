@@ -1,0 +1,1467 @@
+{
+ "42": {
+  "passed": false,
+  "checks": [
+   {
+    "name": "validity",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 1.00010",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_1",
+    "value": 1.2005086487972756,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_1",
+    "value": 43.93397282595504,
+    "threshold": "in [41.78, 48.08] \u00b0/s (real 44.93 \u00b17.0%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "2 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (56.2\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_1",
+    "value": 3.636420071553516,
+    "threshold": "in [3.634, 3.802]\u00b0 (real first 60 min 3.718 \u00b12.3%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_1",
+    "value": 8.280679415735126,
+    "threshold": "in [8.241, 8.333]\u00b0 (real first 60 min 8.287 \u00b10.6%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_1",
+    "value": 7.4902502626774625,
+    "threshold": "in [7.621, 8.362]\u00b0 (real first 60 min 7.991 \u00b14.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.8939957002457003,
+    "threshold": "<= 0.583 (permutation null p95 0.541 + 2 sd seeds 0.042)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.48306",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_2",
+    "value": 0.3270600835997965,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_2",
+    "value": 16.52280919971099,
+    "threshold": "in [16.05, 16.75] \u00b0/s (real 16.40 \u00b12.1%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (20.5\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_2",
+    "value": 1.2899234922533886,
+    "threshold": "in [1.193, 1.259]\u00b0 (real first 60 min 1.226 \u00b12.7%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_2",
+    "value": 3.704537183773468,
+    "threshold": "in [3.637, 3.942]\u00b0 (real first 60 min 3.790 \u00b14.0%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_2",
+    "value": 3.6201659656231677,
+    "threshold": "in [3.455, 3.635]\u00b0 (real first 60 min 3.545 \u00b12.5%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.8649058149058149,
+    "threshold": "<= 0.606 (permutation null p95 0.549 + 2 sd seeds 0.057)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.59743",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_3",
+    "value": 0.3408408168742482,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_3",
+    "value": 42.6232635243874,
+    "threshold": "in [42.55, 43.57] \u00b0/s (real 43.06 \u00b11.2%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (53.8\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_3",
+    "value": "n/a",
+    "threshold": "excluded",
+    "passed": true,
+    "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_3",
+    "value": 0.7681192944443563,
+    "threshold": "in [0.754, 0.767]\u00b0 (real first 60 min 0.760 \u00b10.8%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_3",
+    "value": 3.041969453640995,
+    "threshold": "in [2.845, 3.153]\u00b0 (real first 60 min 2.999 \u00b15.1%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_3",
+    "value": 3.9663531994186902,
+    "threshold": "in [3.797, 3.921]\u00b0 (real first 60 min 3.859 \u00b11.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.8882063882063882,
+    "threshold": "<= 0.566 (permutation null p95 0.540 + 2 sd seeds 0.026)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "check7b",
+    "sensor": "all",
+    "value": 92.48673721634309,
+    "threshold": ">= 85.0 %",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "check7c",
+    "sensor": "all",
+    "value": 0.0,
+    "threshold": "lag = 0 ms for every pair",
+    "passed": true,
+    "note": "s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms",
+    "informational": false
+   }
+  ]
+ },
+ "43": {
+  "passed": false,
+  "checks": [
+   {
+    "name": "validity",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 1.00013",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_1",
+    "value": 1.2545522803693123,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_1",
+    "value": 43.71558056157099,
+    "threshold": "in [41.78, 48.08] \u00b0/s (real 44.93 \u00b17.0%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "1 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (56.2\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_1",
+    "value": 3.6619263372191737,
+    "threshold": "in [3.634, 3.802]\u00b0 (real first 60 min 3.718 \u00b12.3%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_1",
+    "value": 8.314014289010828,
+    "threshold": "in [8.241, 8.333]\u00b0 (real first 60 min 8.287 \u00b10.6%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_1",
+    "value": 7.477634139741894,
+    "threshold": "in [7.621, 8.362]\u00b0 (real first 60 min 7.991 \u00b14.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.8911291973791975,
+    "threshold": "<= 0.583 (permutation null p95 0.541 + 2 sd seeds 0.042)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.48298",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_2",
+    "value": 0.32635753062498074,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_2",
+    "value": 16.4308058900137,
+    "threshold": "in [16.05, 16.75] \u00b0/s (real 16.40 \u00b12.1%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (20.5\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_2",
+    "value": 1.2894174396239964,
+    "threshold": "in [1.193, 1.259]\u00b0 (real first 60 min 1.226 \u00b12.7%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_2",
+    "value": 3.715861882448128,
+    "threshold": "in [3.637, 3.942]\u00b0 (real first 60 min 3.790 \u00b14.0%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_2",
+    "value": 3.6210658851272295,
+    "threshold": "in [3.455, 3.635]\u00b0 (real first 60 min 3.545 \u00b12.5%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.8742705773955773,
+    "threshold": "<= 0.606 (permutation null p95 0.549 + 2 sd seeds 0.057)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.59764",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_3",
+    "value": 0.3365489088941328,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_3",
+    "value": 42.64453046208684,
+    "threshold": "in [42.55, 43.57] \u00b0/s (real 43.06 \u00b11.2%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (53.8\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_3",
+    "value": "n/a",
+    "threshold": "excluded",
+    "passed": true,
+    "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_3",
+    "value": 0.7654421358127876,
+    "threshold": "in [0.754, 0.767]\u00b0 (real first 60 min 0.760 \u00b10.8%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_3",
+    "value": 3.054523162444102,
+    "threshold": "in [2.845, 3.153]\u00b0 (real first 60 min 2.999 \u00b15.1%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_3",
+    "value": 3.9458771737744054,
+    "threshold": "in [3.797, 3.921]\u00b0 (real first 60 min 3.859 \u00b11.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.8850122850122851,
+    "threshold": "<= 0.566 (permutation null p95 0.540 + 2 sd seeds 0.026)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "check7b",
+    "sensor": "all",
+    "value": 92.50978976310162,
+    "threshold": ">= 85.0 %",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "check7c",
+    "sensor": "all",
+    "value": 0.0,
+    "threshold": "lag = 0 ms for every pair",
+    "passed": true,
+    "note": "s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms",
+    "informational": false
+   }
+  ]
+ },
+ "44": {
+  "passed": false,
+  "checks": [
+   {
+    "name": "validity",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 1.00012",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_1",
+    "value": 1.2645279692168523,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_1",
+    "value": 43.689392167666966,
+    "threshold": "in [41.78, 48.08] \u00b0/s (real 44.93 \u00b17.0%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (56.2\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_1",
+    "value": 3.638452796728663,
+    "threshold": "in [3.634, 3.802]\u00b0 (real first 60 min 3.718 \u00b12.3%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_1",
+    "value": 8.321109921802215,
+    "threshold": "in [8.241, 8.333]\u00b0 (real first 60 min 8.287 \u00b10.6%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_1",
+    "value": 7.460295292402777,
+    "threshold": "in [7.621, 8.362]\u00b0 (real first 60 min 7.991 \u00b14.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.892997542997543,
+    "threshold": "<= 0.583 (permutation null p95 0.541 + 2 sd seeds 0.042)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.48305",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_2",
+    "value": 0.3271635593860981,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_2",
+    "value": 16.442621390992038,
+    "threshold": "in [16.05, 16.75] \u00b0/s (real 16.40 \u00b12.1%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (20.5\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_2",
+    "value": 1.2811993781039153,
+    "threshold": "in [1.193, 1.259]\u00b0 (real first 60 min 1.226 \u00b12.7%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_2",
+    "value": 3.7404999117919715,
+    "threshold": "in [3.637, 3.942]\u00b0 (real first 60 min 3.790 \u00b14.0%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_2",
+    "value": 3.6393855786882643,
+    "threshold": "in [3.455, 3.635]\u00b0 (real first 60 min 3.545 \u00b12.5%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.8528127559377559,
+    "threshold": "<= 0.606 (permutation null p95 0.549 + 2 sd seeds 0.057)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.59708",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_3",
+    "value": 0.33905702557097905,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_3",
+    "value": 42.68383269706711,
+    "threshold": "in [42.55, 43.57] \u00b0/s (real 43.06 \u00b11.2%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (53.8\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_3",
+    "value": "n/a",
+    "threshold": "excluded",
+    "passed": true,
+    "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_3",
+    "value": 0.7688389058487697,
+    "threshold": "in [0.754, 0.767]\u00b0 (real first 60 min 0.760 \u00b10.8%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_3",
+    "value": 3.09825248158062,
+    "threshold": "in [2.845, 3.153]\u00b0 (real first 60 min 2.999 \u00b15.1%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_3",
+    "value": 3.9371109955600043,
+    "threshold": "in [3.797, 3.921]\u00b0 (real first 60 min 3.859 \u00b11.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.8884111384111385,
+    "threshold": "<= 0.566 (permutation null p95 0.540 + 2 sd seeds 0.026)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "check7b",
+    "sensor": "all",
+    "value": 92.66470392178647,
+    "threshold": ">= 85.0 %",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "check7c",
+    "sensor": "all",
+    "value": 0.0,
+    "threshold": "lag = 0 ms for every pair",
+    "passed": true,
+    "note": "s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms",
+    "informational": false
+   }
+  ]
+ },
+ "45": {
+  "passed": false,
+  "checks": [
+   {
+    "name": "validity",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 1.00012",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_1",
+    "value": 1.268044578730331,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_1",
+    "value": 43.79166323922089,
+    "threshold": "in [41.78, 48.08] \u00b0/s (real 44.93 \u00b17.0%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "1 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (56.2\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_1",
+    "value": 3.640377336445513,
+    "threshold": "in [3.634, 3.802]\u00b0 (real first 60 min 3.718 \u00b12.3%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_1",
+    "value": 8.302529657380873,
+    "threshold": "in [8.241, 8.333]\u00b0 (real first 60 min 8.287 \u00b10.6%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_1",
+    "value": 7.490204248762428,
+    "threshold": "in [7.621, 8.362]\u00b0 (real first 60 min 7.991 \u00b14.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.885090346027846,
+    "threshold": "<= 0.583 (permutation null p95 0.541 + 2 sd seeds 0.042)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.48302",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_2",
+    "value": 0.3276825968062766,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_2",
+    "value": 16.455633512589156,
+    "threshold": "in [16.05, 16.75] \u00b0/s (real 16.40 \u00b12.1%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (20.5\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_2",
+    "value": 1.2864450501105995,
+    "threshold": "in [1.193, 1.259]\u00b0 (real first 60 min 1.226 \u00b12.7%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_2",
+    "value": 3.7120599132352607,
+    "threshold": "in [3.637, 3.942]\u00b0 (real first 60 min 3.790 \u00b14.0%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_2",
+    "value": 3.645418228280844,
+    "threshold": "in [3.455, 3.635]\u00b0 (real first 60 min 3.545 \u00b12.5%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.871895475020475,
+    "threshold": "<= 0.606 (permutation null p95 0.549 + 2 sd seeds 0.057)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.59353",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_3",
+    "value": 0.34122747633839606,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_3",
+    "value": 42.59938185915465,
+    "threshold": "in [42.55, 43.57] \u00b0/s (real 43.06 \u00b11.2%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (53.8\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_3",
+    "value": "n/a",
+    "threshold": "excluded",
+    "passed": true,
+    "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_3",
+    "value": 0.7702806569341668,
+    "threshold": "in [0.754, 0.767]\u00b0 (real first 60 min 0.760 \u00b10.8%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_3",
+    "value": 3.0430290808221154,
+    "threshold": "in [2.845, 3.153]\u00b0 (real first 60 min 2.999 \u00b15.1%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_3",
+    "value": 3.9571896687701305,
+    "threshold": "in [3.797, 3.921]\u00b0 (real first 60 min 3.859 \u00b11.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.8792792792792794,
+    "threshold": "<= 0.566 (permutation null p95 0.540 + 2 sd seeds 0.026)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "check7b",
+    "sensor": "all",
+    "value": 92.05388140536037,
+    "threshold": ">= 85.0 %",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "check7c",
+    "sensor": "all",
+    "value": 0.0,
+    "threshold": "lag = 0 ms for every pair",
+    "passed": true,
+    "note": "s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms",
+    "informational": false
+   }
+  ]
+ },
+ "46": {
+  "passed": false,
+  "checks": [
+   {
+    "name": "validity",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 1.00013",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_1",
+    "value": 1.2246227164756747,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_1",
+    "value": 43.632666580205516,
+    "threshold": "in [41.78, 48.08] \u00b0/s (real 44.93 \u00b17.0%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (56.2\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_1",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_1",
+    "value": 3.618501785115699,
+    "threshold": "in [3.634, 3.802]\u00b0 (real first 60 min 3.718 \u00b12.3%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_1",
+    "value": 8.268871076698593,
+    "threshold": "in [8.241, 8.333]\u00b0 (real first 60 min 8.287 \u00b10.6%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_1",
+    "value": 7.461426001352195,
+    "threshold": "in [7.621, 8.362]\u00b0 (real first 60 min 7.991 \u00b14.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_1",
+    "value": 0.8877085892710893,
+    "threshold": "<= 0.583 (permutation null p95 0.541 + 2 sd seeds 0.042)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.48300",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_2",
+    "value": 0.32906154801151644,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_2",
+    "value": 16.25172789960708,
+    "threshold": "in [16.05, 16.75] \u00b0/s (real 16.40 \u00b12.1%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (20.5\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_2",
+    "value": 0.0,
+    "threshold": "<= 5.0 % windows corr>0.99",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_2",
+    "value": 1.2951091108758837,
+    "threshold": "in [1.193, 1.259]\u00b0 (real first 60 min 1.226 \u00b12.7%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_2",
+    "value": 3.679882548142084,
+    "threshold": "in [3.637, 3.942]\u00b0 (real first 60 min 3.790 \u00b14.0%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_2",
+    "value": 3.6307096822915517,
+    "threshold": "in [3.455, 3.635]\u00b0 (real first 60 min 3.545 \u00b12.5%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_2",
+    "value": 0.8583819615069614,
+    "threshold": "<= 0.606 (permutation null p95 0.549 + 2 sd seeds 0.057)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "validity",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 % of s > 1+0.001",
+    "passed": true,
+    "note": "max s 0.59767",
+    "informational": false
+   },
+   {
+    "name": "gravity",
+    "sensor": "sensor_3",
+    "value": 0.33871435468623556,
+    "threshold": "< 2.0\u00b0",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "omega_p99",
+    "sensor": "sensor_3",
+    "value": 42.622849945185905,
+    "threshold": "in [42.55, 43.57] \u00b0/s (real 43.06 \u00b11.2%, data-derived)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 non-flip quaternion jumps (one-sample steps)",
+    "passed": true,
+    "note": "0 transition(s) across timestamp gaps checked by angular speed",
+    "informational": false
+   },
+   {
+    "name": "gap_jumps",
+    "sensor": "sensor_3",
+    "value": 0.0,
+    "threshold": "= 0 gap transitions faster than real p99 +25% (53.8\u00b0/s)",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "copy",
+    "sensor": "sensor_3",
+    "value": "n/a",
+    "threshold": "excluded",
+    "passed": true,
+    "note": "real sensor_3 cycles are near-identical to each other (held-out real vs training real max-corr 0.997), so similarity to the recording cannot separate replay from genuine data; the check is uninformative there.",
+    "informational": false
+   },
+   {
+    "name": "grav_moving_med",
+    "sensor": "sensor_3",
+    "value": 0.7719623599996669,
+    "threshold": "in [0.754, 0.767]\u00b0 (real first 60 min 0.760 \u00b10.8%, data-derived)",
+    "passed": false,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "grav_moving_p95",
+    "sensor": "sensor_3",
+    "value": 3.0332103257823673,
+    "threshold": "in [2.845, 3.153]\u00b0 (real first 60 min 2.999 \u00b15.1%, data-derived)",
+    "passed": true,
+    "note": "reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "mag_world",
+    "sensor": "sensor_3",
+    "value": 3.9771673550201836,
+    "threshold": "in [3.797, 3.921]\u00b0 (real first 60 min 3.859 \u00b11.6%, data-derived)",
+    "passed": false,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "c2st",
+    "sensor": "sensor_3",
+    "value": 0.890909090909091,
+    "threshold": "<= 0.566 (permutation null p95 0.540 + 2 sd seeds 0.026)",
+    "passed": false,
+    "note": "real span 0-60 min; reported, does not block",
+    "informational": true
+   },
+   {
+    "name": "check7b",
+    "sensor": "all",
+    "value": 92.69207266262985,
+    "threshold": ">= 85.0 %",
+    "passed": true,
+    "note": "",
+    "informational": false
+   },
+   {
+    "name": "check7c",
+    "sensor": "all",
+    "value": 0.0,
+    "threshold": "lag = 0 ms for every pair",
+    "passed": true,
+    "note": "s1-s2 +0ms, s1-s3 +0ms, s2-s3 +0ms",
+    "informational": false
+   }
+  ]
+ }
+}

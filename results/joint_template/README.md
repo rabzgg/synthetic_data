@@ -52,6 +52,21 @@ The sensor → arm-link mapping is **[USER TO VERIFY]**.
 | `long_duration_3h_empirical.log`, `gate_3h_per_hour_empirical.json` | `python3 long_duration_test.py --json ...` | 3-hour run, gate per hour |
 | `residual_step_covariance.py` / `.log` | (itself) | smooth vs residual step covariance (Step 2 mechanism) |
 
+## imu_consistency/
+| file | produced by | content |
+|---|---|---|
+| `README.md` | `imu_consistency.py`, `derive_gate_thresholds.py --only-imu`, gate runs in `gate/` | gravity-while-moving (reported) and mag ↔ orientation (blocking): definitions, tolerances, real vs 5 + 10 held-out seeds vs old generator |
+
+## arm6/
+| file | produced by | content |
+|---|---|---|
+| `README.md` | `build_joint_bank.py` (6 sensors), `derive_gate_thresholds.py --config-dir configs/robot_arm_6`, `regression_arm.py --config-dir ...`, `long_duration_test.py --config-dir ...` | one bank for sensor_1–6: cycle accounting, N-sensor cross-sensor checks (7a/7b/7c, data-derived, blocking), mag residual from the same cycle, data-based copy rule; gate **fails** (7a, sensor_4 copy, omega on some seeds) |
+
+## joints_456/ (superseded by arm6/)
+| file | produced by | content |
+|---|---|---|
+| `README.md` | `build_joint_bank.py`, `derive_gate_thresholds.py --config-dir configs/robot_arm_456`, `regression_arm.py --config-dir ...`, `long_duration_test.py --config-dir ...` | second sensor group (sensor_4/5/6, own bank): gate **fails** (mag_world on all three, copy on sensor_5); cause analysis, heading drift, plots |
+
 ## round3/
 | file | produced by | content |
 |---|---|---|
