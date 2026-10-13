@@ -140,10 +140,19 @@ Result: exactly what expected, nothing more and nothing less.
   - **sensor_4 copy is reported, not blocking (user decision):** "sensor_4's magnetometer is
     strongly disturbed while the arm moves; a residual from another cycle breaks mag ↔
     orientation consistency. We chose physical consistency over novelty for this channel."
-  - **The six-sensor gate still fails on every seed.** Activity correlation (7a) of 4–7 sensor
-    pairs per seed is 0.004–0.013 below real, against a real uncertainty of 0.001–0.008. This
-    systematic bias comes from the donor accel residual; raw replay passes. Omega p99 of sensor_6
-    also fails on 3 of 15 seeds.
+  - **7a practical equivalence margin (user decision 2026-10-13, option B):** a pair passes when
+    synthetic ≥ real − max(statistical tol, 0.02) (`gate_thresholds.json`,
+    `cross_sensor.activity_corr_margin`).
+    - **The practical margin 0.02 was set AFTER seeing the results (post hoc).** Reason: an
+      activity-correlation difference of ~0.01 does not change the physical behaviour of the arm;
+      the measured cause is the donor accel residual.
+    - Without the margin, 4–7 pairs per seed sit 0.004–0.013 below real, against a real uncertainty
+      of 0.001–0.008. Raw replay passes.
+    - The raw statistical result is still reported next to the pass status: 21/75 (seeds 42–46)
+      and 61/150 (held-out) pair checks fall below the statistical bound.
+  - **Six-sensor gate with the margin: 12 of 15 seeds pass** (3/5 derivation seeds, 9/10 held-out).
+    - All three failures are omega p99 of sensor_6, which stays blocking: 40.77–40.85 vs ≥ 40.89 °/s.
+    - The closest 7a pair is s1–s6, 0.004–0.011 above its bound.
   - The sensor_1–3 results below are the 3-sensor bank.
 - The sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing below says which link
   a sensor is on.

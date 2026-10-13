@@ -1,0 +1,21 @@
+== seeds 42-46 (derivation): gate passed 3/5 seeds
+  seed 42: FAIL; failing: sensor_6/omega_p99 40.845; 7a below statistical bound: 4/15
+  seed 43: PASS; failing: -; 7a below statistical bound: 2/15
+  seed 44: PASS; failing: -; 7a below statistical bound: 4/15
+  seed 45: FAIL; failing: sensor_6/omega_p99 40.771; 7a below statistical bound: 4/15
+  seed 46: PASS; failing: -; 7a below statistical bound: 7/15
+  blocking checks failing 2/280 (0.7%); by check: omega_p99 2/30
+  7a below the statistical bound (reported): 21/75 -> s1-s2 5, s1-s3 1, s1-s4 1, s1-s6 5, s2-s4 2, s3-s6 4, s4-s5 3
+== seeds 100-109 (held-out): gate passed 9/10 seeds
+  seed 100: PASS; failing: -; 7a below statistical bound: 7/15
+  seed 101: PASS; failing: -; 7a below statistical bound: 7/15
+  seed 102: PASS; failing: -; 7a below statistical bound: 4/15
+  seed 103: PASS; failing: -; 7a below statistical bound: 7/15
+  seed 104: PASS; failing: -; 7a below statistical bound: 6/15
+  seed 105: PASS; failing: -; 7a below statistical bound: 6/15
+  seed 106: FAIL; failing: sensor_6/omega_p99 40.803; 7a below statistical bound: 5/15
+  seed 107: PASS; failing: -; 7a below statistical bound: 5/15
+  seed 108: PASS; failing: -; 7a below statistical bound: 7/15
+  seed 109: PASS; failing: -; 7a below statistical bound: 7/15
+  blocking checks failing 1/560 (0.2%); by check: omega_p99 1/60
+  7a below the statistical bound (reported): 61/150 -> s1-s2 10, s1-s3 8, s1-s4 8, s1-s6 10, s2-s4 8, s3-s6 8, s4-s5 9
