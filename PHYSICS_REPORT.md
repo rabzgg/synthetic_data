@@ -131,10 +131,19 @@ Result: exactly what expected, nothing more and nothing less.
   - Mag residual from the same cycle (`mag_residual: own`): mag_world passes on all six sensors.
   - Copy check: a data-based rule replaces the per-sensor exclusion; sensor_3 and sensor_5 are
     not informative.
-  - **The six-sensor gate fails on every seed**:
-    - activity correlation of some pairs is 0.004–0.012 below real (donor accel residual);
-    - sensor_4 copy 3–46 % (the price of the mag fix);
-    - omega p99 of sensor_6 on 7 of 15 seeds.
+  - Omega p99 and 7a tolerances (review of d5ba433):
+    - tol = 2·sqrt(σ_seed² + σ_real²), with σ_real from a block bootstrap over cycles of the real
+      first 60 min;
+    - omega reference = real first 60 min;
+    - genuine real data fails 1 of 21 of these checks;
+    - omega on held-out seeds: 1/60.
+  - **sensor_4 copy is reported, not blocking (user decision):** "sensor_4's magnetometer is
+    strongly disturbed while the arm moves; a residual from another cycle breaks mag ↔
+    orientation consistency. We chose physical consistency over novelty for this channel."
+  - **The six-sensor gate still fails on every seed.** Activity correlation (7a) of 4–7 sensor
+    pairs per seed is 0.004–0.013 below real, against a real uncertainty of 0.001–0.008. This
+    systematic bias comes from the donor accel residual; raw replay passes. Omega p99 of sensor_6
+    also fails on 3 of 15 seeds.
   - The sensor_1–3 results below are the 3-sensor bank.
 - The sensor → arm-link mapping is **[USER TO VERIFY]**. Nothing below says which link
   a sensor is on.

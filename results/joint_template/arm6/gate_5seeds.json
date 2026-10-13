@@ -24,7 +24,7 @@
     "name": "omega_p99",
     "sensor": "sensor_1",
     "value": 43.830111343566884,
-    "threshold": "in [42.29, 47.57] \u00b0/s (real 44.93 \u00b15.9%, data-derived)",
+    "threshold": "in [40.78, 50.51] \u00b0/s (real first 60 min 45.65 \u00b110.7%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -114,7 +114,7 @@
     "name": "omega_p99",
     "sensor": "sensor_2",
     "value": 16.400226403164396,
-    "threshold": "in [16.08, 16.71] \u00b0/s (real 16.40 \u00b11.9%, data-derived)",
+    "threshold": "in [16.14, 16.83] \u00b0/s (real first 60 min 16.48 \u00b12.1%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -204,7 +204,7 @@
     "name": "omega_p99",
     "sensor": "sensor_3",
     "value": 42.7427866463359,
-    "threshold": "in [42.65, 43.46] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
+    "threshold": "in [42.50, 43.56] \u00b0/s (real first 60 min 43.03 \u00b11.2%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -294,7 +294,7 @@
     "name": "omega_p99",
     "sensor": "sensor_4",
     "value": 47.09643183526728,
-    "threshold": "in [46.31, 48.16] \u00b0/s (real 47.23 \u00b12.0%, data-derived)",
+    "threshold": "in [46.33, 47.59] \u00b0/s (real first 60 min 46.96 \u00b11.3%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -323,8 +323,8 @@
     "value": 9.278350515463918,
     "threshold": "<= 5.0 % windows corr>0.99",
     "passed": false,
-    "note": "held-out real scores 1.8 %",
-    "informational": false
+    "note": "reported, does not block: user decision 2026-10-13: sensor_4's magnetometer is strongly disturbed while the arm moves; a residual from another cycle breaks mag <-> orientation consistency. We chose physical consistency over novelty for this channel (mag residual from the same cycle).",
+    "informational": true
    },
    {
     "name": "grav_moving_med",
@@ -384,7 +384,7 @@
     "name": "omega_p99",
     "sensor": "sensor_5",
     "value": 34.435842226833046,
-    "threshold": "in [33.73, 36.37] \u00b0/s (real 35.05 \u00b13.8%, data-derived)",
+    "threshold": "in [33.56, 35.56] \u00b0/s (real first 60 min 34.56 \u00b12.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -474,7 +474,7 @@
     "name": "omega_p99",
     "sensor": "sensor_6",
     "value": 40.84499452280132,
-    "threshold": "in [40.99, 42.17] \u00b0/s (real 41.58 \u00b11.4%, data-derived)",
+    "threshold": "in [40.89, 42.40] \u00b0/s (real first 60 min 41.64 \u00b11.8%, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -546,7 +546,7 @@
     "name": "check7a",
     "sensor": "s1-s2",
     "value": 0.9500893918067499,
-    "threshold": ">= 0.954 (real 0.958, data-derived)",
+    "threshold": ">= 0.953 (real 0.958, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -555,7 +555,7 @@
     "name": "check7a",
     "sensor": "s1-s3",
     "value": 0.9442886186479771,
-    "threshold": ">= 0.943 (real 0.948, data-derived)",
+    "threshold": ">= 0.944 (real 0.948, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -564,7 +564,7 @@
     "name": "check7a",
     "sensor": "s1-s4",
     "value": 0.9100996572831457,
-    "threshold": ">= 0.907 (real 0.912, data-derived)",
+    "threshold": ">= 0.906 (real 0.912, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -573,7 +573,7 @@
     "name": "check7a",
     "sensor": "s1-s5",
     "value": 0.8654231328960831,
-    "threshold": ">= 0.843 (real 0.853, data-derived)",
+    "threshold": ">= 0.844 (real 0.853, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -582,7 +582,7 @@
     "name": "check7a",
     "sensor": "s1-s6",
     "value": 0.8657932077932416,
-    "threshold": ">= 0.872 (real 0.880, data-derived)",
+    "threshold": ">= 0.873 (real 0.880, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -591,7 +591,7 @@
     "name": "check7a",
     "sensor": "s2-s3",
     "value": 0.9198975106855742,
-    "threshold": ">= 0.914 (real 0.921, data-derived)",
+    "threshold": ">= 0.916 (real 0.921, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -600,7 +600,7 @@
     "name": "check7a",
     "sensor": "s2-s4",
     "value": 0.9200446167082501,
-    "threshold": ">= 0.918 (real 0.924, data-derived)",
+    "threshold": ">= 0.920 (real 0.924, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -609,7 +609,7 @@
     "name": "check7a",
     "sensor": "s2-s5",
     "value": 0.861814784548452,
-    "threshold": ">= 0.849 (real 0.864, data-derived)",
+    "threshold": ">= 0.855 (real 0.864, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -618,7 +618,7 @@
     "name": "check7a",
     "sensor": "s2-s6",
     "value": 0.853293364026948,
-    "threshold": ">= 0.840 (real 0.851, data-derived)",
+    "threshold": ">= 0.842 (real 0.851, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -627,7 +627,7 @@
     "name": "check7a",
     "sensor": "s3-s4",
     "value": 0.9368304288059346,
-    "threshold": ">= 0.933 (real 0.937, data-derived)",
+    "threshold": ">= 0.931 (real 0.937, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -636,7 +636,7 @@
     "name": "check7a",
     "sensor": "s3-s5",
     "value": 0.9026438958949059,
-    "threshold": ">= 0.881 (real 0.896, data-derived)",
+    "threshold": ">= 0.885 (real 0.896, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -645,7 +645,7 @@
     "name": "check7a",
     "sensor": "s3-s6",
     "value": 0.883503697190802,
-    "threshold": ">= 0.888 (real 0.895, data-derived)",
+    "threshold": ">= 0.889 (real 0.895, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -654,8 +654,8 @@
     "name": "check7a",
     "sensor": "s4-s5",
     "value": 0.918193242690575,
-    "threshold": ">= 0.916 (real 0.926, data-derived)",
-    "passed": true,
+    "threshold": ">= 0.920 (real 0.926, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -663,7 +663,7 @@
     "name": "check7a",
     "sensor": "s4-s6",
     "value": 0.83379808349207,
-    "threshold": ">= 0.823 (real 0.831, data-derived)",
+    "threshold": ">= 0.816 (real 0.831, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -672,7 +672,7 @@
     "name": "check7a",
     "sensor": "s5-s6",
     "value": 0.8785447449613386,
-    "threshold": ">= 0.847 (real 0.859, data-derived)",
+    "threshold": ">= 0.842 (real 0.859, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -722,7 +722,7 @@
     "name": "omega_p99",
     "sensor": "sensor_1",
     "value": 44.129763111870055,
-    "threshold": "in [42.29, 47.57] \u00b0/s (real 44.93 \u00b15.9%, data-derived)",
+    "threshold": "in [40.78, 50.51] \u00b0/s (real first 60 min 45.65 \u00b110.7%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -812,7 +812,7 @@
     "name": "omega_p99",
     "sensor": "sensor_2",
     "value": 16.31958605343164,
-    "threshold": "in [16.08, 16.71] \u00b0/s (real 16.40 \u00b11.9%, data-derived)",
+    "threshold": "in [16.14, 16.83] \u00b0/s (real first 60 min 16.48 \u00b12.1%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -902,7 +902,7 @@
     "name": "omega_p99",
     "sensor": "sensor_3",
     "value": 42.84540712479353,
-    "threshold": "in [42.65, 43.46] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
+    "threshold": "in [42.50, 43.56] \u00b0/s (real first 60 min 43.03 \u00b11.2%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -992,7 +992,7 @@
     "name": "omega_p99",
     "sensor": "sensor_4",
     "value": 46.60088132002733,
-    "threshold": "in [46.31, 48.16] \u00b0/s (real 47.23 \u00b12.0%, data-derived)",
+    "threshold": "in [46.33, 47.59] \u00b0/s (real first 60 min 46.96 \u00b11.3%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1021,8 +1021,8 @@
     "value": 8.24742268041237,
     "threshold": "<= 5.0 % windows corr>0.99",
     "passed": false,
-    "note": "held-out real scores 1.8 %",
-    "informational": false
+    "note": "reported, does not block: user decision 2026-10-13: sensor_4's magnetometer is strongly disturbed while the arm moves; a residual from another cycle breaks mag <-> orientation consistency. We chose physical consistency over novelty for this channel (mag residual from the same cycle).",
+    "informational": true
    },
    {
     "name": "grav_moving_med",
@@ -1082,7 +1082,7 @@
     "name": "omega_p99",
     "sensor": "sensor_5",
     "value": 34.00653948697586,
-    "threshold": "in [33.73, 36.37] \u00b0/s (real 35.05 \u00b13.8%, data-derived)",
+    "threshold": "in [33.56, 35.56] \u00b0/s (real first 60 min 34.56 \u00b12.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1172,8 +1172,8 @@
     "name": "omega_p99",
     "sensor": "sensor_6",
     "value": 40.94387572254658,
-    "threshold": "in [40.99, 42.17] \u00b0/s (real 41.58 \u00b11.4%, data-derived)",
-    "passed": false,
+    "threshold": "in [40.89, 42.40] \u00b0/s (real first 60 min 41.64 \u00b11.8%, data-derived)",
+    "passed": true,
     "note": "",
     "informational": false
    },
@@ -1244,7 +1244,7 @@
     "name": "check7a",
     "sensor": "s1-s2",
     "value": 0.950049439241177,
-    "threshold": ">= 0.954 (real 0.958, data-derived)",
+    "threshold": ">= 0.953 (real 0.958, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -1253,7 +1253,7 @@
     "name": "check7a",
     "sensor": "s1-s3",
     "value": 0.9450406693619395,
-    "threshold": ">= 0.943 (real 0.948, data-derived)",
+    "threshold": ">= 0.944 (real 0.948, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1262,7 +1262,7 @@
     "name": "check7a",
     "sensor": "s1-s4",
     "value": 0.9082064645415553,
-    "threshold": ">= 0.907 (real 0.912, data-derived)",
+    "threshold": ">= 0.906 (real 0.912, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1271,7 +1271,7 @@
     "name": "check7a",
     "sensor": "s1-s5",
     "value": 0.866505403866807,
-    "threshold": ">= 0.843 (real 0.853, data-derived)",
+    "threshold": ">= 0.844 (real 0.853, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1280,7 +1280,7 @@
     "name": "check7a",
     "sensor": "s1-s6",
     "value": 0.8706228300509589,
-    "threshold": ">= 0.872 (real 0.880, data-derived)",
+    "threshold": ">= 0.873 (real 0.880, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -1289,7 +1289,7 @@
     "name": "check7a",
     "sensor": "s2-s3",
     "value": 0.9188148923663128,
-    "threshold": ">= 0.914 (real 0.921, data-derived)",
+    "threshold": ">= 0.916 (real 0.921, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1298,7 +1298,7 @@
     "name": "check7a",
     "sensor": "s2-s4",
     "value": 0.9197556554572557,
-    "threshold": ">= 0.918 (real 0.924, data-derived)",
+    "threshold": ">= 0.920 (real 0.924, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1307,7 +1307,7 @@
     "name": "check7a",
     "sensor": "s2-s5",
     "value": 0.8650067373993232,
-    "threshold": ">= 0.849 (real 0.864, data-derived)",
+    "threshold": ">= 0.855 (real 0.864, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1316,7 +1316,7 @@
     "name": "check7a",
     "sensor": "s2-s6",
     "value": 0.8550295413386266,
-    "threshold": ">= 0.840 (real 0.851, data-derived)",
+    "threshold": ">= 0.842 (real 0.851, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1325,7 +1325,7 @@
     "name": "check7a",
     "sensor": "s3-s4",
     "value": 0.9382130055628539,
-    "threshold": ">= 0.933 (real 0.937, data-derived)",
+    "threshold": ">= 0.931 (real 0.937, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1334,7 +1334,7 @@
     "name": "check7a",
     "sensor": "s3-s5",
     "value": 0.9100717900213972,
-    "threshold": ">= 0.881 (real 0.896, data-derived)",
+    "threshold": ">= 0.885 (real 0.896, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1343,7 +1343,7 @@
     "name": "check7a",
     "sensor": "s3-s6",
     "value": 0.8893621745841225,
-    "threshold": ">= 0.888 (real 0.895, data-derived)",
+    "threshold": ">= 0.889 (real 0.895, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1352,7 +1352,7 @@
     "name": "check7a",
     "sensor": "s4-s5",
     "value": 0.9203264008576442,
-    "threshold": ">= 0.916 (real 0.926, data-derived)",
+    "threshold": ">= 0.920 (real 0.926, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1361,7 +1361,7 @@
     "name": "check7a",
     "sensor": "s4-s6",
     "value": 0.8382519498385584,
-    "threshold": ">= 0.823 (real 0.831, data-derived)",
+    "threshold": ">= 0.816 (real 0.831, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1370,7 +1370,7 @@
     "name": "check7a",
     "sensor": "s5-s6",
     "value": 0.8867065412330684,
-    "threshold": ">= 0.847 (real 0.859, data-derived)",
+    "threshold": ">= 0.842 (real 0.859, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1420,7 +1420,7 @@
     "name": "omega_p99",
     "sensor": "sensor_1",
     "value": 45.186797411729444,
-    "threshold": "in [42.29, 47.57] \u00b0/s (real 44.93 \u00b15.9%, data-derived)",
+    "threshold": "in [40.78, 50.51] \u00b0/s (real first 60 min 45.65 \u00b110.7%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1510,7 +1510,7 @@
     "name": "omega_p99",
     "sensor": "sensor_2",
     "value": 16.48674796264043,
-    "threshold": "in [16.08, 16.71] \u00b0/s (real 16.40 \u00b11.9%, data-derived)",
+    "threshold": "in [16.14, 16.83] \u00b0/s (real first 60 min 16.48 \u00b12.1%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1600,7 +1600,7 @@
     "name": "omega_p99",
     "sensor": "sensor_3",
     "value": 42.963448275305964,
-    "threshold": "in [42.65, 43.46] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
+    "threshold": "in [42.50, 43.56] \u00b0/s (real first 60 min 43.03 \u00b11.2%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1690,7 +1690,7 @@
     "name": "omega_p99",
     "sensor": "sensor_4",
     "value": 47.129833119002946,
-    "threshold": "in [46.31, 48.16] \u00b0/s (real 47.23 \u00b12.0%, data-derived)",
+    "threshold": "in [46.33, 47.59] \u00b0/s (real first 60 min 46.96 \u00b11.3%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1719,8 +1719,8 @@
     "value": 7.216494845360824,
     "threshold": "<= 5.0 % windows corr>0.99",
     "passed": false,
-    "note": "held-out real scores 1.8 %",
-    "informational": false
+    "note": "reported, does not block: user decision 2026-10-13: sensor_4's magnetometer is strongly disturbed while the arm moves; a residual from another cycle breaks mag <-> orientation consistency. We chose physical consistency over novelty for this channel (mag residual from the same cycle).",
+    "informational": true
    },
    {
     "name": "grav_moving_med",
@@ -1780,7 +1780,7 @@
     "name": "omega_p99",
     "sensor": "sensor_5",
     "value": 34.34098296811327,
-    "threshold": "in [33.73, 36.37] \u00b0/s (real 35.05 \u00b13.8%, data-derived)",
+    "threshold": "in [33.56, 35.56] \u00b0/s (real first 60 min 34.56 \u00b12.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1870,7 +1870,7 @@
     "name": "omega_p99",
     "sensor": "sensor_6",
     "value": 41.17156324911455,
-    "threshold": "in [40.99, 42.17] \u00b0/s (real 41.58 \u00b11.4%, data-derived)",
+    "threshold": "in [40.89, 42.40] \u00b0/s (real first 60 min 41.64 \u00b11.8%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1942,7 +1942,7 @@
     "name": "check7a",
     "sensor": "s1-s2",
     "value": 0.9486866803676867,
-    "threshold": ">= 0.954 (real 0.958, data-derived)",
+    "threshold": ">= 0.953 (real 0.958, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -1951,7 +1951,7 @@
     "name": "check7a",
     "sensor": "s1-s3",
     "value": 0.9446915231815991,
-    "threshold": ">= 0.943 (real 0.948, data-derived)",
+    "threshold": ">= 0.944 (real 0.948, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1960,7 +1960,7 @@
     "name": "check7a",
     "sensor": "s1-s4",
     "value": 0.9086125126862382,
-    "threshold": ">= 0.907 (real 0.912, data-derived)",
+    "threshold": ">= 0.906 (real 0.912, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1969,7 +1969,7 @@
     "name": "check7a",
     "sensor": "s1-s5",
     "value": 0.8648716814657724,
-    "threshold": ">= 0.843 (real 0.853, data-derived)",
+    "threshold": ">= 0.844 (real 0.853, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1978,7 +1978,7 @@
     "name": "check7a",
     "sensor": "s1-s6",
     "value": 0.8675339419924402,
-    "threshold": ">= 0.872 (real 0.880, data-derived)",
+    "threshold": ">= 0.873 (real 0.880, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -1987,7 +1987,7 @@
     "name": "check7a",
     "sensor": "s2-s3",
     "value": 0.9190702453955909,
-    "threshold": ">= 0.914 (real 0.921, data-derived)",
+    "threshold": ">= 0.916 (real 0.921, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -1996,7 +1996,7 @@
     "name": "check7a",
     "sensor": "s2-s4",
     "value": 0.9206082543614039,
-    "threshold": ">= 0.918 (real 0.924, data-derived)",
+    "threshold": ">= 0.920 (real 0.924, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2005,7 +2005,7 @@
     "name": "check7a",
     "sensor": "s2-s5",
     "value": 0.8584862682890017,
-    "threshold": ">= 0.849 (real 0.864, data-derived)",
+    "threshold": ">= 0.855 (real 0.864, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2014,7 +2014,7 @@
     "name": "check7a",
     "sensor": "s2-s6",
     "value": 0.8536227828555223,
-    "threshold": ">= 0.840 (real 0.851, data-derived)",
+    "threshold": ">= 0.842 (real 0.851, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2023,7 +2023,7 @@
     "name": "check7a",
     "sensor": "s3-s4",
     "value": 0.9376209726251676,
-    "threshold": ">= 0.933 (real 0.937, data-derived)",
+    "threshold": ">= 0.931 (real 0.937, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2032,7 +2032,7 @@
     "name": "check7a",
     "sensor": "s3-s5",
     "value": 0.9048891085102799,
-    "threshold": ">= 0.881 (real 0.896, data-derived)",
+    "threshold": ">= 0.885 (real 0.896, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2041,7 +2041,7 @@
     "name": "check7a",
     "sensor": "s3-s6",
     "value": 0.8859109880031522,
-    "threshold": ">= 0.888 (real 0.895, data-derived)",
+    "threshold": ">= 0.889 (real 0.895, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -2050,8 +2050,8 @@
     "name": "check7a",
     "sensor": "s4-s5",
     "value": 0.9181372523357392,
-    "threshold": ">= 0.916 (real 0.926, data-derived)",
-    "passed": true,
+    "threshold": ">= 0.920 (real 0.926, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -2059,7 +2059,7 @@
     "name": "check7a",
     "sensor": "s4-s6",
     "value": 0.8359339062632221,
-    "threshold": ">= 0.823 (real 0.831, data-derived)",
+    "threshold": ">= 0.816 (real 0.831, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2068,7 +2068,7 @@
     "name": "check7a",
     "sensor": "s5-s6",
     "value": 0.87857901647595,
-    "threshold": ">= 0.847 (real 0.859, data-derived)",
+    "threshold": ">= 0.842 (real 0.859, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2118,7 +2118,7 @@
     "name": "omega_p99",
     "sensor": "sensor_1",
     "value": 43.89888390239946,
-    "threshold": "in [42.29, 47.57] \u00b0/s (real 44.93 \u00b15.9%, data-derived)",
+    "threshold": "in [40.78, 50.51] \u00b0/s (real first 60 min 45.65 \u00b110.7%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2208,7 +2208,7 @@
     "name": "omega_p99",
     "sensor": "sensor_2",
     "value": 16.23798845245209,
-    "threshold": "in [16.08, 16.71] \u00b0/s (real 16.40 \u00b11.9%, data-derived)",
+    "threshold": "in [16.14, 16.83] \u00b0/s (real first 60 min 16.48 \u00b12.1%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2298,7 +2298,7 @@
     "name": "omega_p99",
     "sensor": "sensor_3",
     "value": 42.805569820632485,
-    "threshold": "in [42.65, 43.46] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
+    "threshold": "in [42.50, 43.56] \u00b0/s (real first 60 min 43.03 \u00b11.2%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2388,7 +2388,7 @@
     "name": "omega_p99",
     "sensor": "sensor_4",
     "value": 46.693410048033286,
-    "threshold": "in [46.31, 48.16] \u00b0/s (real 47.23 \u00b12.0%, data-derived)",
+    "threshold": "in [46.33, 47.59] \u00b0/s (real first 60 min 46.96 \u00b11.3%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2417,8 +2417,8 @@
     "value": 6.185567010309279,
     "threshold": "<= 5.0 % windows corr>0.99",
     "passed": false,
-    "note": "held-out real scores 1.8 %",
-    "informational": false
+    "note": "reported, does not block: user decision 2026-10-13: sensor_4's magnetometer is strongly disturbed while the arm moves; a residual from another cycle breaks mag <-> orientation consistency. We chose physical consistency over novelty for this channel (mag residual from the same cycle).",
+    "informational": true
    },
    {
     "name": "grav_moving_med",
@@ -2478,8 +2478,8 @@
     "name": "omega_p99",
     "sensor": "sensor_5",
     "value": 33.71284610388517,
-    "threshold": "in [33.73, 36.37] \u00b0/s (real 35.05 \u00b13.8%, data-derived)",
-    "passed": false,
+    "threshold": "in [33.56, 35.56] \u00b0/s (real first 60 min 34.56 \u00b12.9%, data-derived)",
+    "passed": true,
     "note": "",
     "informational": false
    },
@@ -2568,7 +2568,7 @@
     "name": "omega_p99",
     "sensor": "sensor_6",
     "value": 40.77058656834009,
-    "threshold": "in [40.99, 42.17] \u00b0/s (real 41.58 \u00b11.4%, data-derived)",
+    "threshold": "in [40.89, 42.40] \u00b0/s (real first 60 min 41.64 \u00b11.8%, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -2640,7 +2640,7 @@
     "name": "check7a",
     "sensor": "s1-s2",
     "value": 0.9467431798096304,
-    "threshold": ">= 0.954 (real 0.958, data-derived)",
+    "threshold": ">= 0.953 (real 0.958, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -2649,7 +2649,7 @@
     "name": "check7a",
     "sensor": "s1-s3",
     "value": 0.9457244870360335,
-    "threshold": ">= 0.943 (real 0.948, data-derived)",
+    "threshold": ">= 0.944 (real 0.948, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2658,7 +2658,7 @@
     "name": "check7a",
     "sensor": "s1-s4",
     "value": 0.9099029497395199,
-    "threshold": ">= 0.907 (real 0.912, data-derived)",
+    "threshold": ">= 0.906 (real 0.912, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2667,7 +2667,7 @@
     "name": "check7a",
     "sensor": "s1-s5",
     "value": 0.8669670760318037,
-    "threshold": ">= 0.843 (real 0.853, data-derived)",
+    "threshold": ">= 0.844 (real 0.853, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2676,7 +2676,7 @@
     "name": "check7a",
     "sensor": "s1-s6",
     "value": 0.8683242164512717,
-    "threshold": ">= 0.872 (real 0.880, data-derived)",
+    "threshold": ">= 0.873 (real 0.880, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -2685,7 +2685,7 @@
     "name": "check7a",
     "sensor": "s2-s3",
     "value": 0.9185058545212299,
-    "threshold": ">= 0.914 (real 0.921, data-derived)",
+    "threshold": ">= 0.916 (real 0.921, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2694,7 +2694,7 @@
     "name": "check7a",
     "sensor": "s2-s4",
     "value": 0.917217277748228,
-    "threshold": ">= 0.918 (real 0.924, data-derived)",
+    "threshold": ">= 0.920 (real 0.924, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -2703,7 +2703,7 @@
     "name": "check7a",
     "sensor": "s2-s5",
     "value": 0.8624874085759501,
-    "threshold": ">= 0.849 (real 0.864, data-derived)",
+    "threshold": ">= 0.855 (real 0.864, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2712,7 +2712,7 @@
     "name": "check7a",
     "sensor": "s2-s6",
     "value": 0.8588398486407508,
-    "threshold": ">= 0.840 (real 0.851, data-derived)",
+    "threshold": ">= 0.842 (real 0.851, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2721,7 +2721,7 @@
     "name": "check7a",
     "sensor": "s3-s4",
     "value": 0.9403272525339166,
-    "threshold": ">= 0.933 (real 0.937, data-derived)",
+    "threshold": ">= 0.931 (real 0.937, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2730,7 +2730,7 @@
     "name": "check7a",
     "sensor": "s3-s5",
     "value": 0.9098036765723994,
-    "threshold": ">= 0.881 (real 0.896, data-derived)",
+    "threshold": ">= 0.885 (real 0.896, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2739,7 +2739,7 @@
     "name": "check7a",
     "sensor": "s3-s6",
     "value": 0.887306910821716,
-    "threshold": ">= 0.888 (real 0.895, data-derived)",
+    "threshold": ">= 0.889 (real 0.895, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -2748,7 +2748,7 @@
     "name": "check7a",
     "sensor": "s4-s5",
     "value": 0.9221810332349984,
-    "threshold": ">= 0.916 (real 0.926, data-derived)",
+    "threshold": ">= 0.920 (real 0.926, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2757,7 +2757,7 @@
     "name": "check7a",
     "sensor": "s4-s6",
     "value": 0.8376416514944056,
-    "threshold": ">= 0.823 (real 0.831, data-derived)",
+    "threshold": ">= 0.816 (real 0.831, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2766,7 +2766,7 @@
     "name": "check7a",
     "sensor": "s5-s6",
     "value": 0.8793387273085306,
-    "threshold": ">= 0.847 (real 0.859, data-derived)",
+    "threshold": ">= 0.842 (real 0.859, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2816,7 +2816,7 @@
     "name": "omega_p99",
     "sensor": "sensor_1",
     "value": 44.73291375566093,
-    "threshold": "in [42.29, 47.57] \u00b0/s (real 44.93 \u00b15.9%, data-derived)",
+    "threshold": "in [40.78, 50.51] \u00b0/s (real first 60 min 45.65 \u00b110.7%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2906,7 +2906,7 @@
     "name": "omega_p99",
     "sensor": "sensor_2",
     "value": 16.484537194692496,
-    "threshold": "in [16.08, 16.71] \u00b0/s (real 16.40 \u00b11.9%, data-derived)",
+    "threshold": "in [16.14, 16.83] \u00b0/s (real first 60 min 16.48 \u00b12.1%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -2996,7 +2996,7 @@
     "name": "omega_p99",
     "sensor": "sensor_3",
     "value": 42.97402726400133,
-    "threshold": "in [42.65, 43.46] \u00b0/s (real 43.06 \u00b10.9%, data-derived)",
+    "threshold": "in [42.50, 43.56] \u00b0/s (real first 60 min 43.03 \u00b11.2%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3086,7 +3086,7 @@
     "name": "omega_p99",
     "sensor": "sensor_4",
     "value": 46.970889705897534,
-    "threshold": "in [46.31, 48.16] \u00b0/s (real 47.23 \u00b12.0%, data-derived)",
+    "threshold": "in [46.33, 47.59] \u00b0/s (real first 60 min 46.96 \u00b11.3%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3115,8 +3115,8 @@
     "value": 11.34020618556701,
     "threshold": "<= 5.0 % windows corr>0.99",
     "passed": false,
-    "note": "held-out real scores 1.8 %",
-    "informational": false
+    "note": "reported, does not block: user decision 2026-10-13: sensor_4's magnetometer is strongly disturbed while the arm moves; a residual from another cycle breaks mag <-> orientation consistency. We chose physical consistency over novelty for this channel (mag residual from the same cycle).",
+    "informational": true
    },
    {
     "name": "grav_moving_med",
@@ -3176,7 +3176,7 @@
     "name": "omega_p99",
     "sensor": "sensor_5",
     "value": 34.34023518039367,
-    "threshold": "in [33.73, 36.37] \u00b0/s (real 35.05 \u00b13.8%, data-derived)",
+    "threshold": "in [33.56, 35.56] \u00b0/s (real first 60 min 34.56 \u00b12.9%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3266,7 +3266,7 @@
     "name": "omega_p99",
     "sensor": "sensor_6",
     "value": 41.18417696796309,
-    "threshold": "in [40.99, 42.17] \u00b0/s (real 41.58 \u00b11.4%, data-derived)",
+    "threshold": "in [40.89, 42.40] \u00b0/s (real first 60 min 41.64 \u00b11.8%, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3338,7 +3338,7 @@
     "name": "check7a",
     "sensor": "s1-s2",
     "value": 0.9488246018956438,
-    "threshold": ">= 0.954 (real 0.958, data-derived)",
+    "threshold": ">= 0.953 (real 0.958, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -3347,7 +3347,7 @@
     "name": "check7a",
     "sensor": "s1-s3",
     "value": 0.9416631466397719,
-    "threshold": ">= 0.943 (real 0.948, data-derived)",
+    "threshold": ">= 0.944 (real 0.948, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -3356,7 +3356,7 @@
     "name": "check7a",
     "sensor": "s1-s4",
     "value": 0.9051345004058408,
-    "threshold": ">= 0.907 (real 0.912, data-derived)",
+    "threshold": ">= 0.906 (real 0.912, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -3365,7 +3365,7 @@
     "name": "check7a",
     "sensor": "s1-s5",
     "value": 0.8623363786510287,
-    "threshold": ">= 0.843 (real 0.853, data-derived)",
+    "threshold": ">= 0.844 (real 0.853, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3374,7 +3374,7 @@
     "name": "check7a",
     "sensor": "s1-s6",
     "value": 0.8700339113302884,
-    "threshold": ">= 0.872 (real 0.880, data-derived)",
+    "threshold": ">= 0.873 (real 0.880, data-derived)",
     "passed": false,
     "note": "",
     "informational": false
@@ -3383,7 +3383,7 @@
     "name": "check7a",
     "sensor": "s2-s3",
     "value": 0.9177372587078558,
-    "threshold": ">= 0.914 (real 0.921, data-derived)",
+    "threshold": ">= 0.916 (real 0.921, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3392,8 +3392,8 @@
     "name": "check7a",
     "sensor": "s2-s4",
     "value": 0.9189669219596817,
-    "threshold": ">= 0.918 (real 0.924, data-derived)",
-    "passed": true,
+    "threshold": ">= 0.920 (real 0.924, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -3401,7 +3401,7 @@
     "name": "check7a",
     "sensor": "s2-s5",
     "value": 0.8600877920437865,
-    "threshold": ">= 0.849 (real 0.864, data-derived)",
+    "threshold": ">= 0.855 (real 0.864, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3410,7 +3410,7 @@
     "name": "check7a",
     "sensor": "s2-s6",
     "value": 0.854985989831985,
-    "threshold": ">= 0.840 (real 0.851, data-derived)",
+    "threshold": ">= 0.842 (real 0.851, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3419,7 +3419,7 @@
     "name": "check7a",
     "sensor": "s3-s4",
     "value": 0.9382675262993015,
-    "threshold": ">= 0.933 (real 0.937, data-derived)",
+    "threshold": ">= 0.931 (real 0.937, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3428,7 +3428,7 @@
     "name": "check7a",
     "sensor": "s3-s5",
     "value": 0.9065242136144818,
-    "threshold": ">= 0.881 (real 0.896, data-derived)",
+    "threshold": ">= 0.885 (real 0.896, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3437,8 +3437,8 @@
     "name": "check7a",
     "sensor": "s3-s6",
     "value": 0.8886371994507335,
-    "threshold": ">= 0.888 (real 0.895, data-derived)",
-    "passed": true,
+    "threshold": ">= 0.889 (real 0.895, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -3446,8 +3446,8 @@
     "name": "check7a",
     "sensor": "s4-s5",
     "value": 0.9181668469864702,
-    "threshold": ">= 0.916 (real 0.926, data-derived)",
-    "passed": true,
+    "threshold": ">= 0.920 (real 0.926, data-derived)",
+    "passed": false,
     "note": "",
     "informational": false
    },
@@ -3455,7 +3455,7 @@
     "name": "check7a",
     "sensor": "s4-s6",
     "value": 0.8367045207340276,
-    "threshold": ">= 0.823 (real 0.831, data-derived)",
+    "threshold": ">= 0.816 (real 0.831, data-derived)",
     "passed": true,
     "note": "",
     "informational": false
@@ -3464,7 +3464,7 @@
     "name": "check7a",
     "sensor": "s5-s6",
     "value": 0.8778834853272208,
-    "threshold": ">= 0.847 (real 0.859, data-derived)",
+    "threshold": ">= 0.842 (real 0.859, data-derived)",
     "passed": true,
     "note": "",
     "informational": false

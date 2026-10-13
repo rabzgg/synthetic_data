@@ -5,6 +5,58 @@ Sensor → arm-link mapping: **[USER TO VERIFY]**.
 This replaces the two-bank setup of `../joints_456/` (sensor_1–3 and sensor_4–6 as separate banks).
 That setup broke the coupling between the two groups.
 
+## Update 2026-10-13 (review of d5ba433): tolerances with real uncertainty, sensor_4 copy reported
+
+**TL;DR**
+- **Omega p99 and 7a tolerances now include real sampling uncertainty.**
+  - Rule, the same for every sensor and every pair: tol = 2·sqrt(σ_seed² + σ_real²).
+  - σ_real comes from a moving-block bootstrap of the real first 60 min (blocks of 10 cycles,
+    200 resamples; `real_bootstrap.py`).
+  - Derived and committed before the gate was run.
+- **Omega reference changed** from the whole 95-min recording to the real first 60 min. That is the
+  span the synthetic file replays, the span the bootstrap measures, and the reference of every
+  other check. The two differ by up to 1.6 % (sensor_1) and 1.4 % (sensor_5), which with the
+  narrower bands alone would fail a sensor.
+- **Real uncertainty is small, so the bands barely widen.** σ_real is 0.001–0.008 for the
+  correlations and 0.13–0.40 °/s for omega (sensor_1: 2.4 °/s).
+  - Omega bands: ±1.2–2.9 % for five sensors, ±10.7 % for sensor_1.
+  - Some bands get narrower: omega sensor_4 and sensor_5; 7a s3–s4, s4–s6, s5–s6.
+  - The data does not support the ~5 % band suggested in the review.
+- **Calibration**, as the share of blocking checks failing:
+
+  | data | old thresholds | new thresholds |
+  |---|---|---|
+  | genuine real data, real minutes 35–95 scored as if synthetic (`calibration_real_window.log`) | 0/21 | **1/21 (5 %)**: omega sensor_5, real p99 35.68 vs band 33.56–35.56 |
+  | synthetic, held-out seeds 100–109 (`calibration_heldout.log`) | 53/570 (9.3 %) | **62/560 (11.1 %)** |
+  | — omega | 3/60 | **1/60 (1.7 %)** |
+  | — 7a | 43/150 | **61/150 (41 %)** |
+  | — copy | 7/40 | 0/30 (sensor_4 now reported) |
+
+  - The new bands are calibrated on genuine data, and omega is now calibrated on synthetic data.
+  - **7a is not a calibration problem.** The same bands pass the genuine real window on all 15
+    pairs, but synthetic sits consistently below real on 7 pairs.
+    - Example: s1–s2 0.947–0.950 vs real 0.958, with σ_real 0.002.
+    - That is the donor accel-residual bias (raw replay passes, `check7a_diagnosis.log`).
+- **sensor_4 copy is reported, not blocking**, by user decision: "sensor_4's magnetometer is
+  strongly disturbed while the arm moves; a residual from another cycle breaks mag ↔ orientation
+  consistency. We chose physical consistency over novelty for this channel."
+  - The copy value is still shown: 3.1–46.4 % over 15 seeds.
+  - The decision is coded in `physics_gate.COPY_REPORTED_DECISION`, separate from the data rule.
+- **The copy rule's 0.97 is confirmed** as the **fraction of held-out real windows** that count as
+  copies (sensor_3 and sensor_5: 98.2 %).
+- **Gate result:** fails on all 5 + 10 seeds.
+  - The only blocking failures left: 7a on 4–7 pairs per seed, plus omega sensor_6 on 2 of 5 and
+    1 of 10 seeds.
+  - Seed 42 (the dataset files): omega sensor_6 (40.85 vs ≥ 40.89); 7a s1–s2, s1–s6, s3–s6, s4–s5.
+
+Old vs new thresholds side by side, with pass counts: `thresholds_old_vs_new.md`. Gate runs:
+`regression_5seeds.log` / `gate_5seeds.json`, `heldout_seeds_100_109.log` / `.json` (new),
+`*_before_bootstrap.*` (old). Old thresholds file: `gate_thresholds_before_bootstrap.json`.
+
+## Report of d5ba433 (one bank, cross-sensor checks, mag residual, copy rule)
+
+The thresholds and pass counts below are the ones before the update above.
+
 **TL;DR**
 - **The cross-group defect is fixed.** All six sensors now replay one shared cycle schedule.
   - Activity correlation between groups: 0.86–0.94 (real 0.85–0.94), up from 0.09–0.15.
@@ -164,7 +216,10 @@ donor aligned to the same phase (DTW) still gives 15.6°. Each cycle carries its
 |---|---|
 | `bank_cycle_attribution.py` / `.log` | dropped cycles by rule and sensor, for banks 1–3, 4–6 and 1–6 |
 | `cross_group_activity.log` | activity correlation, agreement and lag: real vs two banks vs one bank |
-| `derive_thresholds.log`, `gate_thresholds.json` | `python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6` |
+| `derive_thresholds.log`, `gate_thresholds_before_bootstrap.json` | `python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6` (first derivation) |
+| `derive_thresholds_bootstrap.log`, `gate_thresholds.json` | `python3 derive_gate_thresholds.py --config-dir configs/robot_arm_6 --update omega cross_sensor` (current) |
+| `thresholds_old_vs_new.md` | omega and 7a thresholds, old vs new, with pass counts |
+| `calibration_real_window.log`, `calibration_heldout.log` | share of checks failing: genuine real window, held-out seeds |
 | `regression_5seeds.log`, `gate_5seeds.json` | `python3 regression_arm.py --config-dir configs/robot_arm_6 --json …` (seeds 42–46) |
 | `heldout_seeds_100_109.log` / `.json` | same, seeds 100–109 |
 | `long_duration_3h.log`, `gate_3h_per_hour.json` | `python3 long_duration_test.py --config-dir configs/robot_arm_6 --tag _arm6 --json …` |

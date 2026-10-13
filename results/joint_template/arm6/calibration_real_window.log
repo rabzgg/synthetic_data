@@ -1,0 +1,23 @@
+genuine real data, minutes 34.9-94.9, scored as if synthetic (overlaps the reference 0-60 min by 25 min)
+  omega sensor_1: 46.07  new [40.78,50.51] pass   old [42.29,47.57] pass
+  omega sensor_2: 16.41  new [16.14,16.83] pass   old [16.08,16.71] pass
+  omega sensor_3: 43.28  new [42.50,43.56] pass   old [42.65,43.46] pass
+  omega sensor_4: 47.45  new [46.33,47.59] pass   old [46.31,48.16] pass
+  omega sensor_5: 35.68  new [33.56,35.56] FAIL   old [33.73,36.37] pass
+  omega sensor_6: 41.68  new [40.89,42.40] pass   old [40.99,42.17] pass
+  7a s1-s2: 0.956  new min 0.953 pass   old min 0.954 pass
+  7a s1-s3: 0.951  new min 0.944 pass   old min 0.943 pass
+  7a s1-s4: 0.913  new min 0.906 pass   old min 0.907 pass
+  7a s1-s5: 0.849  new min 0.844 pass   old min 0.843 pass
+  7a s1-s6: 0.878  new min 0.873 pass   old min 0.872 pass
+  7a s2-s3: 0.922  new min 0.916 pass   old min 0.914 pass
+  7a s2-s4: 0.927  new min 0.920 pass   old min 0.918 pass
+  7a s2-s5: 0.865  new min 0.855 pass   old min 0.849 pass
+  7a s2-s6: 0.847  new min 0.842 pass   old min 0.840 pass
+  7a s3-s4: 0.939  new min 0.931 pass   old min 0.933 pass
+  7a s3-s5: 0.890  new min 0.885 pass   old min 0.881 pass
+  7a s3-s6: 0.892  new min 0.889 pass   old min 0.888 pass
+  7a s4-s5: 0.921  new min 0.920 pass   old min 0.916 pass
+  7a s4-s6: 0.832  new min 0.816 pass   old min 0.823 pass
+  7a s5-s6: 0.853  new min 0.842 pass   old min 0.847 pass
+genuine data failing: new thresholds 1/21 (5%), old thresholds 0/21 (0%)
