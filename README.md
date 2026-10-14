@@ -23,7 +23,8 @@ streamlit run ui/app.py
 ```
 Pick sensor, scenario, duration and seed, then Generate. The UI shows the gate result per check and
 real-vs-synthetic plots, and offers a ZIP (CSV + `gate_report.json` + README). For the robot-arm
-scenarios the gate is used as a filter: up to 5 seeds are tried.
+scenarios the gate is used as a filter: up to 5 seeds are tried. The five gas detectors (MSA ALTAIR
+io4/io6, Blackline G7c/G7x/G8) are datasheet-based: rule gate only, no real data behind them.
 
 ## Run the physics gate
 ```bash

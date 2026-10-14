@@ -35,6 +35,10 @@ A check with `informational=True` is shown with ⚠️ and does not decide the r
 
 Never return `passed` for an output nothing has checked. Use `not_validated` instead.
 
+Two real examples: `core/profiles/xdk.py` (recorded data, physics gate, gate as filter) and
+`core/profiles/gas.py` (datasheet-only gas detectors, rule gate, one profile per device; scenarios map
+to the generator's `forced` events).
+
 ## 2. A minimal profile
 
 ```python

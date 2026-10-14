@@ -31,8 +31,9 @@ with st.sidebar:
 
     max_s, min_s = prof.max_duration_s(scenario), prof.min_duration_s(scenario)
     if max_s:
-        beyond = st.checkbox(f"Allow longer than the recording ({max_s / 60:.1f} min)", value=False)
-        top_min = (3 * max_s if beyond else max_s) / 60
+        hard = prof.hard_max_duration_s(scenario)
+        beyond = st.checkbox(f"Allow longer than {max_s / 60:.1f} min", value=False) if hard and hard > max_s else False
+        top_min = (hard if beyond else max_s) / 60
     else:
         top_min = 24 * 60.0
     default_min = min(prof.default_duration_s(scenario) / 60, top_min)
@@ -40,7 +41,7 @@ with st.sidebar:
                         value=float(round(default_min, 1)), step=0.5)
     duration_s = dur_min * 60
     if max_s and duration_s > max_s:
-        st.warning(f"Drift is not modelled beyond the recording length ({max_s / 60:.1f} min).")
+        st.warning(prof.beyond_max_message(scenario))
 
     random_seed = st.checkbox("Random seed", value=False)
     seed_in = st.number_input("Seed", min_value=0, max_value=2 ** 31 - 10, value=42, step=1, disabled=random_seed)
@@ -80,10 +81,10 @@ if res:
     n = len(run.attempts)
     which = f"attempt {run.chosen.number} of {n} (seed {run.chosen.seed})"
     if rep.status == PASSED:
-        st.success(f"Physics gate PASSED on {which}.")
+        st.success(f"{p.gate_name} PASSED" + (f" on {which}." if n > 1 or p.max_attempts(run.scenario) > 1 else "."))
     elif rep.status == FAILED:
-        st.error(f"Physics gate FAILED on every attempt ({n}). Showing {which}, the one with the fewest failed "
-                 f"blocking checks.")
+        st.error(f"{p.gate_name} FAILED on every attempt ({n}). Showing {which}, the one with the fewest failed "
+                 f"blocking checks." if n > 1 else f"{p.gate_name} FAILED.")
     elif rep.status == PARTIAL:
         (st.info if rep.passed else st.error)(rep.message + (" Passed." if rep.passed else " Failed."))
     elif rep.status == NOT_VALIDATED:
@@ -117,12 +118,13 @@ if res:
         st.markdown("**Known limitations**")
         st.markdown("\n".join(f"- {x}" for x in lim))
 
-    st.download_button("Download ZIP (CSV + gate_report.json + README)", data=res["zip"],
+    st.download_button("Download ZIP (CSV + gate_report.json + README" +
+                       (" + spec + assumptions" if p.extra_files(run) else "") + ")", data=res["zip"],
                        file_name=f"{p.name}_{run.scenario.replace('/', '_')}_seed{run.chosen.seed}.zip",
                        mime="application/zip")
 
     if res["pngs"]:
-        st.markdown("**Real vs synthetic** (orientation and acceleration; left: whole span, right: zoom)")
+        st.markdown(f"**{p.plot_title}**")
         for png in res["pngs"]:
             st.image(png, caption=os.path.basename(png), width="stretch")
 else:

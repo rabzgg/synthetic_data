@@ -122,8 +122,9 @@ def inventory(d: pd.DataFrame) -> dict:
             "battery_end_pct": int(d["battery_pct"].iloc[-1])}
 
 
-def check_gas_file(csv_path, device, seed=None, spec=None, assumptions=None) -> GateReport:
-    """seed: also check the coverage-plan items of that seed. spec / assumptions: override configs (tests)."""
+def check_gas_file(csv_path, device, seed=None, spec=None, assumptions=None, items=None) -> GateReport:
+    """seed: also check the coverage-plan items of that seed; items: check these items instead (UI scenarios).
+    spec / assumptions: override configs (tests)."""
     spec_f, A_f = load(device)
     spec, A = spec or spec_f, assumptions or A_f
     d = pd.read_csv(csv_path)
@@ -307,7 +308,8 @@ def check_gas_file(csv_path, device, seed=None, spec=None, assumptions=None) -> 
     seen = {"sustained_stel": inv["stel_alarm_samples"] > 0, "prolonged_twa": inv["twa_alarm_samples"] > 0,
             "over_range": inv["over_range_samples"] > 0, "voc": inv["voc_exposures"] > 0,
             "pump_fault": bool(inv["pump_faults"])}
-    items = plan_items(device, seed, A) if seed is not None else []
+    if items is None:
+        items = plan_items(device, seed, A) if seed is not None else []
     for it in items:
         cond[f"coverage item {it}"] = seen[it]
     rep.add(Check("scenario_content", "all", n_exp, ", ".join(cond), all(cond.values()),

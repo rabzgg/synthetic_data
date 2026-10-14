@@ -24,8 +24,9 @@ DUR, SEED = 600.0, 7
 
 
 class TestRegistry(unittest.TestCase):
-    def test_xdk_registered(self):
-        self.assertEqual([p.name for p in registry.all_profiles()], ["xdk"])
+    def test_registered(self):
+        self.assertEqual([p.name for p in registry.all_profiles()],
+                         ["xdk", "blackline_g7c", "blackline_g7x_bridge", "blackline_g8", "msa_altair_io4", "msa_altair_io6"])
         self.assertIsInstance(registry.get("xdk"), XDKProfile)
 
     def test_scenarios_and_durations(self):
@@ -76,6 +77,42 @@ class TestXDKMatchesCLI(unittest.TestCase):
         if all(os.path.exists(bank.real_path(s)) for s in syn):
             ref2 = check_physics_gate(syn, {s: bank.real_path(s) for s in syn}, bank.period, True, thr).to_dict()
             self.assertEqual(ref2["checks"], ref["checks"])
+
+
+class TestGasProfiles(unittest.TestCase):
+    """Gas profiles == cli/generate_gas.py + validation/gas_gate.py; every scenario passes and shows its event."""
+
+    def test_generate_and_validate_match_cli(self):
+        from validation.gas_gate import check_gas_file
+        with tempfile.TemporaryDirectory() as d:
+            for dev in ("blackline_g8", "msa_altair_io6"):
+                p = registry.get(dev)
+                path = p.generate("standard", 28800, 47, d)[0]           # seed 47: outside the coverage plan
+                cli = os.path.join(d, f"cli_{dev}.csv")
+                subprocess.run(["python3", "cli/generate_gas.py", "--device", dev, "--seed", "47", "--output", cli],
+                               cwd=ROOT, check=True, capture_output=True)
+                with open(path, "rb") as a, open(cli, "rb") as b:
+                    self.assertEqual(a.read(), b.read(), dev)
+                self.assertEqual(p.validate("standard", [path]).to_dict()["checks"],
+                                 json.loads(json.dumps(check_gas_file(cli, dev, items=[]).to_dict()["checks"])))
+
+    def test_every_scenario_passes_and_shows_its_event(self):
+        from validation.gas_gate import inventory
+        import pandas as pd
+        key = {"stel_alarm": "stel_alarm_samples", "twa_alarm": "twa_alarm_samples", "over_range": "over_range_samples",
+               "voc_exposure": "voc_exposures", "pump_fault": "pump_faults"}
+        with tempfile.TemporaryDirectory() as d:
+            for p in registry.all_profiles()[1:]:
+                for sc in p.scenarios():
+                    run = p.generate_validated(sc, p.default_duration_s(sc), 3, d)
+                    self.assertTrue(run.chosen.report.passed, f"{p.name}/{sc}: {run.chosen.report.failed_blocking}")
+                    if sc in key:
+                        self.assertTrue(inventory(pd.read_csv(run.chosen.csv_paths[0]))[key[sc]], f"{p.name}/{sc}")
+            import zipfile, io
+            names = zipfile.ZipFile(io.BytesIO(p.bundle(run))).namelist()
+            self.assertIn("spec.json", names)
+            self.assertIn("assumptions.json", names)
+            self.assertIn("gate_report.json", names)
 
 
 class _Fake(SensorProfile):

@@ -48,6 +48,8 @@ def _run_main(config, output, duration_s, seed):
 class XDKProfile(SensorProfile):
     name = "xdk"
     label = "Bosch XDK"
+    gate_name = "Physics gate"
+    plot_title = "Real vs synthetic (orientation and acceleration; left: whole span, right: zoom)"
 
     def __init__(self, configs_root: str = None):
         self.configs_root = configs_root or os.path.join(ROOT, "configs")
@@ -110,6 +112,9 @@ class XDKProfile(SensorProfile):
 
     def max_attempts(self, scenario):
         return MAX_ATTEMPTS if self.is_joint(scenario) else 1
+
+    def beyond_max_message(self, scenario):
+        return f"Drift is not modelled beyond the recording length ({self.max_duration_s(scenario) / 60:.1f} min)."
 
     def limitations(self, scenario, duration_s):
         if not self.is_joint(scenario):

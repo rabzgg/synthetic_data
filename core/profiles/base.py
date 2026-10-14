@@ -96,6 +96,8 @@ Progress = Optional[Callable[[float, str], None]]     # (fraction 0..1, text)
 class SensorProfile(ABC):
     name: str = ""        # short id, e.g. "xdk"
     label: str = ""       # shown in the UI
+    gate_name: str = "Gate"                       # what the UI calls the validation
+    plot_title: str = "Figures"                   # heading above the figures in the UI
 
     @abstractmethod
     def scenarios(self) -> list:
@@ -110,6 +112,19 @@ class SensorProfile(ABC):
 
     def min_duration_s(self, scenario: str) -> float:
         return 60.0
+
+    def hard_max_duration_s(self, scenario: str) -> Optional[float]:
+        """Upper end of the slider when the user allows going past max_duration_s."""
+        m = self.max_duration_s(scenario)
+        return 3 * m if m else None
+
+    def beyond_max_message(self, scenario: str) -> str:
+        """Warning shown when the duration exceeds max_duration_s."""
+        return f"Longer than the supported length ({self.max_duration_s(scenario) / 60:.1f} min)."
+
+    def extra_files(self, run: "Run") -> dict:
+        """Extra files for the ZIP: {name in zip: path}."""
+        return {}
 
     def default_duration_s(self, scenario: str) -> float:
         m = self.max_duration_s(scenario)
@@ -208,6 +223,8 @@ class SensorProfile(ABC):
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
             for p in run.chosen.csv_paths:
                 z.write(p, os.path.basename(p))
+            for arc, p in self.extra_files(run).items():
+                z.write(p, arc)
             z.writestr("gate_report.json", json.dumps(run.to_dict(), indent=1, default=float))
             z.writestr("README.md", self.readme(run))
         return buf.getvalue()
