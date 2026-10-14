@@ -17,6 +17,14 @@ python3 cli/main.py --config configs/robot_arm_6/sensor_1_joint.json \
 ```
 Use the same `--seed` and `--duration` for every sensor so that they share one cycle schedule.
 
+## Run the UI
+```bash
+streamlit run ui/app.py
+```
+Pick sensor, scenario, duration and seed, then Generate. The UI shows the gate result per check and
+real-vs-synthetic plots, and offers a ZIP (CSV + `gate_report.json` + README). For the robot-arm
+scenarios the gate is used as a filter: up to 5 seeds are tried.
+
 ## Run the physics gate
 ```bash
 cli/run_robot_arm_joint.sh 42 3600 out/arm6 configs/robot_arm_6     # all six sensors + full gate
@@ -36,7 +44,7 @@ are in `data/arm6/original/`.
 Details: `results/joint_template/arm6/README.md` (six sensors), `results/joint_template/`.
 
 ## Layout and docs
-`core/` engine · `cli/` generate and build · `validation/` physics gate and thresholds ·
+`core/` engine and sensor profiles · `cli/` generate and build · `ui/` Streamlit app · `validation/` physics gate and thresholds ·
 `experiments/` ablations and evaluation · `configs/` configs, banks, thresholds ·
 `data/arm6/` real + synthetic CSVs (gzip) and plots · `results/` final gate outputs.
 
@@ -44,4 +52,5 @@ Details: `results/joint_template/arm6/README.md` (six sensors), `results/joint_t
 - `docs/USAGE.md`: full usage (config fitting, anomalies, all options)
 - `docs/ENGINES.md`, `docs/ENGINE_MAP.md`: engines per column
 - `docs/EVAL.md`: statistical evaluation
+- `docs/ADDING_A_SENSOR.md`: how to add a sensor profile to the UI
 - `docs/CHANGELOG.md`: repo cleanup, list of files removed from the tree

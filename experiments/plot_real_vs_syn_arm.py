@@ -33,6 +33,8 @@ ap.add_argument("--zoom", type=float, nargs=2, default=[1200.0, 1380.0])
 ap.add_argument("--out", default=os.path.join(ROOT, "results", "joint_template", "plots"))
 ap.add_argument("--label", default="synthetic joint-template (60 min)", help="name of the synthetic data in the title")
 ap.add_argument("--sensors", type=int, nargs="+", default=[1, 2, 3])
+ap.add_argument("--real", action="append", default=[],
+                help="sensor_k=path: real recording for that sensor (default: ppt/arm_robot/sensor_k_real.csv)")
 args = ap.parse_args()
 os.makedirs(args.out, exist_ok=True)
 
@@ -67,7 +69,8 @@ def phase_lag(real, syn, lo, hi, col="orientation_y", max_lag=37.0):
 
 
 for k in args.sensors:
-    real = load(os.path.join(ROOT, "ppt", "arm_robot", f"sensor_{k}_real.csv"), args.span)
+    real_override = dict(x.split("=", 1) for x in args.real)
+    real = load(real_override.get(f"sensor_{k}", os.path.join(ROOT, "ppt", "arm_robot", f"sensor_{k}_real.csv")), args.span)
     syn = load(os.path.join(args.syn_dir, f"sensor_{k}_seed{args.seed}.csv"), args.span)
     lag, cc = phase_lag(real, syn, *args.zoom)
     fig, ax = plt.subplots(6, 2, figsize=(16, 15), sharex="col", gridspec_kw={"width_ratios": [3, 2]})
@@ -83,13 +86,13 @@ for k in args.sensors:
             if j == 0:
                 a.set_ylabel(lbl)
             if i == 0:
-                a.set_title("whole hour" if j == 0 else
+                a.set_title(("whole hour" if args.span == 3600 else f"whole {args.span / 60:.0f} min") if j == 0 else
                             f"zoom {args.zoom[0] / 60:.0f}–{args.zoom[1] / 60:.0f} min (synthetic shifted {lag:+.1f} s to align cycle phase)")
             a.grid(alpha=0.3)
     ax[-1, 0].set_xlabel("elapsed time [min]")
     ax[-1, 1].set_xlabel("elapsed time [s]")
     ax[0, 1].legend(loc="upper right", fontsize=9)
-    fig.suptitle(f"sensor_{k}: real (first 60 min) vs {args.label} — orientation and acceleration\n"
+    fig.suptitle(f"sensor_{k}: real (first {args.span / 60:.0f} min) vs {args.label} — orientation and acceleration\n"
                  f"(sensor → arm-link mapping: [USER TO VERIFY])", fontsize=12)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     p = os.path.join(args.out, f"sensor_{k}_orientation_accel_real_vs_syn.png")
