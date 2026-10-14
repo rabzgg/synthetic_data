@@ -54,3 +54,4 @@ Details: `results/joint_template/arm6/README.md` (six sensors), `results/joint_t
 - `docs/EVAL.md`: statistical evaluation
 - `docs/ADDING_A_SENSOR.md`: how to add a sensor profile to the UI
 - `docs/CHANGELOG.md`: repo cleanup, list of files removed from the tree
+- `data/gas/README.md`: gas detector data generated from datasheets (rule-consistent, not field-like; `cli/generate_gas.py`, `validation/gas_gate.py`)
