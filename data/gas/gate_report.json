@@ -1,0 +1,1538 @@
+{
+ "blackline_g7c": {
+  "csv": "data/gas/blackline_g7c_shift_seed42.csv",
+  "model": "Blackline G7c",
+  "source": "Blackline G7c datasheet R28",
+  "alarm_counts": {
+   "stel": 0,
+   "twa": 0,
+   "over_range": 0
+  },
+  "rows": 2880,
+  "events": "bump_test, exposure_lel, exposure_lel, exposure_lel",
+  "report": {
+   "passed": true,
+   "checks": [
+    {
+     "name": "columns",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 missing columns",
+     "passed": true,
+     "note": "28 columns",
+     "informational": false
+    },
+    {
+     "name": "timestamps",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 steps != 10 s; ISO 8601 UTC",
+     "passed": true,
+     "note": "2880 rows, steps [10.0]",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "lel_pct_lel: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 50",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 20)",
+     "passed": true,
+     "note": "low alarms 104, high alarms 81",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 104",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "o2_pct_vol: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 25]",
+     "passed": true,
+     "note": "min 18, max 21",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low <= 19.5, high >= 23.5)",
+     "passed": true,
+     "note": "low alarms 7, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 25)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 7",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 500]",
+     "passed": true,
+     "note": "min 0, max 99",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 25, high >= 100)",
+     "passed": true,
+     "note": "low alarms 11, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 500)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "co",
+     "value": 0.5,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 10",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "co",
+     "value": 0.3541666666666667,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 0",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 200, TWA >= 25)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 11",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 24.8",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 15)",
+     "passed": true,
+     "note": "low alarms 9, high alarms 6",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "h2s",
+     "value": 0.04888888888888887,
+     "threshold": "max |STEL - 15-min mean| <= 0.05",
+     "passed": true,
+     "note": "peak STEL 2.4",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "h2s",
+     "value": 0.04864583333333334,
+     "threshold": "max |TWA - dose/8 h| <= 0.05",
+     "passed": true,
+     "note": "end-of-shift TWA 0.1",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 15, TWA >= 10)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 9",
+     "informational": false
+    },
+    {
+     "name": "bump_simultaneous",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "every bump: all mix gases change first at its first sample",
+     "passed": true,
+     "note": "bump at row 12: first change lel@12, h2s@12, co@12, o2@12",
+     "informational": false
+    },
+    {
+     "name": "state_values",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 columns with values outside the allowed set; ids constant",
+     "passed": true,
+     "note": "17 columns checked",
+     "informational": false
+    },
+    {
+     "name": "scenario_content",
+     "sensor": "all",
+     "value": 3.0,
+     "threshold": "bump in first 15 min, 1-3 exposures",
+     "passed": true,
+     "note": "first bump at 120.0 s; exposures 3",
+     "informational": false
+    }
+   ]
+  },
+  "verify": []
+ },
+ "blackline_g7x_bridge": {
+  "csv": "data/gas/blackline_g7x_bridge_shift_seed42.csv",
+  "model": "Blackline G7x with G7 Bridge",
+  "source": "Blackline G7x datasheet R21",
+  "alarm_counts": {
+   "stel": 0,
+   "twa": 0,
+   "over_range": 0
+  },
+  "rows": 2880,
+  "events": "bump_test, exposure_lel",
+  "report": {
+   "passed": true,
+   "checks": [
+    {
+     "name": "columns",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 missing columns",
+     "passed": true,
+     "note": "30 columns",
+     "informational": false
+    },
+    {
+     "name": "timestamps",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 steps != 10 s; ISO 8601 UTC",
+     "passed": true,
+     "note": "2880 rows, steps [10.0]",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "lel_pct_lel: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 50",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 20)",
+     "passed": true,
+     "note": "low alarms 70, high alarms 8",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 70",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "o2_pct_vol: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 25]",
+     "passed": true,
+     "note": "min 18, max 21",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low <= 19.5, high >= 23.5)",
+     "passed": true,
+     "note": "low alarms 7, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 25)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 7",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 500]",
+     "passed": true,
+     "note": "min 0, max 99",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 25, high >= 100)",
+     "passed": true,
+     "note": "low alarms 11, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 500)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "co",
+     "value": 0.5,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 10",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "co",
+     "value": 0.34756944444444443,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 0",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 200, TWA >= 25)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 11",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 24.7",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 15)",
+     "passed": true,
+     "note": "low alarms 9, high alarms 6",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "h2s",
+     "value": 0.04999999999999982,
+     "threshold": "max |STEL - 15-min mean| <= 0.05",
+     "passed": true,
+     "note": "peak STEL 2.4",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "h2s",
+     "value": 0.04861111111111112,
+     "threshold": "max |TWA - dose/8 h| <= 0.05",
+     "passed": true,
+     "note": "end-of-shift TWA 0.1",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 15, TWA >= 10)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 9",
+     "informational": false
+    },
+    {
+     "name": "bump_simultaneous",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "every bump: all mix gases change first at its first sample",
+     "passed": true,
+     "note": "bump at row 12: first change lel@12, h2s@12, co@12, o2@12",
+     "informational": false
+    },
+    {
+     "name": "state_values",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 columns with values outside the allowed set; ids constant",
+     "passed": true,
+     "note": "18 columns checked",
+     "informational": false
+    },
+    {
+     "name": "scenario_content",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "bump in first 15 min, 1-3 exposures",
+     "passed": true,
+     "note": "first bump at 120.0 s; exposures 1",
+     "informational": false
+    }
+   ]
+  },
+  "verify": [
+   "Gas ranges and resolutions are the G7c values (brief: same sensors as G7c); confirm in G7x datasheet R21."
+  ]
+ },
+ "blackline_g8": {
+  "csv": "data/gas/blackline_g8_shift_seed42.csv",
+  "model": "Blackline G8",
+  "source": "Blackline G8 spec sheet R1",
+  "alarm_counts": {
+   "stel": 0,
+   "twa": 0,
+   "over_range": 0
+  },
+  "rows": 2880,
+  "events": "bump_test, exposure_h2s, sos",
+  "report": {
+   "passed": true,
+   "checks": [
+    {
+     "name": "columns",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 missing columns",
+     "passed": true,
+     "note": "29 columns",
+     "informational": false
+    },
+    {
+     "name": "timestamps",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 steps != 10 s; ISO 8601 UTC",
+     "passed": true,
+     "note": "2880 rows, steps [10.0]",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "lel_pct_lel: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 50",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 20)",
+     "passed": true,
+     "note": "low alarms 10, high alarms 8",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 10",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "o2_pct_vol: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 25]",
+     "passed": true,
+     "note": "min 18, max 21",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low <= 19.5, high >= 23.5)",
+     "passed": true,
+     "note": "low alarms 7, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 25)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 7",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 500]",
+     "passed": true,
+     "note": "min 0, max 99",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 25, high >= 100)",
+     "passed": true,
+     "note": "low alarms 11, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 500)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "co",
+     "value": 0.5,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 10",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "co",
+     "value": 0.3388888888888889,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 0",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 200, TWA >= 25)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 11",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 24.7",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 15)",
+     "passed": true,
+     "note": "low alarms 9, high alarms 6",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "h2s",
+     "value": 0.04999999999999982,
+     "threshold": "max |STEL - 15-min mean| <= 0.05",
+     "passed": true,
+     "note": "peak STEL 2.6",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "h2s",
+     "value": 0.048611111111111126,
+     "threshold": "max |TWA - dose/8 h| <= 0.05",
+     "passed": true,
+     "note": "end-of-shift TWA 0.2",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 15, TWA >= 10)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 9",
+     "informational": false
+    },
+    {
+     "name": "bump_simultaneous",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "every bump: all mix gases change first at its first sample",
+     "passed": true,
+     "note": "bump at row 12: first change lel@12, h2s@12, co@12, o2@12",
+     "informational": false
+    },
+    {
+     "name": "state_values",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 columns with values outside the allowed set; ids constant",
+     "passed": true,
+     "note": "18 columns checked",
+     "informational": false
+    },
+    {
+     "name": "scenario_content",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "bump in first 15 min, 1-3 exposures, SOS as configured",
+     "passed": true,
+     "note": "first bump at 120.0 s; exposures 1; SOS events 1",
+     "informational": false
+    }
+   ]
+  },
+  "verify": [
+   "Gas ranges and resolutions are the G7c values (brief: same sensors as G7c, LEL-MPS); confirm in G8 spec sheet R1."
+  ]
+ },
+ "msa_altair_io4": {
+  "csv": "data/gas/msa_altair_io4_shift_seed42.csv",
+  "model": "MSA ALTAIR io4",
+  "source": "MSA spec sheet 1708-056",
+  "alarm_counts": {
+   "stel": 0,
+   "twa": 0,
+   "over_range": 0
+  },
+  "rows": 2880,
+  "events": "bump_test, exposure_co, exposure_h2s",
+  "report": {
+   "passed": true,
+   "checks": [
+    {
+     "name": "columns",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 missing columns",
+     "passed": true,
+     "note": "28 columns",
+     "informational": false
+    },
+    {
+     "name": "timestamps",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 steps != 10 s; ISO 8601 UTC",
+     "passed": true,
+     "note": "2880 rows, steps [10.0]",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "lel_pct_lel: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 50",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 20)",
+     "passed": true,
+     "note": "low alarms 10, high alarms 8",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 10",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "o2_pct_vol: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 30]",
+     "passed": true,
+     "note": "min 18, max 21",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low <= 19.5, high >= 23.5)",
+     "passed": true,
+     "note": "low alarms 7, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 30)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 7",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 1999]",
+     "passed": true,
+     "note": "min 0, max 99",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 25, high >= 100)",
+     "passed": true,
+     "note": "low alarms 30, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 1999)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "co",
+     "value": 0.5,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 12",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "co",
+     "value": 0.49895833333333334,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 1",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 200, TWA >= 25)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 30",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 199]",
+     "passed": true,
+     "note": "min 0, max 25",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 15)",
+     "passed": true,
+     "note": "low alarms 56, high alarms 51",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 199)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "h2s",
+     "value": 0.5,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 9",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "h2s",
+     "value": 0.359375,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 0",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 15, TWA >= 10)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 56",
+     "informational": false
+    },
+    {
+     "name": "bump_simultaneous",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "every bump: all mix gases change first at its first sample",
+     "passed": true,
+     "note": "bump at row 12: first change lel@12, h2s@12, co@12, o2@12",
+     "informational": false
+    },
+    {
+     "name": "state_values",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 columns with values outside the allowed set; ids constant",
+     "passed": true,
+     "note": "17 columns checked",
+     "informational": false
+    },
+    {
+     "name": "scenario_content",
+     "sensor": "all",
+     "value": 2.0,
+     "threshold": "bump in first 15 min, 1-3 exposures",
+     "passed": true,
+     "note": "first bump at 120.0 s; exposures 2",
+     "informational": false
+    }
+   ]
+  },
+  "verify": []
+ },
+ "msa_altair_io6": {
+  "csv": "data/gas/msa_altair_io6_shift_seed42.csv",
+  "model": "MSA ALTAIR io6",
+  "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)",
+  "alarm_counts": {
+   "stel": 0,
+   "twa": 0,
+   "over_range": 0
+  },
+  "rows": 2880,
+  "events": "bump_test, exposure_lel, exposure_lel",
+  "report": {
+   "passed": true,
+   "checks": [
+    {
+     "name": "columns",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 missing columns",
+     "passed": true,
+     "note": "33 columns",
+     "informational": false
+    },
+    {
+     "name": "timestamps",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 steps != 10 s; ISO 8601 UTC",
+     "passed": true,
+     "note": "2880 rows, steps [10.0]",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "lel_pct_lel: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 100]",
+     "passed": true,
+     "note": "min 0, max 50",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 20)",
+     "passed": true,
+     "note": "low alarms 42, high alarms 8",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 100)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "lel",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 42",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "o2_pct_vol: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 30]",
+     "passed": true,
+     "note": "min 18, max 21",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low <= 19.5, high >= 23.5)",
+     "passed": true,
+     "note": "low alarms 7, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 30)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "o2",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 7",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 1999]",
+     "passed": true,
+     "note": "min 0, max 99",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 25, high >= 100)",
+     "passed": true,
+     "note": "low alarms 11, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 1999)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "co",
+     "value": 0.48888888888888893,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 9",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "co",
+     "value": 0.34097222222222223,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 0",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 200, TWA >= 25)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "co",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 11",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values off the 1 grid",
+     "passed": true,
+     "note": "h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 199]",
+     "passed": true,
+     "note": "min 0, max 25",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 10, high >= 15)",
+     "passed": true,
+     "note": "low alarms 9, high alarms 7",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 199)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "stel_formula",
+     "sensor": "h2s",
+     "value": 0.48888888888888893,
+     "threshold": "max |STEL - 15-min mean| <= 0.5",
+     "passed": true,
+     "note": "peak STEL 2",
+     "informational": false
+    },
+    {
+     "name": "twa_formula",
+     "sensor": "h2s",
+     "value": 0.07430555555555556,
+     "threshold": "max |TWA - dose/8 h| <= 0.5",
+     "passed": true,
+     "note": "end-of-shift TWA 0",
+     "informational": false
+    },
+    {
+     "name": "stel_twa_alarms",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (STEL >= 15, TWA >= 10)",
+     "passed": true,
+     "note": "",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "h2s",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 9",
+     "informational": false
+    },
+    {
+     "name": "resolution",
+     "sensor": "voc",
+     "value": 0.0,
+     "threshold": "= 0 values off the 0.1 grid",
+     "passed": true,
+     "note": "voc_ppm: 0",
+     "informational": false
+    },
+    {
+     "name": "range",
+     "sensor": "voc",
+     "value": 0.0,
+     "threshold": "= 0 values outside [0, 4000]",
+     "passed": true,
+     "note": "min 0, max 0.4",
+     "informational": false
+    },
+    {
+     "name": "alarm_setpoints",
+     "sensor": "voc",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (low >= 50, high >= 100)",
+     "passed": true,
+     "note": "low alarms 0, high alarms 0",
+     "informational": false
+    },
+    {
+     "name": "over_range",
+     "sensor": "voc",
+     "value": 0.0,
+     "threshold": "= 0 mismatches (value >= 4000)",
+     "passed": true,
+     "note": "over-range samples 0",
+     "informational": false
+    },
+    {
+     "name": "alarm_cause",
+     "sensor": "voc",
+     "value": 0.0,
+     "threshold": "= 0 alarm samples without an event on this gas",
+     "passed": true,
+     "note": "alarm samples 0",
+     "informational": false
+    },
+    {
+     "name": "bump_simultaneous",
+     "sensor": "all",
+     "value": 1.0,
+     "threshold": "every bump: all mix gases change first at its first sample",
+     "passed": true,
+     "note": "bump at row 12: first change lel@12, h2s@12, co@12, o2@12",
+     "informational": false
+    },
+    {
+     "name": "state_values",
+     "sensor": "all",
+     "value": 0.0,
+     "threshold": "= 0 columns with values outside the allowed set; ids constant",
+     "passed": true,
+     "note": "21 columns checked",
+     "informational": false
+    },
+    {
+     "name": "scenario_content",
+     "sensor": "all",
+     "value": 2.0,
+     "threshold": "bump in first 15 min, 1-3 exposures",
+     "passed": true,
+     "note": "first bump at 120.0 s; exposures 2",
+     "informational": false
+    }
+   ]
+  },
+  "verify": [
+   "The VOC (PID) range 0-4000 ppm, resolution 0.1 was given in the brief with the io4 spec sheet (MSA 1708-056) as source; the io4 has no VOC channel, so confirm where this value comes from."
+  ]
+ }
+}

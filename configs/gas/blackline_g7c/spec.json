@@ -1,0 +1,85 @@
+{
+  "device": "blackline_g7c",
+  "engine": "gas_detector",
+  "model": "Blackline G7c",
+  "source_document": "Blackline G7c datasheet R28",
+  "channels": {
+    "lel": {
+      "name": "Combustible gas",
+      "column": "lel_pct_lel",
+      "range_min": {
+        "value": 0,
+        "unit": "%LEL",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "%LEL",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "%LEL",
+        "source": "Blackline G7c datasheet R28"
+      }
+    },
+    "o2": {
+      "name": "Oxygen",
+      "column": "o2_pct_vol",
+      "range_min": {
+        "value": 0,
+        "unit": "%vol",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "range_max": {
+        "value": 25,
+        "unit": "%vol",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "%vol",
+        "source": "Blackline G7c datasheet R28"
+      }
+    },
+    "co": {
+      "name": "Carbon monoxide",
+      "column": "co_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "range_max": {
+        "value": 500,
+        "unit": "ppm",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "Blackline G7c datasheet R28"
+      }
+    },
+    "h2s": {
+      "name": "Hydrogen sulfide",
+      "column": "h2s_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "ppm",
+        "source": "Blackline G7c datasheet R28"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "ppm",
+        "source": "Blackline G7c datasheet R28"
+      }
+    }
+  },
+  "state_columns": {}
+}

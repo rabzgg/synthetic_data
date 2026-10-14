@@ -1,0 +1,120 @@
+{
+  "device": "msa_altair_io6",
+  "engine": "gas_detector",
+  "model": "MSA ALTAIR io6",
+  "source_document": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)",
+  "channels": {
+    "lel": {
+      "name": "Combustible gas",
+      "column": "lel_pct_lel",
+      "range_min": {
+        "value": 0,
+        "unit": "%LEL",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "%LEL",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "%LEL",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "assumption": "ASSUMPTION: same sensors as io4 (io6 sensor table not found)"
+    },
+    "o2": {
+      "name": "Oxygen",
+      "column": "o2_pct_vol",
+      "range_min": {
+        "value": 0,
+        "unit": "%vol",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "range_max": {
+        "value": 30,
+        "unit": "%vol",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "%vol",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "assumption": "ASSUMPTION: same sensors as io4 (io6 sensor table not found)"
+    },
+    "co": {
+      "name": "Carbon monoxide",
+      "column": "co_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "range_max": {
+        "value": 1999,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "assumption": "ASSUMPTION: same sensors as io4 (io6 sensor table not found)"
+    },
+    "h2s": {
+      "name": "Hydrogen sulfide",
+      "column": "h2s_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "range_max": {
+        "value": 199,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "assumption": "ASSUMPTION: same sensors as io4 (io6 sensor table not found)"
+    },
+    "voc": {
+      "name": "Volatile organic compounds (PID)",
+      "column": "voc_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "range_max": {
+        "value": 4000,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      }
+    }
+  },
+  "state_columns": {
+    "pump_state": {
+      "values": {
+        "value": [
+          "on",
+          "off"
+        ],
+        "unit": "-",
+        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+      },
+      "assumption": "ASSUMPTION: same sensors as io4 (io6 sensor table not found)"
+    }
+  }
+}
