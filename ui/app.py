@@ -1,11 +1,3 @@
-"""
-Streamlit UI for the synthetic data generator.
-
-Run from the repo root:  streamlit run ui/app.py
-
-Everything sensor-specific comes from a profile in core/profiles (registry.py). The UI only picks
-the inputs, calls profile.generate_validated / plot / bundle, and shows the result.
-"""
 import os
 import random
 import sys
