@@ -18,13 +18,27 @@ from .base import GateReport, SensorProfile
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CONFIGS = os.path.join(ROOT, "configs")
 SCENARIOS = {
-    "standard": ([], "Standard shift: bump test + 1-3 short exposures"),
-    "stel_alarm": (["sustained_stel"], "Shift with a STEL alarm (sustained H2S exposure)"),
-    "twa_alarm": (["prolonged_twa"], "Shift with a TWA alarm (long CO exposure)"),
-    "over_range": (["over_range"], "Shift with an over-range reading (LEL above range)"),
-    "voc_exposure": (["voc"], "Shift with a VOC exposure (PID)"),
-    "pump_fault": (["pump_fault"], "Shift with a pump fault"),
+    "standard": ([], "Normal shift"),
+    "stel_alarm": (["sustained_stel"], "Test: STEL alarm (H2S)"),
+    "twa_alarm": (["prolonged_twa"], "Test: TWA alarm (CO)"),
+    "over_range": (["over_range"], "Test: LEL over-range"),
+    "voc_exposure": (["voc"], "Test: VOC exposure"),
+    "pump_fault": (["pump_fault"], "Test: pump fault"),
 }
+GLOSSARY = {
+    "LEL": "Lower Explosive Limit: the lowest concentration at which a gas can ignite; 100 %LEL means the air "
+           "could explode.",
+    "STEL": "Short-Term Exposure Limit: the average exposure over the last 15 minutes.",
+    "TWA": "Time-Weighted Average: the exposure averaged over an 8-hour work shift.",
+    "PID / VOC": "A PID (photo-ionisation detector) measures VOCs, volatile organic compounds such as solvent and "
+                 "fuel vapours.",
+    "Bump test": "A short check at the start of a shift: test gas is applied to confirm every sensor reacts and "
+                 "alarms.",
+    "Over-range": "The real level is above what the sensor can measure, so the reading stops at the top of its range.",
+}
+REALISM = {True: "Realism: normal shift, the kind of day a detector typically sees (event rates are assumptions, "
+                 "not field measurements).",
+           False: "Realism: test case. The event is forced to appear; how often it happens does not represent the field."}
 MIN_S = {"twa_alarm": 7 * 3600.0}       # the long CO exposure (4-5 h) needs room in the shift
 DEFAULT_MIN_S = 2 * 3600.0             # room for the bump test, one exposure and its recovery
 
@@ -56,6 +70,86 @@ class GasDetectorProfile(SensorProfile):
 
     def scenario_label(self, scenario):
         return SCENARIOS[scenario][1]
+
+    def scenario_help(self, scenario) -> list:
+        """Three plain lines for the UI: what happens, the term, how realistic it is. Numbers come from
+        assumptions.json, so the text follows the generator's settings."""
+        from core.gas_detector import _v
+        A = self.A
+        ex, ty = A["exposure"], _v(A["exposure"]["types"])
+        lim, sp = _v(A["exposure_limits"]), _v(A["alarm_setpoints"])
+        rng = lambda r, f=1: f"{r[0] / f:g}–{r[1] / f:g}"
+        pl = _v(ex["plateau_s"])
+        gases = ", ".join(g.upper() for g in _v(ex["gases"]) if g in self.spec["channels"])
+        if scenario == "standard":
+            what = (f"A bump test at the start of the shift, then 1–3 short gas exposures ({gases}) of {rng(pl, 60)} "
+                    "minutes each. Alarms go off only if a reading crosses its setpoint.")
+            term = "Bump test = a quick check with test gas that every sensor reacts and alarms."
+        elif scenario == "stel_alarm":
+            t = ty["sustained_stel"]
+            what = (f"The worker is in an area with H2S at {rng(t['peak'])} ppm for {rng(t['plateau_s'], 60)} minutes. "
+                    f"The 15-minute average passes the {lim['h2s']['stel']:g} ppm limit, so the STEL alarm goes off.")
+            term = "STEL = the average exposure over the last 15 minutes."
+        elif scenario == "twa_alarm":
+            t = ty["prolonged_twa"]
+            what = (f"The worker spends {rng(t['plateau_s'], 3600)} hours in CO at {rng(t['peak'])} ppm. Averaged over "
+                    f"the 8-hour shift this passes the {lim['co']['twa']:g} ppm limit, so the TWA alarm goes off.")
+            term = "TWA = the exposure averaged over an 8-hour shift."
+        elif scenario == "over_range":
+            t = ty["over_range"]
+            top = self.spec["channels"]["lel"]["range_max"]["value"]
+            what = (f"Combustible gas rises to {rng(t['peak'])} %LEL for {rng(t['plateau_s'], 60)} minutes. The sensor "
+                    f"can only show up to {top} %LEL, so the reading sticks at {top} and the over-range flag is set.")
+            term = "LEL = the level at which a gas can ignite; 100 %LEL means explosive air."
+        elif scenario == "voc_exposure":
+            what = (f"The worker meets solvent or fuel vapour (VOC) at {rng(_v(ex['peak'])['voc'])} ppm for "
+                    f"{rng(pl, 60)} minutes. The VOC alarms go off above {sp['voc']['low']:g} / {sp['voc']['high']:g} ppm.")
+            term = "PID / VOC = a photo-ionisation sensor that measures volatile organic compounds."
+        else:
+            d = _v(A["pump_fault"])["duration_s"]
+            what = (f"The sampling pump fails for {rng(d, 60)} minutes: the pump alarm is on. The gas readings are not "
+                    "changed (an assumption: the effect of a stopped pump on the readings is not modelled).")
+            term = "Pump = draws air into the detector; without it the sensors may not see the surrounding air."
+        return [what, term, REALISM[scenario == "standard"]]
+
+    def glossary(self) -> dict:
+        return dict(GLOSSARY)
+
+    def event_summary(self, csv_paths) -> list:
+        """What actually happens in the data, read from the CSV (not from the config)."""
+        import pandas as pd
+        d = pd.read_csv(csv_paths[0])
+        ts = pd.to_datetime(d["timestamp"], utc=True)
+        hm = lambda i: ts.iloc[i].strftime("%H:%M")
+
+        def runs(mask):
+            m = np.concatenate([[False], np.asarray(mask, bool), [False]])
+            k = np.diff(m.astype(int))
+            return list(zip(np.where(k == 1)[0], np.where(k == -1)[0] - 1))
+        out = []
+        for s, e in runs(d["device_mode"] == "bump_test"):
+            out.append((s, f"Bump test {hm(s)}–{hm(e)}"))
+        ev = d["event"].astype(str)
+        for g, ch in self.spec["channels"].items():
+            unit = ch["range_max"]["unit"]
+            for s, e in runs(ev == f"exposure_{g}"):
+                pk = d[ch["column"]].iloc[s:e + 1].max()
+                out.append((s, f"{g.upper()} exposure {hm(s)}–{hm(e)} (peak {pk:g} {unit})"))
+            p = ch["column"].split("_")[0]
+            for col, name in ((f"{p}_alarm_stel", f"{g.upper()} STEL alarm"), (f"{p}_alarm_twa", f"{g.upper()} TWA alarm"),
+                              (f"{p}_over_range", f"{g.upper()} over-range")):
+                if col in d:
+                    for s, e in runs(d[col] == 1):
+                        out.append((s, f"{name} {hm(s)}–{hm(e)}"))
+        for col, on, name in (("pump_state", "fault", "Pump fault"), ("sos_state", 1, "SOS"),
+                              ("bridge_link", "satellite", "Satellite link")):
+            if col in d:
+                for s, e in runs(d[col] == on):
+                    out.append((s, f"{name} {hm(s)}–{hm(e)}"))
+        for i in np.where(d["gap_before_s"] > 0)[0]:
+            out.append((i, f"No data {(ts.iloc[i] - pd.Timedelta(seconds=float(d['gap_before_s'].iloc[i]))).strftime('%H:%M')}"
+                           f"–{hm(i)} (connection gap, {d['gap_before_s'].iloc[i]:g} s)"))
+        return [text for _, text in sorted(out, key=lambda x: x[0])]
 
     def items(self, scenario):
         return list(SCENARIOS[scenario][0])

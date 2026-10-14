@@ -27,7 +27,15 @@ with st.sidebar:
     st.header("Settings")
     profiles = registry.all_profiles()
     prof = st.selectbox("Sensor", profiles, format_func=lambda p: p.label)
-    scenario = st.selectbox("Scenario", prof.scenarios(), format_func=prof.scenario_label)
+    scenario = st.selectbox("Scenario", prof.scenarios(), format_func=prof.scenario_label,
+                            help='"Test:" scenarios force a rare event to appear on purpose.')
+    help_lines = prof.scenario_help(scenario)
+    if help_lines:
+        st.info("\n\n".join(help_lines))
+    terms = prof.glossary()
+    if terms:
+        with st.expander("What do these terms mean?"):
+            st.markdown("\n".join(f"- **{k}**: {v}" for k, v in terms.items()))
 
     max_s, min_s = prof.max_duration_s(scenario), prof.min_duration_s(scenario)
     if max_s:
@@ -61,7 +69,8 @@ if go:
                                       progress=lambda f, t: bar.progress(min(max(f, 0.0), 1.0), text=t))
         bar.progress(1.0, text="plotting real vs synthetic")
         pngs = prof.plot(scenario, run.chosen.csv_paths, run.chosen.seed, duration_s, os.path.join(work, "plots"))
-        st.session_state["result"] = {"profile": prof.name, "run": run, "pngs": pngs, "zip": prof.bundle(run)}
+        st.session_state["result"] = {"profile": prof.name, "run": run, "pngs": pngs, "zip": prof.bundle(run),
+                                      "events": prof.event_summary(run.chosen.csv_paths)}
         bar.empty()
     except Exception as e:
         bar.empty()
@@ -91,6 +100,10 @@ if res:
         st.warning("Not validated: " + rep.message)
     elif rep.status == ERROR:
         st.error(rep.message)
+
+    if res.get("events"):
+        st.markdown("**What happens in this data** (read from the generated CSV, times in UTC)")
+        st.markdown(" · ".join(res["events"]))
 
     if n > 1:
         st.markdown("**Attempts**")

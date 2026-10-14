@@ -106,6 +106,18 @@ class SensorProfile(ABC):
     def scenario_label(self, scenario: str) -> str:
         return scenario
 
+    def scenario_help(self, scenario: str) -> List[str]:
+        """Plain-language lines shown under the scenario dropdown: what happens, the key term, realism."""
+        return []
+
+    def glossary(self) -> dict:
+        """{term: one sentence}, shown in a sidebar expander."""
+        return {}
+
+    def event_summary(self, csv_paths: List[str]) -> List[str]:
+        """What actually happens in the generated data, read from the files."""
+        return []
+
     @abstractmethod
     def max_duration_s(self, scenario: str) -> Optional[float]:
         """Longest output the data supports (e.g. the recording length); None = no limit known."""
