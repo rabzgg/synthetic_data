@@ -21,8 +21,7 @@
         "value": 1,
         "unit": "%LEL",
         "source": "Blackline G7x datasheet R21"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     },
     "o2": {
       "name": "Oxygen",
@@ -41,8 +40,7 @@
         "value": 0.1,
         "unit": "%vol",
         "source": "Blackline G7x datasheet R21"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     },
     "co": {
       "name": "Carbon monoxide",
@@ -61,8 +59,7 @@
         "value": 1,
         "unit": "ppm",
         "source": "Blackline G7x datasheet R21"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     },
     "h2s": {
       "name": "Hydrogen sulfide",
@@ -81,15 +78,14 @@
         "value": 0.1,
         "unit": "ppm",
         "source": "Blackline G7x datasheet R21"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     }
   },
   "state_columns": {},
   "gateway": {
     "columns": [
       "bridge_id",
-      "link"
+      "bridge_link"
     ],
     "link_values": {
       "value": [
@@ -104,5 +100,10 @@
       "unit": "G7x per Bridge",
       "source": "Blackline G7x datasheet R21"
     }
+  },
+  "battery_runtime_h": {
+    "value": 18,
+    "unit": "h",
+    "source": "Blackline G7x datasheet R21"
   }
 }

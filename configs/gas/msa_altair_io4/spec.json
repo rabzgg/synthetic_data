@@ -81,5 +81,10 @@
       }
     }
   },
-  "state_columns": {}
+  "state_columns": {},
+  "battery_runtime_h": {
+    "value": 17,
+    "unit": "h",
+    "source": "MSA spec sheet 1708-056"
+  }
 }

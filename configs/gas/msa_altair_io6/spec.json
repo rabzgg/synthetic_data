@@ -90,31 +90,35 @@
       "range_min": {
         "value": 0,
         "unit": "ppm",
-        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+        "source": "ASSUMPTION: borrowed from Blackline PID (G7c R28); io6 PID table not found"
       },
       "range_max": {
         "value": 4000,
         "unit": "ppm",
-        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
+        "source": "ASSUMPTION: borrowed from Blackline PID (G7c R28); io6 PID table not found"
       },
       "resolution": {
         "value": 0.1,
         "unit": "ppm",
-        "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
-      }
+        "source": "ASSUMPTION: borrowed from Blackline PID (G7c R28); io6 PID table not found"
+      },
+      "assumption": "ASSUMPTION: borrowed from Blackline PID (G7c R28); io6 PID table not found"
     }
   },
   "state_columns": {
     "pump_state": {
-      "values": {
-        "value": [
-          "on",
-          "off"
-        ],
+      "feature": {
+        "value": "sampling pump",
         "unit": "-",
         "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)"
       },
       "assumption": "ASSUMPTION: same sensors as io4 (io6 sensor table not found)"
     }
+  },
+  "battery_runtime_h": {
+    "value": 17,
+    "unit": "h",
+    "source": "MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)",
+    "assumption": "ASSUMPTION: same battery as io4 (io6 battery table not found)"
   }
 }

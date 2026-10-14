@@ -26,8 +26,7 @@
         "value": 1,
         "unit": "%LEL",
         "source": "Blackline G8 spec sheet R1"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     },
     "o2": {
       "name": "Oxygen",
@@ -46,8 +45,7 @@
         "value": 0.1,
         "unit": "%vol",
         "source": "Blackline G8 spec sheet R1"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     },
     "co": {
       "name": "Carbon monoxide",
@@ -66,8 +64,7 @@
         "value": 1,
         "unit": "ppm",
         "source": "Blackline G8 spec sheet R1"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     },
     "h2s": {
       "name": "Hydrogen sulfide",
@@ -86,20 +83,21 @@
         "value": 0.1,
         "unit": "ppm",
         "source": "Blackline G8 spec sheet R1"
-      },
-      "note": "same sensors as G7c (G7c datasheet R28 values)"
+      }
     }
   },
   "state_columns": {
     "sos_state": {
-      "values": {
-        "value": [
-          0,
-          1
-        ],
+      "feature": {
+        "value": "SOS",
         "unit": "-",
         "source": "Blackline G8 spec sheet R1"
       }
     }
+  },
+  "battery_runtime_h": {
+    "value": 18,
+    "unit": "h",
+    "source": "Blackline G8 spec sheet R1"
   }
 }

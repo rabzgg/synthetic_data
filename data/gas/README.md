@@ -1,231 +1,89 @@
 # Gas detector data (datasheet-based)
 
-**What this is:** synthetic data that **obeys the datasheets** (range, resolution) and is **consistent by rule** (alarms, STEL/TWA, simultaneous bump test, timestamps).
+**What this is:** synthetic data that **obeys the datasheets** (range, resolution, battery runtime) and is **consistent by rule** (alarms, STEL/TWA, simultaneous bump test, announced connection gaps, timestamps).
 
-**What this is not:** it is **not** made to look like field data. No real recording of these devices was available, so nothing here was compared with, or fitted to, real readings. Noise, event shapes and timings are assumptions (listed below), not measurements.
+**What this is not:** it is **not** made to look like field data. No real recording of these devices was available, so nothing here was compared with, or fitted to, real readings. Noise, event shapes, timings, battery drain, signal strength and gaps are assumptions (listed below), not measurements.
 
-- Generator: `core/gas_detector.py` (`python3 cli/generate_gas.py --all`), one 8-h shift per device, seed 42.
-- Rule gate: `validation/gas_gate.py` (`python3 validation/gas_gate.py --all --json data/gas/gate_report.json --readme data/gas/README.md`). The gate recomputes every rule from the CSV; it shares no code with the generator.
-- Specs: `configs/gas/<device>/spec.json`: only datasheet values, each with `{value, unit, source}`.
+- Generator: `core/gas_detector.py` (`python3 cli/generate_gas.py --all`): one 8-h shift per device and seed, seeds 42, 43, 44, 45, 46.
+- Rule gate: `validation/gas_gate.py` (`python3 validation/gas_gate.py --all --json data/gas/gate_report.json --readme data/gas/README.md`). It recomputes every rule from the CSV and shares no code with the generator.
+- Specs: `configs/gas/<device>/spec.json`: datasheet values, each with `{value, unit, source}`.
 - Assumptions: `configs/gas/assumptions.json`: everything else, each marked `ASSUMPTION` with a reason.
 
-## Summary
+## Gate result per device and seed
 
-- Rule gate: **5 of 5 devices pass every check.**
-- What these shifts do not exercise (the checks still run and confirm there is no false alarm): STEL alarms 0, TWA alarms 0, over-range samples 0; the Bridge link stays on cellular. Unit tests (`tests/test_gas.py`) force an over-range exposure and a STEL alarm and check that the gate still passes, and corrupt files one rule at a time to check that it fails.
+**25 of 25 files pass every check.** Full detail per check: `gate_report.json`.
 
-## Files
-
-| file | device | rows | gate |
-|---|---|---|---|
-| `blackline_g7c_shift_seed42.csv` | Blackline G7c | 2880 | PASS |
-| `blackline_g7x_bridge_shift_seed42.csv` | Blackline G7x with G7 Bridge | 2880 | PASS |
-| `blackline_g8_shift_seed42.csv` | Blackline G8 | 2880 | PASS |
-| `msa_altair_io4_shift_seed42.csv` | MSA ALTAIR io4 | 2880 | PASS |
-| `msa_altair_io6_shift_seed42.csv` | MSA ALTAIR io6 | 2880 | PASS |
-
-Columns: `timestamp` (ISO 8601 UTC), `device_id`, gas readings with the unit in the name (`lel_pct_lel`, `o2_pct_vol`, `co_ppm`, `h2s_ppm`, `voc_ppm`), `co_/h2s_stel_ppm` and `_twa_ppm`, state columns (`device_mode`, `pump_state`, `sos_state`, `bridge_id`, `link`), alarm flags (`<gas>_alarm_low/high/stel/twa`, `<gas>_over_range`; 0/1), and `event`, a ground-truth label written by the generator, not a device field.
-
-## Blackline G7c (`blackline_g7c`)
-
-Source: Blackline G7c datasheet R28. Events: bump_test, exposure_lel, exposure_lel, exposure_lel.
-
-| check | channel | result | value | required | detail |
+| device | seed 42 | seed 43 | seed 44 | seed 45 | seed 46 |
 |---|---|---|---|---|---|
-| columns | all | pass | 0 | = 0 missing columns | 28 columns |
-| timestamps | all | pass | 0 | = 0 steps != 10 s; ISO 8601 UTC | 2880 rows, steps [10.0] |
-| resolution | lel | pass | 0 | = 0 values off the 1 grid | lel_pct_lel: 0 |
-| range | lel | pass | 0 | = 0 values outside [0, 100] | min 0, max 50 |
-| alarm_setpoints | lel | pass | 0 | = 0 mismatches (low >= 10, high >= 20) | low alarms 104, high alarms 81 |
-| over_range | lel | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| alarm_cause | lel | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 104 |
-| resolution | o2 | pass | 0 | = 0 values off the 0.1 grid | o2_pct_vol: 0 |
-| range | o2 | pass | 0 | = 0 values outside [0, 25] | min 18, max 21 |
-| alarm_setpoints | o2 | pass | 0 | = 0 mismatches (low <= 19.5, high >= 23.5) | low alarms 7, high alarms 0 |
-| over_range | o2 | pass | 0 | = 0 mismatches (value >= 25) | over-range samples 0 |
-| alarm_cause | o2 | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 7 |
-| resolution | co | pass | 0 | = 0 values off the 1 grid | co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0 |
-| range | co | pass | 0 | = 0 values outside [0, 500] | min 0, max 99 |
-| alarm_setpoints | co | pass | 0 | = 0 mismatches (low >= 25, high >= 100) | low alarms 11, high alarms 0 |
-| over_range | co | pass | 0 | = 0 mismatches (value >= 500) | over-range samples 0 |
-| stel_formula | co | pass | 0.5 | max |STEL - 15-min mean| <= 0.5 | peak STEL 10 |
-| twa_formula | co | pass | 0.3542 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 0 |
-| stel_twa_alarms | co | pass | 0 | = 0 mismatches (STEL >= 200, TWA >= 25) |  |
-| alarm_cause | co | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 11 |
-| resolution | h2s | pass | 0 | = 0 values off the 0.1 grid | h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0 |
-| range | h2s | pass | 0 | = 0 values outside [0, 100] | min 0, max 24.8 |
-| alarm_setpoints | h2s | pass | 0 | = 0 mismatches (low >= 10, high >= 15) | low alarms 9, high alarms 6 |
-| over_range | h2s | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| stel_formula | h2s | pass | 0.04889 | max |STEL - 15-min mean| <= 0.05 | peak STEL 2.4 |
-| twa_formula | h2s | pass | 0.04865 | max |TWA - dose/8 h| <= 0.05 | end-of-shift TWA 0.1 |
-| stel_twa_alarms | h2s | pass | 0 | = 0 mismatches (STEL >= 15, TWA >= 10) |  |
-| alarm_cause | h2s | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 9 |
-| bump_simultaneous | all | pass | 1 | every bump: all mix gases change first at its first sample | bump at row 12: first change lel@12, h2s@12, co@12, o2@12 |
-| state_values | all | pass | 0 | = 0 columns with values outside the allowed set; ids constant | 17 columns checked |
-| scenario_content | all | pass | 3 | bump in first 15 min, 1-3 exposures | first bump at 120.0 s; exposures 3 |
+| blackline_g7c | PASS | PASS | PASS | PASS | PASS |
+| blackline_g7x_bridge | PASS | PASS | PASS | PASS | PASS |
+| blackline_g8 | PASS | PASS | PASS | PASS | PASS |
+| msa_altair_io4 | PASS | PASS | PASS | PASS | PASS |
+| msa_altair_io6 | PASS | PASS | PASS | PASS | PASS |
 
-## Blackline G7x with G7 Bridge (`blackline_g7x_bridge`)
+Checks on every file: columns, timestamps (steps of 10 s, or an announced gap), connection_gaps, resolution, range, alarm_setpoints, over_range, stel_formula, twa_formula, stel_twa_alarms, bump_simultaneous, alarm_cause, battery, signal, state_values, scenario_content (incl. the coverage-plan items of that seed); pump (io6) and bridge_link (G7x).
 
-Source: Blackline G7x datasheet R21. Events: bump_test, exposure_lel.
+## Events per seed
 
-| check | channel | result | value | required | detail |
-|---|---|---|---|---|---|
-| columns | all | pass | 0 | = 0 missing columns | 30 columns |
-| timestamps | all | pass | 0 | = 0 steps != 10 s; ISO 8601 UTC | 2880 rows, steps [10.0] |
-| resolution | lel | pass | 0 | = 0 values off the 1 grid | lel_pct_lel: 0 |
-| range | lel | pass | 0 | = 0 values outside [0, 100] | min 0, max 50 |
-| alarm_setpoints | lel | pass | 0 | = 0 mismatches (low >= 10, high >= 20) | low alarms 70, high alarms 8 |
-| over_range | lel | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| alarm_cause | lel | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 70 |
-| resolution | o2 | pass | 0 | = 0 values off the 0.1 grid | o2_pct_vol: 0 |
-| range | o2 | pass | 0 | = 0 values outside [0, 25] | min 18, max 21 |
-| alarm_setpoints | o2 | pass | 0 | = 0 mismatches (low <= 19.5, high >= 23.5) | low alarms 7, high alarms 0 |
-| over_range | o2 | pass | 0 | = 0 mismatches (value >= 25) | over-range samples 0 |
-| alarm_cause | o2 | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 7 |
-| resolution | co | pass | 0 | = 0 values off the 1 grid | co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0 |
-| range | co | pass | 0 | = 0 values outside [0, 500] | min 0, max 99 |
-| alarm_setpoints | co | pass | 0 | = 0 mismatches (low >= 25, high >= 100) | low alarms 11, high alarms 0 |
-| over_range | co | pass | 0 | = 0 mismatches (value >= 500) | over-range samples 0 |
-| stel_formula | co | pass | 0.5 | max |STEL - 15-min mean| <= 0.5 | peak STEL 10 |
-| twa_formula | co | pass | 0.3476 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 0 |
-| stel_twa_alarms | co | pass | 0 | = 0 mismatches (STEL >= 200, TWA >= 25) |  |
-| alarm_cause | co | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 11 |
-| resolution | h2s | pass | 0 | = 0 values off the 0.1 grid | h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0 |
-| range | h2s | pass | 0 | = 0 values outside [0, 100] | min 0, max 24.7 |
-| alarm_setpoints | h2s | pass | 0 | = 0 mismatches (low >= 10, high >= 15) | low alarms 9, high alarms 6 |
-| over_range | h2s | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| stel_formula | h2s | pass | 0.05 | max |STEL - 15-min mean| <= 0.05 | peak STEL 2.4 |
-| twa_formula | h2s | pass | 0.04861 | max |TWA - dose/8 h| <= 0.05 | end-of-shift TWA 0.1 |
-| stel_twa_alarms | h2s | pass | 0 | = 0 mismatches (STEL >= 15, TWA >= 10) |  |
-| alarm_cause | h2s | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 9 |
-| bump_simultaneous | all | pass | 1 | every bump: all mix gases change first at its first sample | bump at row 12: first change lel@12, h2s@12, co@12, o2@12 |
-| state_values | all | pass | 0 | = 0 columns with values outside the allowed set; ids constant | 18 columns checked |
-| scenario_content | all | pass | 1 | bump in first 15 min, 1-3 exposures | first bump at 120.0 s; exposures 1 |
+Read from the data by the gate (`inventory`). STEL / TWA / over-range: number of samples with that flag.
 
-- To verify: Gas ranges and resolutions are the G7c values (brief: same sensors as G7c); confirm in G7x datasheet R21.
+| device | seed | bump | exposures (gas) | STEL alarm | TWA alarm | over-range | VOC exp. | pump fault | SOS | gaps | satellite | battery end % |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| blackline_g7c | 42 | 1 | lel, lel, lel | 0 | 0 | 0 | 0 | — | — | 2 | — | 55 |
+| blackline_g7c | 43 | 1 | h2s, h2s | 83 | 0 | 0 | 0 | — | — | 1 | — | 55 |
+| blackline_g7c | 44 | 1 | co, h2s | 0 | 1575 | 0 | 0 | — | — | 1 | — | 55 |
+| blackline_g7c | 45 | 1 | lel, h2s, h2s | 0 | 0 | 9 | 0 | — | — | 3 | — | 55 |
+| blackline_g7c | 46 | 1 | lel, h2s, co | 0 | 0 | 0 | 0 | — | — | 3 | — | 55 |
+| blackline_g7x_bridge | 42 | 1 | lel | 0 | 0 | 0 | 0 | — | — | 2 | 2 | 55 |
+| blackline_g7x_bridge | 43 | 1 | h2s, co, h2s | 84 | 0 | 0 | 0 | — | — | 1 | 2 | 55 |
+| blackline_g7x_bridge | 44 | 1 | lel, co, lel | 0 | 1187 | 0 | 0 | — | — | 1 | 1 | 55 |
+| blackline_g7x_bridge | 45 | 1 | lel, h2s, lel | 0 | 0 | 10 | 0 | — | — | 2 | 1 | 55 |
+| blackline_g7x_bridge | 46 | 1 | h2s, co, h2s | 0 | 0 | 0 | 0 | — | — | 2 | 2 | 55 |
+| blackline_g8 | 42 | 1 | h2s | 0 | 0 | 0 | 0 | — | 1 | 3 | — | 55 |
+| blackline_g8 | 43 | 1 | lel, h2s | 125 | 0 | 0 | 0 | — | 1 | 1 | — | 55 |
+| blackline_g8 | 44 | 1 | co, lel | 0 | 1390 | 0 | 0 | — | 1 | 1 | — | 55 |
+| blackline_g8 | 45 | 1 | lel | 0 | 0 | 16 | 0 | — | 1 | 1 | — | 55 |
+| blackline_g8 | 46 | 1 | co | 0 | 0 | 0 | 0 | — | 1 | 1 | — | 55 |
+| msa_altair_io4 | 42 | 1 | co, co | 0 | 0 | 0 | 0 | — | — | 1 | — | 52 |
+| msa_altair_io4 | 43 | 1 | h2s | 120 | 0 | 0 | 0 | — | — | 1 | — | 52 |
+| msa_altair_io4 | 44 | 1 | h2s, co | 0 | 1365 | 0 | 0 | — | — | 1 | — | 52 |
+| msa_altair_io4 | 45 | 1 | co, co, lel | 0 | 0 | 15 | 0 | — | — | 1 | — | 52 |
+| msa_altair_io4 | 46 | 1 | h2s, lel | 0 | 0 | 0 | 0 | — | — | 2 | — | 52 |
+| msa_altair_io6 | 42 | 1 | lel, h2s | 112 | 0 | 0 | 0 | 0 | — | 1 | — | 52 |
+| msa_altair_io6 | 43 | 1 | co | 0 | 1496 | 0 | 0 | 0 | — | 3 | — | 52 |
+| msa_altair_io6 | 44 | 1 | co, lel, voc | 0 | 0 | 16 | 1 | 0 | — | 2 | — | 52 |
+| msa_altair_io6 | 45 | 1 | h2s, voc, co | 0 | 0 | 0 | 1 | 0 | — | 3 | — | 52 |
+| msa_altair_io6 | 46 | 1 | voc, co, h2s | 0 | 0 | 0 | 1 | 1 | — | 1 | — | 52 |
 
-## Blackline G8 (`blackline_g8`)
+## Coverage of the 5-seed set
 
-Source: Blackline G8 spec sheet R1. Events: bump_test, exposure_h2s, sos.
+Each item has to appear at least once for every device it applies to. It is placed by the coverage plan (`coverage_plan` in `assumptions.json`), not left to chance; random exposures are always short.
 
-| check | channel | result | value | required | detail |
-|---|---|---|---|---|---|
-| columns | all | pass | 0 | = 0 missing columns | 29 columns |
-| timestamps | all | pass | 0 | = 0 steps != 10 s; ISO 8601 UTC | 2880 rows, steps [10.0] |
-| resolution | lel | pass | 0 | = 0 values off the 1 grid | lel_pct_lel: 0 |
-| range | lel | pass | 0 | = 0 values outside [0, 100] | min 0, max 50 |
-| alarm_setpoints | lel | pass | 0 | = 0 mismatches (low >= 10, high >= 20) | low alarms 10, high alarms 8 |
-| over_range | lel | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| alarm_cause | lel | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 10 |
-| resolution | o2 | pass | 0 | = 0 values off the 0.1 grid | o2_pct_vol: 0 |
-| range | o2 | pass | 0 | = 0 values outside [0, 25] | min 18, max 21 |
-| alarm_setpoints | o2 | pass | 0 | = 0 mismatches (low <= 19.5, high >= 23.5) | low alarms 7, high alarms 0 |
-| over_range | o2 | pass | 0 | = 0 mismatches (value >= 25) | over-range samples 0 |
-| alarm_cause | o2 | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 7 |
-| resolution | co | pass | 0 | = 0 values off the 1 grid | co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0 |
-| range | co | pass | 0 | = 0 values outside [0, 500] | min 0, max 99 |
-| alarm_setpoints | co | pass | 0 | = 0 mismatches (low >= 25, high >= 100) | low alarms 11, high alarms 0 |
-| over_range | co | pass | 0 | = 0 mismatches (value >= 500) | over-range samples 0 |
-| stel_formula | co | pass | 0.5 | max |STEL - 15-min mean| <= 0.5 | peak STEL 10 |
-| twa_formula | co | pass | 0.3389 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 0 |
-| stel_twa_alarms | co | pass | 0 | = 0 mismatches (STEL >= 200, TWA >= 25) |  |
-| alarm_cause | co | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 11 |
-| resolution | h2s | pass | 0 | = 0 values off the 0.1 grid | h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0 |
-| range | h2s | pass | 0 | = 0 values outside [0, 100] | min 0, max 24.7 |
-| alarm_setpoints | h2s | pass | 0 | = 0 mismatches (low >= 10, high >= 15) | low alarms 9, high alarms 6 |
-| over_range | h2s | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| stel_formula | h2s | pass | 0.05 | max |STEL - 15-min mean| <= 0.05 | peak STEL 2.6 |
-| twa_formula | h2s | pass | 0.04861 | max |TWA - dose/8 h| <= 0.05 | end-of-shift TWA 0.2 |
-| stel_twa_alarms | h2s | pass | 0 | = 0 mismatches (STEL >= 15, TWA >= 10) |  |
-| alarm_cause | h2s | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 9 |
-| bump_simultaneous | all | pass | 1 | every bump: all mix gases change first at its first sample | bump at row 12: first change lel@12, h2s@12, co@12, o2@12 |
-| state_values | all | pass | 0 | = 0 columns with values outside the allowed set; ids constant | 18 columns checked |
-| scenario_content | all | pass | 1 | bump in first 15 min, 1-3 exposures, SOS as configured | first bump at 120.0 s; exposures 1; SOS events 1 |
+| item | applies to | seeds where it appears |
+|---|---|---|
+| STEL alarm | all devices | blackline_g7c: 43; blackline_g7x_bridge: 43; blackline_g8: 43; msa_altair_io4: 43; msa_altair_io6: 42 |
+| TWA alarm | all devices | blackline_g7c: 44; blackline_g7x_bridge: 44; blackline_g8: 44; msa_altair_io4: 44; msa_altair_io6: 43 |
+| over-range | all devices | blackline_g7c: 45; blackline_g7x_bridge: 45; blackline_g8: 45; msa_altair_io4: 45; msa_altair_io6: 44 |
+| VOC exposure | msa_altair_io6 | msa_altair_io6: 44, 45, 46 |
+| pump fault | msa_altair_io6 | msa_altair_io6: 46 |
+| SOS | blackline_g8 | blackline_g8: 42, 43, 44, 45, 46 |
 
-- To verify: Gas ranges and resolutions are the G7c values (brief: same sensors as G7c, LEL-MPS); confirm in G8 spec sheet R1.
+## Columns
 
-## MSA ALTAIR io4 (`msa_altair_io4`)
+`timestamp` (ISO 8601 UTC), `device_id`, `bridge_id`/`bridge_link` (G7x), `gap_before_s` (seconds without rows before this row; 0 normally), gas readings with the unit in the name (`lel_pct_lel`, `o2_pct_vol`, `co_ppm`, `h2s_ppm`, `voc_ppm`), `co_/h2s_stel_ppm` and `_twa_ppm`, `device_mode`, `pump_state`/`pump_alarm` (io6), `sos_state` (G8), `battery_pct`, `signal_strength_dbm`, alarm flags (`<gas>_alarm_low/high/stel/twa`, `<gas>_over_range`; 0/1), and `event`, a ground-truth label written by the generator, not a device field.
 
-Source: MSA spec sheet 1708-056. Events: bump_test, exposure_co, exposure_h2s.
+## Datasheet sources
 
-| check | channel | result | value | required | detail |
-|---|---|---|---|---|---|
-| columns | all | pass | 0 | = 0 missing columns | 28 columns |
-| timestamps | all | pass | 0 | = 0 steps != 10 s; ISO 8601 UTC | 2880 rows, steps [10.0] |
-| resolution | lel | pass | 0 | = 0 values off the 1 grid | lel_pct_lel: 0 |
-| range | lel | pass | 0 | = 0 values outside [0, 100] | min 0, max 50 |
-| alarm_setpoints | lel | pass | 0 | = 0 mismatches (low >= 10, high >= 20) | low alarms 10, high alarms 8 |
-| over_range | lel | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| alarm_cause | lel | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 10 |
-| resolution | o2 | pass | 0 | = 0 values off the 0.1 grid | o2_pct_vol: 0 |
-| range | o2 | pass | 0 | = 0 values outside [0, 30] | min 18, max 21 |
-| alarm_setpoints | o2 | pass | 0 | = 0 mismatches (low <= 19.5, high >= 23.5) | low alarms 7, high alarms 0 |
-| over_range | o2 | pass | 0 | = 0 mismatches (value >= 30) | over-range samples 0 |
-| alarm_cause | o2 | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 7 |
-| resolution | co | pass | 0 | = 0 values off the 1 grid | co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0 |
-| range | co | pass | 0 | = 0 values outside [0, 1999] | min 0, max 99 |
-| alarm_setpoints | co | pass | 0 | = 0 mismatches (low >= 25, high >= 100) | low alarms 30, high alarms 0 |
-| over_range | co | pass | 0 | = 0 mismatches (value >= 1999) | over-range samples 0 |
-| stel_formula | co | pass | 0.5 | max |STEL - 15-min mean| <= 0.5 | peak STEL 12 |
-| twa_formula | co | pass | 0.499 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 1 |
-| stel_twa_alarms | co | pass | 0 | = 0 mismatches (STEL >= 200, TWA >= 25) |  |
-| alarm_cause | co | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 30 |
-| resolution | h2s | pass | 0 | = 0 values off the 1 grid | h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0 |
-| range | h2s | pass | 0 | = 0 values outside [0, 199] | min 0, max 25 |
-| alarm_setpoints | h2s | pass | 0 | = 0 mismatches (low >= 10, high >= 15) | low alarms 56, high alarms 51 |
-| over_range | h2s | pass | 0 | = 0 mismatches (value >= 199) | over-range samples 0 |
-| stel_formula | h2s | pass | 0.5 | max |STEL - 15-min mean| <= 0.5 | peak STEL 9 |
-| twa_formula | h2s | pass | 0.3594 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 0 |
-| stel_twa_alarms | h2s | pass | 0 | = 0 mismatches (STEL >= 15, TWA >= 10) |  |
-| alarm_cause | h2s | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 56 |
-| bump_simultaneous | all | pass | 1 | every bump: all mix gases change first at its first sample | bump at row 12: first change lel@12, h2s@12, co@12, o2@12 |
-| state_values | all | pass | 0 | = 0 columns with values outside the allowed set; ids constant | 17 columns checked |
-| scenario_content | all | pass | 2 | bump in first 15 min, 1-3 exposures | first bump at 120.0 s; exposures 2 |
+| device | source | battery runtime |
+|---|---|---|
+| Blackline G7c (`blackline_g7c`) | Blackline G7c datasheet R28 | 18 h (Blackline G7c datasheet R28) |
+| Blackline G7x with G7 Bridge (`blackline_g7x_bridge`) | Blackline G7x datasheet R21 | 18 h (Blackline G7x datasheet R21) |
+| Blackline G8 (`blackline_g8`) | Blackline G8 spec sheet R1 | 18 h (Blackline G8 spec sheet R1) |
+| MSA ALTAIR io4 (`msa_altair_io4`) | MSA spec sheet 1708-056 | 17 h (MSA spec sheet 1708-056) |
+| MSA ALTAIR io6 (`msa_altair_io6`) | MSA spec sheet 1708-056 (ALTAIR io4 spec sheet) | 17 h (ASSUMPTION: same battery as io4 (io6 battery table not found)) |
 
-## MSA ALTAIR io6 (`msa_altair_io6`)
-
-Source: MSA spec sheet 1708-056 (ALTAIR io4 spec sheet). Events: bump_test, exposure_lel, exposure_lel.
-
-| check | channel | result | value | required | detail |
-|---|---|---|---|---|---|
-| columns | all | pass | 0 | = 0 missing columns | 33 columns |
-| timestamps | all | pass | 0 | = 0 steps != 10 s; ISO 8601 UTC | 2880 rows, steps [10.0] |
-| resolution | lel | pass | 0 | = 0 values off the 1 grid | lel_pct_lel: 0 |
-| range | lel | pass | 0 | = 0 values outside [0, 100] | min 0, max 50 |
-| alarm_setpoints | lel | pass | 0 | = 0 mismatches (low >= 10, high >= 20) | low alarms 42, high alarms 8 |
-| over_range | lel | pass | 0 | = 0 mismatches (value >= 100) | over-range samples 0 |
-| alarm_cause | lel | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 42 |
-| resolution | o2 | pass | 0 | = 0 values off the 0.1 grid | o2_pct_vol: 0 |
-| range | o2 | pass | 0 | = 0 values outside [0, 30] | min 18, max 21 |
-| alarm_setpoints | o2 | pass | 0 | = 0 mismatches (low <= 19.5, high >= 23.5) | low alarms 7, high alarms 0 |
-| over_range | o2 | pass | 0 | = 0 mismatches (value >= 30) | over-range samples 0 |
-| alarm_cause | o2 | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 7 |
-| resolution | co | pass | 0 | = 0 values off the 1 grid | co_ppm: 0, co_stel_ppm: 0, co_twa_ppm: 0 |
-| range | co | pass | 0 | = 0 values outside [0, 1999] | min 0, max 99 |
-| alarm_setpoints | co | pass | 0 | = 0 mismatches (low >= 25, high >= 100) | low alarms 11, high alarms 0 |
-| over_range | co | pass | 0 | = 0 mismatches (value >= 1999) | over-range samples 0 |
-| stel_formula | co | pass | 0.4889 | max |STEL - 15-min mean| <= 0.5 | peak STEL 9 |
-| twa_formula | co | pass | 0.341 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 0 |
-| stel_twa_alarms | co | pass | 0 | = 0 mismatches (STEL >= 200, TWA >= 25) |  |
-| alarm_cause | co | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 11 |
-| resolution | h2s | pass | 0 | = 0 values off the 1 grid | h2s_ppm: 0, h2s_stel_ppm: 0, h2s_twa_ppm: 0 |
-| range | h2s | pass | 0 | = 0 values outside [0, 199] | min 0, max 25 |
-| alarm_setpoints | h2s | pass | 0 | = 0 mismatches (low >= 10, high >= 15) | low alarms 9, high alarms 7 |
-| over_range | h2s | pass | 0 | = 0 mismatches (value >= 199) | over-range samples 0 |
-| stel_formula | h2s | pass | 0.4889 | max |STEL - 15-min mean| <= 0.5 | peak STEL 2 |
-| twa_formula | h2s | pass | 0.07431 | max |TWA - dose/8 h| <= 0.5 | end-of-shift TWA 0 |
-| stel_twa_alarms | h2s | pass | 0 | = 0 mismatches (STEL >= 15, TWA >= 10) |  |
-| alarm_cause | h2s | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 9 |
-| resolution | voc | pass | 0 | = 0 values off the 0.1 grid | voc_ppm: 0 |
-| range | voc | pass | 0 | = 0 values outside [0, 4000] | min 0, max 0.4 |
-| alarm_setpoints | voc | pass | 0 | = 0 mismatches (low >= 50, high >= 100) | low alarms 0, high alarms 0 |
-| over_range | voc | pass | 0 | = 0 mismatches (value >= 4000) | over-range samples 0 |
-| alarm_cause | voc | pass | 0 | = 0 alarm samples without an event on this gas | alarm samples 0 |
-| bump_simultaneous | all | pass | 1 | every bump: all mix gases change first at its first sample | bump at row 12: first change lel@12, h2s@12, co@12, o2@12 |
-| state_values | all | pass | 0 | = 0 columns with values outside the allowed set; ids constant | 21 columns checked |
-| scenario_content | all | pass | 2 | bump in first 15 min, 1-3 exposures | first bump at 120.0 s; exposures 2 |
-
-- To verify: The VOC (PID) range 0-4000 ppm, resolution 0.1 was given in the brief with the io4 spec sheet (MSA 1708-056) as source; the io4 has no VOC channel, so confirm where this value comes from.
+- `msa_altair_io6`: LEL/O2/CO/H2S and the pump are taken from the io4 spec sheet: **ASSUMPTION: same sensors as io4** (io6 sensor table not found). VOC (PID) 0-4000 ppm, resolution 0.1: **ASSUMPTION: borrowed from Blackline PID (G7c R28); io6 PID table not found**. Battery: **ASSUMPTION: same as io4**.
+- G7x and G8 gas ranges equal the G7c values; the reviewer checked this against the G7x and G8 datasheets.
 
 ## Assumptions (not in the datasheets)
 
@@ -252,12 +110,15 @@ Every entry is marked `ASSUMPTION` in `configs/gas/assumptions.json`.
 | `exposure.gases` | `["lel", "co", "h2s", "voc"]` | - | Combustible and toxic gases (VOC on io6 only); O2 deficiency events are not modelled. |
 | `exposure.peak` | `{"lel": [5, 25], "co": [20, 150], "h2s": [3, 20], "voc": [20, 200]}` | channel units (min, max) | Peak levels drawn uniformly; ranges chosen so that some exposures cross the alarm setpoints. |
 | `exposure.plateau_s` | `[120, 600]` | s (min, max) | Duration at the peak level, drawn uniformly. |
-| `sos.count_per_shift` | `1` | events | Brief: one SOS on the G8. Independent of the gas readings. |
+| `exposure.types` | `{"short": {"gas": "any exposure gas", "peak": "exposure.peak", "plateau_s": "exposure.plateau_s"}, "sustained_stel": {"gas": "h2s", "peak": [20, 30], "plateau_s": [900, 1500]}, "prolonged_twa": {"gas": "co", "peak": [55, 70], "plateau_s": [14400, 18000]}, "over_range": {"gas": "lel", "peak": [110, 130], "plateau_s": [60, 180]}, "voc": {"gas": "voc", "peak": "exposure.peak.voc", "plateau_s": "exposure.plateau_s"}}` | ppm / %LEL, s | Random exposures are always 'short'. The other types are placed only by the coverage plan: a sustained H2S exposure that crosses the 15-ppm STEL, a long CO exposure whose 8-h TWA crosses 25 ppm, and an LEL peak above the 100 %LEL range. |
+| `sos.count_per_shift` | `1` | events | Brief: one SOS on the G8 in every shift. Independent of the gas readings. |
 | `sos.duration_s` | `[60, 300]` | s (min, max) | SOS active time, drawn uniformly. |
-| `state_values` | `{"device_mode": ["normal", "bump_test"], "pump_state": "on for the whole shift", "link": "cellular for the whole shift"}` | - | No state logging format given. Pump runs continuously; the Bridge stays on cellular (satellite is allowed by the spec but not exercised). |
+| `state_values` | `{"device_mode": ["normal", "bump_test"], "pump_state": ["on", "fault"], "sos_state": [0, 1]}` | - | No state logging format given. pump_state is 'on' except during a pump fault; sos_state is 0/1. |
 | `identifiers` | `{"device_id": "<DEVICE>-0001", "bridge_id": "BRIDGE-0001"}` | - | Synthetic identifiers. |
 | `event_label` | `"event column: none \| bump_test \| exposure_<gas>"` | - | Ground-truth label written by the generator, not a device field. The gate uses it to check that every alarm has a cause. |
-
-Device-level assumptions in the specs:
-
-- `msa_altair_io6`: LEL/O2/CO/H2S ranges and resolutions and `pump_state` are taken from the io4 spec sheet: **ASSUMPTION: same sensors as io4** (io6 sensor table not found).
+| `battery` | `{"start_pct": 100, "model": "linear drain over the datasheet runtime", "rounding": "floor to 1 %"}` | % | Datasheets give runtime only. Battery starts full and drains linearly: pct = floor(100 - 100 * t / runtime). Over an 8-h shift that is 47 % (17 h) or 44 % (18 h). |
+| `signal_strength` | `{"range_dbm": [-115, -55], "start_dbm": [-90, -70], "step_sd_db": 1.0, "rounding": "integer dBm"}` | dBm | No signal specification given. Bounded random walk, one step per logging interval. Reported by every device. |
+| `bridge_link` | `{"satellite_periods_per_shift": [1, 2], "satellite_duration_s": [600, 2400]}` | - | The G7x datasheet allows cellular and satellite links; how often a Bridge switches is not given. The link is cellular, with 1-2 satellite periods per shift. |
+| `connection_gaps` | `{"count_per_shift": [1, 3], "duration_s": [30, 300], "not_before_s": 600, "marker": "gap_before_s on the first row after a gap = seconds without rows (0 elsewhere)", "data_during_gap": "lost (not buffered); the device keeps measuring, so STEL/TWA still include the gap"}` | - | Periods without rows, as from a lost connection. Each gap is announced on the next row so that the gate can tell an intended gap from a row lost to a bug. No gap during the bump test. |
+| `pump_fault` | `{"duration_s": [120, 600], "readings": "unchanged (flag only)", "alarm": "pump_alarm = 1 while pump_state is fault"}` | - | No pump fault behaviour given. A fault sets pump_state to 'fault' and raises pump_alarm; the gas readings are not altered. |
+| `coverage_plan` | `{"seeds": [42, 43, 44, 45, 46], "items": {"default": ["sustained_stel", "prolonged_twa", "over_range"], "msa_altair_io6": ["sustained_stel", "prolonged_twa", "over_range", "voc", "pump_fault"]}, "rule": "item k goes to seed seeds[k + 1] (io6: seeds[k]); it replaces one random exposure (pump_fault is added on top). SOS is in every G8 shift."}` | - | The review asks that the 5-seed set contains each of: STEL alarm, TWA alarm, over-range, VOC exposure (io6), pump fault (io6), SOS (G8). Random draws do not guarantee that, so each item is placed on one seed. Seed 42 stays a plain random shift on every device except io6, which needs all five seeds. |

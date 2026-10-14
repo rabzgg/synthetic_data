@@ -81,5 +81,10 @@
       }
     }
   },
-  "state_columns": {}
+  "state_columns": {},
+  "battery_runtime_h": {
+    "value": 18,
+    "unit": "h",
+    "source": "Blackline G7c datasheet R28"
+  }
 }
