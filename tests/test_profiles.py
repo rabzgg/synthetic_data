@@ -115,6 +115,24 @@ class TestGasProfiles(unittest.TestCase):
             self.assertIn("gate_report.json", names)
 
 
+class TestGasPlot(unittest.TestCase):
+    def test_labels_read_from_csv(self):
+        import pandas as pd
+        p = registry.get("blackline_g8")
+        d = pd.read_csv(os.path.join(ROOT, "data", "gas", "blackline_g8_shift_seed42.csv"))
+        ev = p.plot_events(d)
+        texts = [e[2] for e in ev]
+        self.assertEqual(texts[0], "Bump test")
+        self.assertEqual(sum(t.startswith("Connection gap") for t in texts), int((d["gap_before_s"] > 0).sum()))
+        self.assertIn("SOS", texts)
+        pk = d.loc[d["event"] == "exposure_h2s", "h2s_ppm"].max()
+        self.assertIn(f"H₂S exposure {pk:g} ppm", texts)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = p.plot_file(os.path.join(ROOT, "data", "gas", "blackline_g8_shift_seed42.csv"), "test",
+                              os.path.join(tmp, "x.png"))
+            self.assertGreater(os.path.getsize(out), 10000)
+
+
 class _Fake(SensorProfile):
     """Passes on the seeds in `good`; fails with `n_fail[seed]` blocking checks otherwise."""
     name, label = "fake", "Fake"

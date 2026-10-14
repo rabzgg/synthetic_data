@@ -6,6 +6,7 @@
 
 - Generator: `core/gas_detector.py` (`python3 cli/generate_gas.py --all`): one 8-h shift per device and seed, seeds 42, 43, 44, 45, 46.
 - Rule gate: `validation/gas_gate.py` (`python3 validation/gas_gate.py --all --json data/gas/gate_report.json --readme data/gas/README.md`). It recomputes every rule from the CSV and shares no code with the generator.
+- Plots: `plots/<device>_shift_seed<seed>.png` (`python3 cli/plot_gas.py --all`): readings, setpoints, STEL/TWA, alarms, bump test, connection gaps and device state; every label is read from the CSV.
 - Specs: `configs/gas/<device>/spec.json`: datasheet values, each with `{value, unit, source}`.
 - Assumptions: `configs/gas/assumptions.json`: everything else, each marked `ASSUMPTION` with a reason.
 

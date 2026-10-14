@@ -121,11 +121,7 @@ class GasDetectorProfile(SensorProfile):
         d = pd.read_csv(csv_paths[0])
         ts = pd.to_datetime(d["timestamp"], utc=True)
         hm = lambda i: ts.iloc[i].strftime("%H:%M")
-
-        def runs(mask):
-            m = np.concatenate([[False], np.asarray(mask, bool), [False]])
-            k = np.diff(m.astype(int))
-            return list(zip(np.where(k == 1)[0], np.where(k == -1)[0] - 1))
+        runs = _runs
         out = []
         for s, e in runs(d["device_mode"] == "bump_test"):
             out.append((s, f"Bump test {hm(s)}–{hm(e)}"))
@@ -216,67 +212,190 @@ class GasDetectorProfile(SensorProfile):
 
     # figure
     def plot(self, scenario, csv_paths, seed, duration_s, out_dir):
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        import pandas as pd
-        from core.gas_detector import _v
-        d = pd.read_csv(csv_paths[0])
-        t = (pd.to_datetime(d["timestamp"]) - pd.to_datetime(d["timestamp"].iloc[0])).dt.total_seconds().to_numpy() / 3600
-        sp = _v(self.A["alarm_setpoints"])
-        chans = list(self.spec["channels"].items())
-        fig, ax = plt.subplots(len(chans) + 1, 1, figsize=(14, 2.3 * (len(chans) + 1)), sharex=True)
-        ev = d["event"].astype(str).to_numpy()
-
-        def gapped(y):
-            y = np.asarray(y, float).copy()
-            br = np.where(d["gap_before_s"].to_numpy() > 0)[0]
-            return np.insert(t, br, np.nan), np.insert(y, br, np.nan)
-        for a, (g, ch) in zip(ax, chans):
-            x, y = gapped(d[ch["column"]])
-            a.plot(x, y, color="black", lw=0.8, label="reading")
-            p = ch["column"].split("_")[0]
-            if f"{p}_stel_{ch['column'].split('_', 1)[1]}" in d:
-                xs, ys = gapped(d[f"{p}_stel_{ch['column'].split('_', 1)[1]}"])
-                a.plot(xs, ys, color="tab:blue", lw=0.8, label="STEL")
-                xt, yt = gapped(d[f"{p}_twa_{ch['column'].split('_', 1)[1]}"])
-                a.plot(xt, yt, color="tab:green", lw=0.8, label="TWA")
-            for lvl, c, nm in ((sp[g]["low"], "tab:orange", "low setpoint"), (sp[g]["high"], "tab:red", "high setpoint")):
-                a.axhline(lvl, color=c, ls="--", lw=0.8, label=nm)
-            alarm = (d[f"{p}_alarm_low"] == 1) | (d[f"{p}_alarm_high"] == 1)
-            if alarm.any():
-                a.fill_between(t, 0, 1, where=alarm.to_numpy(), color="tab:red", alpha=0.12,
-                               transform=a.get_xaxis_transform(), label="alarm")
-            a.set_ylabel(ch["column"])
-            a.grid(alpha=0.3)
-            a.legend(loc="upper right", fontsize=7, ncol=3)
-        a = ax[-1]
-        a.plot(t, d["battery_pct"], color="tab:purple", lw=1, label="battery %")
-        a.set_ylabel("battery [%]")
-        a2 = a.twinx()
-        a2.plot(t, d["signal_strength_dbm"], color="tab:gray", lw=0.6, label="signal [dBm]")
-        a2.set_ylabel("signal [dBm]")
-        states = [("pump_state", "fault", "tab:brown", "pump fault"), ("sos_state", 1, "tab:pink", "SOS"),
-                  ("bridge_link", "satellite", "tab:cyan", "satellite link")]
-        for col, on, c, nm in states:
-            if col in d and (d[col] == on).any():
-                a.fill_between(t, 0, 1, where=(d[col] == on).to_numpy(), color=c, alpha=0.3,
-                               transform=a.get_xaxis_transform(), label=nm)
-        h1, l1 = a.get_legend_handles_labels()
-        h2, l2 = a2.get_legend_handles_labels()
-        a.legend(h1 + h2, l1 + l2, loc="lower left", fontsize=7, ncol=4)
-        for gb in np.where(d["gap_before_s"].to_numpy() > 0)[0]:
-            for ax_ in ax:
-                ax_.axvspan(t[gb] - d["gap_before_s"].iloc[gb] / 3600, t[gb], color="gold", alpha=0.35)
-        a.set_xlabel("time since shift start [h]  (yellow: connection gap, no rows; red shade: gas alarm)")
-        a.grid(alpha=0.3)
-        bump = np.where(d["device_mode"] == "bump_test")[0]
-        title = (f"{self.label}: {self.scenario_label(scenario)}, seed {seed}\n"
-                 f"synthetic, datasheet-based (no real data); bump test at {t[bump[0]] * 60:.0f} min" if len(bump) else "")
-        fig.suptitle(title, fontsize=11)
-        fig.tight_layout(rect=(0, 0, 1, 0.96))
         os.makedirs(out_dir, exist_ok=True)
         p = os.path.join(out_dir, f"{self.device}_{scenario}_seed{seed}.png")
-        fig.savefig(p, dpi=100)
-        plt.close(fig)
+        self.plot_file(csv_paths[0], f"{self.label} · {self.scenario_label(scenario)} · seed {seed} · "
+                                     "synthetic, datasheet-based", p)
         return [p]
+
+    def plot_events(self, d) -> list:
+        """Blocks to label above the figure, read from the CSV (event, device_mode, flag and gap_before_s
+        columns): [(start, end, text, kind)] with start/end as timestamps."""
+        ts = pd_times(d)
+        bump = (d["device_mode"] == "bump_test").to_numpy()
+        ev = d["event"].astype(str)
+        out = [(ts[s], ts[e], "Bump test", "bump") for s, e in _runs(bump)]
+        for g, ch in self.spec["channels"].items():
+            unit, p = ch["range_max"]["unit"], ch["column"].split("_")[0]
+            for s, e in _runs(ev == f"exposure_{g}"):
+                pk = d[ch["column"]].iloc[s:e + 1].max()
+                over = f"{p}_over_range" in d and (d[f"{p}_over_range"].iloc[s:e + 1] == 1).any()
+                out.append((ts[s], ts[e], f"{gas_name(g)} exposure {pk:g} {unit}" + (" (over-range)" if over else ""),
+                             "exposure"))
+            low, high = (d[f"{p}_alarm_low"] == 1).to_numpy(), (d[f"{p}_alarm_high"] == 1).to_numpy()
+            for s, e in _runs((low | high) & ~bump, join=ALARM_JOIN_ROWS):
+                out.append((ts[s], ts[e], f"{gas_name(g)} alarm {'high' if high[s:e + 1].any() else 'low'}", "alarm"))
+            for col, nm in ((f"{p}_alarm_stel", "STEL"), (f"{p}_alarm_twa", "TWA")):
+                if col in d:
+                    for s, e in _runs((d[col] == 1).to_numpy() & ~bump, join=ALARM_JOIN_ROWS):
+                        out.append((ts[s], ts[e], f"{gas_name(g)} {nm} alarm", "alarm"))
+        for col, on, nm, kind in DEVICE_BLOCKS:
+            if col in d:
+                out += [(ts[s], ts[e], nm[0].upper() + nm[1:], kind) for s, e in _runs(d[col] == on)]
+        gap = d["gap_before_s"].to_numpy()
+        for i in np.where(gap > 0)[0]:
+            g = float(gap[i])
+            out.append((ts[i] - np.timedelta64(int(g), "s"), ts[i],
+                        f"Connection gap {g:g} s" if g < 90 else f"Connection gap {g / 60:.0f} min", "gap"))
+        return sorted(out, key=lambda x: x[0])
+
+    def plot_file(self, csv_path, subtitle, out_path):
+        """One PNG: a panel per gas (reading, setpoints, STEL/TWA) and a device panel (battery, signal);
+        shared blocks for gas alarm, bump test, connection gap and device states; one legend on top and
+        a label above every block, all read from the CSV."""
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.dates as mdates
+        import matplotlib.pyplot as plt
+        from matplotlib.lines import Line2D
+        from matplotlib.patches import Patch
+        import pandas as pd
+        from core.gas_detector import _v
+        d = pd.read_csv(csv_path)
+        t = pd_times(d)
+        dt = np.timedelta64(int(round(_v(self.A["logging_interval_s"]))), "s")
+        sp = _v(self.A["alarm_setpoints"])
+        chans = list(self.spec["channels"].items())
+        bump = (d["device_mode"] == "bump_test").to_numpy()
+        gap = d["gap_before_s"].to_numpy()
+        n = len(chans) + 1
+        head_in, panel_in, foot_in = 2.6, 1.9, 0.55     # unused header room is cropped on save
+        H = head_in + n * panel_in + foot_in
+        fig, ax = plt.subplots(n, 1, figsize=(14, H), sharex=True, dpi=100)
+        fig.subplots_adjust(left=0.07, right=0.93, top=1 - head_in / H, bottom=foot_in / H, hspace=0.12)
+
+        def gapped(y):
+            br = np.where(gap > 0)[0]
+            return np.insert(t, br, t[br] - dt), np.insert(np.asarray(y, float), br, np.nan)
+
+        def blocks(a, mask, color, alpha, z=0):
+            for s, e in _runs(mask):
+                a.axvspan(t[s], t[e] + dt, color=color, alpha=alpha, lw=0, zorder=z)
+
+        has_stel = False
+        for a, (g, ch) in zip(ax, chans):
+            col, p = ch["column"], ch["column"].split("_")[0]
+            x, y = gapped(d[col])
+            a.plot(x, y, color="black", lw=0.8, zorder=3)
+            rest = col.split("_", 1)[1]
+            if f"{p}_stel_{rest}" in d:
+                has_stel = True
+                for c, color in ((f"{p}_stel_{rest}", COLORS["stel"]), (f"{p}_twa_{rest}", COLORS["twa"])):
+                    a.plot(*gapped(d[c]), color=color, lw=0.9, zorder=2)
+            a.axhline(sp[g]["low"], color=COLORS["low"], ls="--", lw=0.9, zorder=1)
+            a.axhline(sp[g]["high"], color=COLORS["high"], ls="--", lw=0.9, zorder=1)
+            alarm = np.zeros(len(d), bool)
+            for c in (f"{p}_alarm_low", f"{p}_alarm_high", f"{p}_alarm_stel", f"{p}_alarm_twa"):
+                if c in d:
+                    alarm |= (d[c] == 1).to_numpy()
+            blocks(a, alarm & ~bump, COLORS["alarm"], 0.55)        # alarms during the bump test sit under its block
+            a.set_ylabel(f"{gas_name(g)} ({ch['range_max']['unit']})")
+            a.grid(alpha=0.3)
+        a = ax[-1]
+        a.plot(t, d["battery_pct"], color=COLORS["battery"], lw=1.1, zorder=3)
+        a.set_ylabel("Battery (%)", color=COLORS["battery"])
+        a.set_ylim(0, 105)
+        a2 = a.twinx()
+        a2.plot(*gapped(d["signal_strength_dbm"]), color=COLORS["signal"], lw=0.6)
+        a2.set_ylabel("Signal (dBm)", color=COLORS["signal"])
+        a.grid(alpha=0.3)
+        present = {}
+        for col, on, nm, kind in DEVICE_BLOCKS:
+            if col in d and (d[col] == on).any():
+                present[kind] = nm
+                for a_ in (ax if kind == "sos" else [a]):
+                    blocks(a_, (d[col] == on).to_numpy(), COLORS[kind], ALPHA[kind])
+        for a_ in ax:
+            blocks(a_, bump, COLORS["bump"], ALPHA["bump"])
+            for i in np.where(gap > 0)[0]:          # drawn at least MIN_GAP_DRAW_S wide so short gaps stay visible
+                a_.axvspan(t[i] - np.timedelta64(int(max(gap[i], MIN_GAP_DRAW_S)), "s"), t[i], color=COLORS["gap"],
+                           alpha=ALPHA["gap"], lw=0, zorder=0)
+        a.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+        a.set_xlabel("Time (UTC)")
+        a.set_xlim(t[0], t[-1] + dt)
+
+        # a small label above every block, in up to LABEL_ROWS rows so they do not overlap
+        a0 = ax[0]
+        fig.canvas.draw()
+        r = fig.canvas.get_renderer()
+        box = a0.get_window_extent(r)
+        row_px = 13
+        right = [-np.inf] * LABEL_ROWS
+        for s, e, text, kind in self.plot_events(d):
+            xc = a0.transData.transform((mdates.date2num(s + (e - s) / 2), 0))[0]
+            txt = fig.text(0, 0, text, fontsize=7.5, color=LABEL_COLORS[kind], ha="left", va="bottom")
+            w = txt.get_window_extent(r).width
+            x0 = min(max(xc - w / 2, box.x0), box.x1 - w)
+            row = next((k for k in range(LABEL_ROWS) if x0 > right[k] + 6), None)
+            if row is None:
+                row = int(np.argmin(right))
+            right[row] = x0 + w
+            txt.set_position(fig.transFigure.inverted().transform((x0, box.y1 + 3 + row * row_px)))
+        used = int(np.isfinite(right).sum())
+
+        # header stacked upwards from the labels: one legend for every panel, subtitle, title
+        to_fig = lambda y_px: fig.transFigure.inverted().transform((0, y_px))[1]
+        line = lambda c, ls="-": Line2D([], [], color=c, ls=ls, lw=1.2)
+        patch = lambda k: Patch(facecolor=COLORS[k], alpha=ALPHA[k])
+        items = [(line("black"), "reading"), (line(COLORS["low"], "--"), "low setpoint"),
+                 (line(COLORS["high"], "--"), "high setpoint")]
+        if has_stel:
+            items += [(line(COLORS["stel"]), "STEL (15-min average)"), (line(COLORS["twa"]), "TWA (8-h average)")]
+        items += [(patch("alarm"), "gas alarm"), (patch("bump"), "bump test"), (patch("gap"), "connection gap (no rows)")]
+        items += [(patch(k), present[k]) for k in ("sos", "pump", "satellite") if k in present]
+        items += [(line(COLORS["battery"]), "battery"), (line(COLORS["signal"]), "signal")]
+        leg = fig.legend([h for h, _ in items], [l for _, l in items], loc="lower center", ncol=min(len(items), 7),
+                         bbox_to_anchor=(0.5, to_fig(box.y1 + 3 + used * row_px + 8)), fontsize=8.5, frameon=False,
+                         handlelength=2.2)
+        sub = fig.text(0.5, to_fig(leg.get_window_extent(r).y1 + 6), subtitle, ha="center", va="bottom", fontsize=10)
+        fig.text(0.5, to_fig(sub.get_window_extent(r).y1 + 6), "Gas readings, alarms and device state",
+                 ha="center", va="bottom", fontsize=13, weight="bold")
+        fig.savefig(out_path, dpi=100, bbox_inches="tight", pad_inches=0.25)
+        plt.close(fig)
+        return out_path
+
+
+GAS_NAMES = {"lel": "LEL", "o2": "O₂", "co": "CO", "h2s": "H₂S", "voc": "VOC"}
+COLORS = {"low": "tab:orange", "high": "tab:red", "stel": "tab:blue", "twa": "tab:green", "alarm": "#f4a3b4",
+          "bump": "#bdbdbd", "gap": "gold", "sos": "tab:purple", "pump": "tab:olive", "satellite": "tab:cyan",
+          "battery": "tab:brown", "signal": "tab:gray"}
+ALPHA = {"alarm": 0.55, "bump": 0.55, "gap": 0.5, "sos": 0.3, "pump": 0.3, "satellite": 0.25}
+LABEL_COLORS = {"bump": "dimgray", "exposure": "black", "alarm": "#c0143c", "gap": "#8a6d00", "sos": "tab:purple",
+                "pump": "olive", "satellite": "teal"}
+DEVICE_BLOCKS = [("sos_state", 1, "SOS", "sos"), ("pump_state", "fault", "pump fault", "pump"),
+                 ("bridge_link", "satellite", "satellite link", "satellite")]
+ALARM_JOIN_ROWS = 30         # alarm runs less than 5 min apart get one label
+LABEL_ROWS = 4
+MIN_GAP_DRAW_S = 120
+
+
+def gas_name(g: str) -> str:
+    return GAS_NAMES.get(g, g.upper())
+
+
+def pd_times(d):
+    import pandas as pd
+    return pd.to_datetime(d["timestamp"], utc=True).dt.tz_convert(None).to_numpy()
+
+
+def _runs(mask, join: int = 0) -> list:
+    """(first, last) row of each run of True; runs fewer than `join` rows apart are merged."""
+    m = np.concatenate([[False], np.asarray(mask, bool), [False]])
+    k = np.diff(m.astype(int))
+    out = []
+    for s, e in zip(np.where(k == 1)[0], np.where(k == -1)[0] - 1):
+        if out and s - out[-1][1] <= join:
+            out[-1] = (out[-1][0], e)
+        else:
+            out.append((s, e))
+    return out

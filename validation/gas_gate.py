@@ -358,6 +358,8 @@ def write_readme(results: list, path: str):
          f"seeds {', '.join(map(str, seeds))}.",
          "- Rule gate: `validation/gas_gate.py` (`python3 validation/gas_gate.py --all --json data/gas/gate_report.json "
          "--readme data/gas/README.md`). It recomputes every rule from the CSV and shares no code with the generator.",
+         "- Plots: `plots/<device>_shift_seed<seed>.png` (`python3 cli/plot_gas.py --all`): readings, setpoints, "
+         "STEL/TWA, alarms, bump test, connection gaps and device state; every label is read from the CSV.",
          "- Specs: `configs/gas/<device>/spec.json`: datasheet values, each with `{value, unit, source}`.",
          "- Assumptions: `configs/gas/assumptions.json`: everything else, each marked `ASSUMPTION` with a reason.", "",
          "## Gate result per device and seed", "",
