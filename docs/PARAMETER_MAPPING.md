@@ -30,10 +30,10 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 |---|---|---|---|
 | `range` | q | required | [low, high] the sensor can report (vectors: one pair, or one pair per axis); required |
 | `resolution` | q | required | smallest reported step; required |
-| `accuracy` | q | 0.0 | ± bound of the bias of one unit (absolute part) |
-| `accuracy_pct_reading` | % | 0.0 | ± bound of the bias of one unit, in % of the reading |
+| `accuracy` | q | 0.0 | bias of one unit (absolute part): ± bound, or 1σ when kind is typical (field `kind`: typical or max) |
+| `accuracy_pct_reading` | % | 0.0 | bias of one unit in % of the reading: ± bound, or 1σ when kind is typical (field `kind`: typical or max) |
 | `accuracy_combine` | - | sum | how the two accuracy parts combine: sum (±(a + b %)) or max (whichever greater) |
-| `bias_distribution` | - | uniform | how per-unit errors are drawn within their bound: uniform, or normal (sd = bound / 3, truncated at the bound); source must be an ASSUMPTION |
+| `bias_distribution` | - | uniform | how per-unit errors are drawn within a max bound: uniform, or normal (sd = bound / 3, truncated at the bound); source must be an ASSUMPTION |
 | `noise_sd` | q | 0.0 | standard deviation of the white noise per sample |
 | `noise_density` | q/√Hz | — | noise spectral density; noise_sd = noise_density × √bandwidth_hz |
 | `bandwidth_hz` | Hz | — | cutoff of the first-order low-pass on the signal; also sets noise_sd from noise_density |
@@ -42,13 +42,13 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 | `t90_up_s` | s | — | t90 for a rising input (default t90_s) |
 | `t90_down_s` | s | — | t90 for a falling input (default t90_s) |
 | `hysteresis` | q | 0.0 | full width of the hysteresis band |
-| `drift_per_hour` | q/h | 0.0 | ± bound of the linear drift rate of one unit |
+| `drift_per_hour` | q/h | 0.0 | linear drift rate of one unit: ± bound, or 1σ when kind is typical (field `kind`: typical or max) |
 | `deadband` | q | 0.0 | values within ±deadband of deadband_center are reported as deadband_center |
 | `deadband_center` | q | 0.0 | centre of the deadband (e.g. 0 for a toxic gas, 20.9 for O2) |
 | `cross_sensitivity` | cross | — | {quantity: {factor, ref}}: adds factor × (other − ref) to the input |
 | `mounting_orientation` | quat | — | how the part sits on the body: quaternion [w, x, y, z] from sensor frame to body frame (default: aligned) |
-| `cross_axis_pct` | % | 0.0 | ± bound of each off-diagonal element of the cross-axis matrix of one unit |
-| `misalignment_deg` | deg | 0.0 | ± bound of the angle by which the axes of one unit are rotated |
+| `cross_axis_pct` | % | 0.0 | each off-diagonal element of one unit's cross-axis matrix: ± bound, or 1σ when kind is typical (field `kind`: typical or max) |
+| `misalignment_deg` | deg | 0.0 | angle by which one unit's axes are rotated: bound, or 1σ when kind is typical (field `kind`: typical or max) |
 
 ## Order of the stages
 
@@ -66,9 +66,11 @@ f. frame               vector quantities: world frame -> body (world's orientati
 8. clip                to the range; over_range / under_range flag what was cut off
 ```
 
-What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit, within the datasheet bound, from bias_distribution: uniform (default) or normal with sd = bound / 3, truncated at the bound. Both are ASSUMPTIONs: datasheets give the bound, not the distribution.
+What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit. How depends on the kind of datasheet value (field "kind" on accuracy, accuracy_pct_reading, drift_per_hour, cross_axis_pct, misalignment_deg): kind typical = a spread, drawn normal with sd = the value (typical = ±1σ, as Bosch datasheets state), truncated at ±3σ; kind max (default: min / max / limit values) = a hard bound, drawn from bias_distribution: uniform (default) or normal with sd = bound / 3, truncated at the bound. The distributions within a max bound are ASSUMPTIONs: datasheets give the bound, not the distribution.
 
 ## Normalisation rules
+
+Every rule also takes `kind: typical` or `kind: max` (which column of the datasheet the value is in); it is set on the resulting accuracy, drift, cross-axis and misalignment parameters. Without it they are max.
 
 | rule | the datasheet says | maps to | conversion | example | assumption |
 |---|---|---|---|---|---|
@@ -82,7 +84,7 @@ What is fixed for one physical unit (bias, drift rate, axis errors) is drawn onc
 | `accuracy_pct_fs` | Accuracy ±Y % of full scale (FS) | accuracy | accuracy = Y / 100 × FS | Carbon monoxide: 2 ppm (full_scale=500) → accuracy = 10 ppm | — |
 | `accuracy_sum` | Accuracy ±(X + Y % of reading) | accuracy, accuracy_pct_reading, accuracy_combine = sum | bound = X + Y % × \|value\| | Carbon dioxide: ±(30 ppm + 3 % of reading) → accuracy = 30 ppm, accuracy_pct_reading = 3 %, accuracy_combine = sum | — |
 | `accuracy_max` | Accuracy ±X or ±Y % of reading, whichever is greater | accuracy, accuracy_pct_reading, accuracy_combine = max | bound = max(X, Y % × \|value\|) | Hydrogen sulfide: ±2 ppm or ±10 % of reading → accuracy = 2 ppm, accuracy_pct_reading = 10 %, accuracy_combine = max | — |
-| `accuracy_typical` | Typical accuracy ±X, no maximum given | accuracy | used as the bound | Air pressure: 1.0 hPa → accuracy = 1 hPa | A typical value is not a guaranteed bound; real units can be worse. |
+| `accuracy_typical` | Typical accuracy ±X (Typ column) | accuracy, kind = typical | a spread: bias drawn normal with sd = X, cut at ±3X | Air pressure: 1.0 hPa → accuracy = 1 hPa, kind = typical | Typical read as ±1σ, as Bosch datasheets state; for other vendors an ASSUMPTION. |
 | `noise_rms` | Noise X RMS; noise sd X; 1σ X | noise_sd | taken as is | Air temperature: 0.02 °C → noise_sd = 0.02 °C | — |
 | `noise_pp` | Noise X peak-to-peak | noise_sd | noise_sd = X / 6.6 | Acceleration: 0.66 mg → noise_sd = 0.0001 g | Gaussian noise; 99.9 % of samples within ±3.3 sd. |
 | `noise_density` | Noise density D per √Hz | noise_density, bandwidth_hz | noise_sd = D × √bandwidth; without a bandwidth, bandwidth = ODR / 2 | Acceleration: 150 µg/√Hz (bandwidth_hz=100) → noise_sd = 0.0015 g | Only when the datasheet gives no bandwidth: ODR / 2 (Nyquist). |

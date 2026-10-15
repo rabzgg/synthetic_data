@@ -99,7 +99,7 @@ class TestConstantWorld(unittest.TestCase):
                 # bias: where the unit's draw puts it, and within ±accuracy
                 mean_err = v.mean(axis=0) - xt
                 tol = res / 2 + 5 * sd / np.sqrt(N)
-                np.testing.assert_allclose(mean_err, draw.u_bias * m.error_bound(xt), atol=tol)
+                np.testing.assert_allclose(mean_err, m.bias(xt, draw), atol=tol)
                 self.assertTrue((np.abs(mean_err) <= m.error_bound(xt) + tol).all())
                 # noise: datasheet sd plus the quantisation step (res^2 / 12)
                 expect = np.sqrt(sd ** 2 + res ** 2 / 12)
@@ -241,6 +241,59 @@ class TestStages(unittest.TestCase):
             self.bare(bias_distribution={"value": "normal", "unit": "-", "source": "datasheet X p.1"})
 
 
+class TestKinds(unittest.TestCase):
+    """typical = a 1σ spread (normal, sd = value, cut at 3σ); max = a hard bound."""
+
+    def units(self, m, n=20000, seed=5):
+        rng = np.random.default_rng(seed)
+        return np.array([m.bias(np.array([100.0]), m.draw(rng))[0] for _ in range(n)])
+
+    def base(self, **kw):
+        return MeasurementModel.from_params("air.co_ppm", {"range": P([0, 1000], "ppm"), "resolution": P(0.1, "ppm"), **kw})
+
+    def test_typical_is_one_sigma(self):
+        m = self.base(**normalize("accuracy_typical", 2, "ppm", "datasheet X p.1"))
+        self.assertEqual(m.kind("accuracy"), "typical")
+        b = self.units(m)
+        self.assertAlmostEqual(b.std(), 2.0, delta=0.05)
+        self.assertLessEqual(np.abs(b).max(), 6.0)
+        self.assertGreater(np.abs(b).max(), 4.0)                # not cut at the typical value
+        self.assertEqual(m.error_bound(100.0), 6.0)              # the gate's bound: 3σ
+
+    def test_max_is_a_hard_bound(self):
+        for dist in ("uniform", "normal"):
+            m = self.base(accuracy=dict(P(2, "ppm"), kind="max"), bias_distribution=P(dist, "-"))
+            b = self.units(m)
+            self.assertLessEqual(np.abs(b).max(), 2.0)
+            self.assertAlmostEqual(b.std(), 2 / np.sqrt(3) if dist == "uniform" else 2 / 3, delta=0.03)
+            self.assertEqual(m.error_bound(100.0), 2.0)
+
+    def test_mixed_kinds(self):
+        # BMM150 style: offset typical + gain max, summed; each part drawn on its own
+        m = self.base(accuracy=dict(P(2, "ppm"), kind="typical"), accuracy_pct_reading=dict(P(5, "%"), kind="max"))
+        self.assertEqual(m.error_bound(100.0), 6.0 + 5.0)
+        self.assertLessEqual(np.abs(self.units(m)).max(), 11.0)
+        with self.assertRaises(ParamError):                     # whichever-greater needs one kind
+            self.base(accuracy=dict(P(2, "ppm"), kind="typical"), accuracy_pct_reading=dict(P(5, "%"), kind="max"),
+                      accuracy_combine=P("max", "-"))
+
+    def test_kind_checked(self):
+        with self.assertRaises(ParamError):
+            self.base(noise_sd=dict(P(1, "ppm"), kind="typical"))
+        with self.assertRaises(ParamError):
+            self.base(accuracy=dict(P(1, "ppm"), kind="average"))
+        d = normalize("drift", 1, "ppm/year", "datasheet X p.1", kind="typical")
+        self.assertEqual(d["drift_per_hour"]["kind"], "typical")
+        self.assertEqual(self.base().kind("accuracy"), "max")   # not stated -> hard bound
+
+    def test_typical_drift_spread(self):
+        m = self.base(drift_per_hour=dict(P(1.0, "ppm/h"), kind="typical"))
+        rng = np.random.default_rng(1)
+        u = np.array([m.draw(rng).u_drift[0] for _ in range(20000)])
+        self.assertAlmostEqual(u.std(), 1.0, delta=0.03)
+        self.assertLessEqual(np.abs(u).max(), 3.0)
+
+
 class TestVectorFrames(unittest.TestCase):
     rng = np.random.default_rng(0)
 
@@ -370,7 +423,6 @@ class TestNormalize(unittest.TestCase):
 
     def test_assumption_marked_in_source(self):
         self.assertIn("ASSUMPTION", normalize("noise_pp", 1, "mg", "datasheet X p.2")["noise_sd"]["source"])
-        self.assertIn("ASSUMPTION", normalize("accuracy_typical", 1, "hPa", "datasheet X p.2")["accuracy"]["source"])
         self.assertNotIn("ASSUMPTION", normalize("accuracy", 1, "hPa", "datasheet X p.2")["accuracy"]["source"])
 
     def test_doc_is_generated_from_code(self):

@@ -103,17 +103,21 @@ class TestGasPresets(unittest.TestCase):
         self.assertTrue(voc["range"]["source"].startswith("ASSUMPTION: borrowed from Blackline PID"))
 
 
-class TestXDK(unittest.TestCase):
-    def test_columns_and_hidden_gyro(self):
-        dev = Device.load("bosch_xdk")
+class TestHiddenChannels(unittest.TestCase):
+    def test_measured_but_not_logged_feeds_derived(self):
+        imu = {"name": "IMU Logger", "parts": [{"part": "bosch_bma280"}, {"part": "bosch_bmg160", "log": False},
+                                               {"part": "bosch_bmm150"}],
+               "features": {"derived": [{"kind": "orientation_quat", "params": {
+                   "write_w": {"value": False, "unit": "-", "source": "ASSUMPTION: test"}}}]}}
+        dev = Device.from_dict(imu)
         cols = dev.columns()
         self.assertIn("body.gyro_dps", dev.measured())
         self.assertFalse(any(c.startswith("gyro") for c in cols))
         self.assertEqual(cols[-3:], ["orientation_x", "orientation_y", "orientation_z"])
         self.assertEqual(dev.derived()[0].inputs(), ["body.accel_g", "body.gyro_dps", "body.mag_ut"])
-        accel = {q: m for _, q, m in dev.models()}["body.accel_g"]
-        self.assertEqual((accel.range, accel.resolution), ((-2.0, 2.0), 0.001))
-        self.assertIn("[USER TO VERIFY]", accel.sources["range"])
+
+    def test_no_xdk_preset(self):
+        self.assertNotIn("bosch_xdk", list_devices())
 
 
 TANK = {"name": "Tank Monitor v1", "device_id_prefix": "TANKMON",

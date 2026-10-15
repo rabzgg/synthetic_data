@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .catalog import CATALOG
-from .measurement import PARAMETERS
+from .measurement import KINDED, KINDS, PARAMETERS
 from .units import canonical
 
 LN10, LN2 = math.log(10.0), math.log(2.0)
@@ -124,10 +124,11 @@ RULES = [
          "accuracy, accuracy_pct_reading, accuracy_combine = max", "bound = max(X, Y % × |value|)",
          _max, ("air.h2s_ppm", (2, 10), "ppm", {}, {"accuracy": 2, "accuracy_pct_reading": 10, "accuracy_combine": "max"}),
          example_text="±2 ppm or ±10 % of reading"),
-    Rule("accuracy_typical", "Typical accuracy ±X, no maximum given", "accuracy", "used as the bound",
-         lambda v, u, s: {"accuracy": _p(v, u, s, "ASSUMPTION: typical value used as the bound, no maximum given")},
-         ("air.pressure_hpa", 1.0, "hPa", {}, {"accuracy": 1.0}),
-         "A typical value is not a guaranteed bound; real units can be worse."),
+    Rule("accuracy_typical", "Typical accuracy ±X (Typ column)", "accuracy, kind = typical",
+         "a spread: bias drawn normal with sd = X, cut at ±3X",
+         lambda v, u, s: {"accuracy": dict(_p(v, u, s, "typical value: 1σ spread"), kind="typical")},
+         ("air.pressure_hpa", 1.0, "hPa", {}, {"accuracy": 1.0, "kinds": {"accuracy": "typical"}}),
+         "Typical read as ±1σ, as Bosch datasheets state; for other vendors an ASSUMPTION."),
     Rule("noise_rms", "Noise X RMS; noise sd X; 1σ X", "noise_sd", "taken as is",
          lambda v, u, s: {"noise_sd": _p(v, u, s)}, ("air.temperature_c", 0.02, "°C", {}, {"noise_sd": 0.02})),
     Rule("noise_pp", "Noise X peak-to-peak", "noise_sd", f"noise_sd = X / {PP_TO_SD}",
@@ -189,11 +190,20 @@ RULES = [
 RULE_BY_ID = {r.id: r for r in RULES}
 
 
-def normalize(rule_id: str, value, unit: str, source: str, **ctx) -> dict:
-    """One datasheet statement -> {param: {value, unit, source}} for MeasurementModel.from_params."""
+def normalize(rule_id: str, value, unit: str, source: str, kind: str = None, **ctx) -> dict:
+    """One datasheet statement -> {param: {value, unit, source}} for MeasurementModel.from_params.
+    kind ("typical" or "max") marks which column of the datasheet the value is from; it is set on
+    every resulting parameter that can carry one."""
     if rule_id not in RULE_BY_ID:
         raise KeyError(f"unknown rule {rule_id!r}; known: {', '.join(RULE_BY_ID)}")
-    return RULE_BY_ID[rule_id].fn(value, canonical(unit), source, **ctx)
+    out = RULE_BY_ID[rule_id].fn(value, canonical(unit), source, **ctx)
+    if kind is not None:
+        if kind not in KINDS:
+            raise ValueError(f"kind must be one of {KINDS}, got {kind!r}")
+        for k, p in out.items():
+            if k in KINDED:
+                p["kind"] = kind
+    return out
 
 
 def markdown() -> str:
@@ -215,18 +225,22 @@ def markdown() -> str:
           "| parameter | unit | default | meaning |", "|---|---|---|---|"]
     for n, p in PARAMETERS.items():
         d = "required" if p.default is None and n in ("range", "resolution") else ("—" if p.default in (None, {}) else p.default)
-        L.append(f"| `{n}` | {p.kind} | {d} | {p.meaning} |")
+        L.append(f"| `{n}` | {p.kind} | {d} | {p.meaning}" + (" (field `kind`: typical or max)" if n in KINDED else "") + " |")
     unit_errors = " ".join(mdoc.split("What is fixed")[1].split("Every parameter")[0].split())
     L += ["", "## Order of the stages", "", "```", "\n".join(s[4:] for s in stages.splitlines()), "```", "",
           "What is fixed " + unit_errors, "",
           "## Normalisation rules", "",
+          "Every rule also takes `kind: typical` or `kind: max` (which column of the datasheet the value is in); it "
+          "is set on the resulting accuracy, drift, cross-axis and misalignment parameters. Without it they are max.",
+          "",
           "| rule | the datasheet says | maps to | conversion | example | assumption |", "|---|---|---|---|---|---|"]
     for r in RULES:
         qid, v, u, ctx, exp = r.example
         q = CATALOG[qid]
         given = r.example_text or (f"{v} {u}" + (f" ({', '.join(f'{k}={c}' for k, c in ctx.items())})" if ctx else ""))
-        ex = f"{q.name}: {given} → " + \
-             ", ".join(f"{k} = {_fmt(e)}{_unit(q, k)}" for k, e in exp.items())
+        ex = f"{q.name}: {given} → " + ", ".join(
+            ", ".join(f"kind = {kd}" for kd in e.values()) if k == "kinds" else f"{k} = {_fmt(e)}{_unit(q, k)}"
+            for k, e in exp.items())
         L.append("| " + " | ".join(_cell(c) for c in (f"`{r.id}`", r.says, r.maps_to, r.how, ex, r.assumption or "—")) + " |")
     return "\n".join(L) + "\n"
 

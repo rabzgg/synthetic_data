@@ -23,9 +23,13 @@ The stages always run in this order:
     7. quantisation        to the resolution
     8. clip                to the range; over_range / under_range flag what was cut off
 
-What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit, within
-the datasheet bound, from bias_distribution: uniform (default) or normal with sd = bound / 3,
-truncated at the bound. Both are ASSUMPTIONs: datasheets give the bound, not the distribution.
+What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit. How
+depends on the kind of datasheet value (field "kind" on accuracy, accuracy_pct_reading,
+drift_per_hour, cross_axis_pct, misalignment_deg): kind typical = a spread, drawn normal with
+sd = the value (typical = ±1σ, as Bosch datasheets state), truncated at ±3σ; kind max (default:
+min / max / limit values) = a hard bound, drawn from bias_distribution: uniform (default) or normal
+with sd = bound / 3, truncated at the bound. The distributions within a max bound are ASSUMPTIONs:
+datasheets give the bound, not the distribution.
 
 Every parameter in a part file is {"value", "unit", "source"}; the source is either
 "datasheet <document> p.<page>" or "ASSUMPTION: <reason>". from_params enforces that and converts
@@ -57,10 +61,10 @@ class Param:
 PARAMETERS = {
     "range": Param("q", None, "[low, high] the sensor can report (vectors: one pair, or one pair per axis); required"),
     "resolution": Param("q", None, "smallest reported step; required"),
-    "accuracy": Param("q", 0.0, "± bound of the bias of one unit (absolute part)"),
-    "accuracy_pct_reading": Param("%", 0.0, "± bound of the bias of one unit, in % of the reading"),
+    "accuracy": Param("q", 0.0, "bias of one unit (absolute part): ± bound, or 1σ when kind is typical"),
+    "accuracy_pct_reading": Param("%", 0.0, "bias of one unit in % of the reading: ± bound, or 1σ when kind is typical"),
     "accuracy_combine": Param("-", "sum", "how the two accuracy parts combine: sum (±(a + b %)) or max (whichever greater)"),
-    "bias_distribution": Param("-", "uniform", "how per-unit errors are drawn within their bound: uniform, or normal "
+    "bias_distribution": Param("-", "uniform", "how per-unit errors are drawn within a max bound: uniform, or normal "
                                                "(sd = bound / 3, truncated at the bound); source must be an ASSUMPTION"),
     "noise_sd": Param("q", 0.0, "standard deviation of the white noise per sample"),
     "noise_density": Param("q/√Hz", None, "noise spectral density; noise_sd = noise_density × √bandwidth_hz"),
@@ -71,16 +75,21 @@ PARAMETERS = {
     "t90_up_s": Param("s", None, "t90 for a rising input (default t90_s)"),
     "t90_down_s": Param("s", None, "t90 for a falling input (default t90_s)"),
     "hysteresis": Param("q", 0.0, "full width of the hysteresis band"),
-    "drift_per_hour": Param("q/h", 0.0, "± bound of the linear drift rate of one unit"),
+    "drift_per_hour": Param("q/h", 0.0, "linear drift rate of one unit: ± bound, or 1σ when kind is typical"),
     "deadband": Param("q", 0.0, "values within ±deadband of deadband_center are reported as deadband_center"),
     "deadband_center": Param("q", 0.0, "centre of the deadband (e.g. 0 for a toxic gas, 20.9 for O2)"),
     "cross_sensitivity": Param("cross", {}, "{quantity: {factor, ref}}: adds factor × (other − ref) to the input"),
     "mounting_orientation": Param("quat", None, "how the part sits on the body: quaternion [w, x, y, z] from sensor "
                                                 "frame to body frame (default: aligned)", True),
-    "cross_axis_pct": Param("%", 0.0, "± bound of each off-diagonal element of the cross-axis matrix of one unit", True),
-    "misalignment_deg": Param("deg", 0.0, "± bound of the angle by which the axes of one unit are rotated", True),
+    "cross_axis_pct": Param("%", 0.0, "each off-diagonal element of one unit's cross-axis matrix: ± bound, or 1σ when "
+                                      "kind is typical", True),
+    "misalignment_deg": Param("deg", 0.0, "angle by which one unit's axes are rotated: bound, or 1σ when kind is "
+                                          "typical", True),
 }
 SOURCE_PREFIXES = ("datasheet", "ASSUMPTION")
+KINDED = ("accuracy", "accuracy_pct_reading", "drift_per_hour", "cross_axis_pct", "misalignment_deg")
+KINDS = ("typical", "max")
+TYPICAL_TRUNCATE = 3.0       # a typical (1σ) spread is cut at ±3σ, the max of a Bosch datasheet
 DEFAULT_SOURCES = {"bias_distribution": "ASSUMPTION: default; uniform within the datasheet bound (the datasheet "
                                         "gives the bound, not the distribution)"}
 
@@ -98,10 +107,12 @@ def check_source(name: str, p: dict):
 
 @dataclass
 class UnitDraw:
-    """What is fixed for one physical unit, each as a fraction of its bound in [-1, 1]:
-    where in ±accuracy its bias sits and its drift rate; for vectors also the axes matrix."""
+    """What is fixed for one physical unit, each as a multiple of its datasheet value (within ±1 for
+    a max bound, ±3 for a typical 1σ spread): the absolute and %-of-reading parts of the bias and the
+    drift rate; for vectors also the axes matrix."""
     u_bias: np.ndarray
     u_drift: np.ndarray
+    u_pct: Optional[np.ndarray] = None
     axes: Optional[np.ndarray] = None         # (3, 3): this unit's axes (misalignment @ (I + cross-axis))
 
 
@@ -136,6 +147,7 @@ class MeasurementModel:
     mounting_orientation: Optional[tuple] = None
     cross_axis_pct: float = 0.0
     misalignment_deg: float = 0.0
+    kinds: dict = field(default_factory=dict)          # {param: "typical" | "max"}; absent = max
     sources: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -171,6 +183,11 @@ class MeasurementModel:
                 raise ParamError(f"{qid}: cross-sensitivity to a vector quantity ({q}) is not supported")
             if set(c) != {"factor", "ref"}:
                 raise ParamError(f"{qid}: cross_sensitivity[{q}] needs factor and ref")
+        for k, kd in self.kinds.items():
+            if k not in KINDED or kd not in KINDS:
+                raise ParamError(f"{qid}: kind {kd!r} on {k}: kind is typical|max, only on {', '.join(KINDED)}")
+        if self.accuracy_combine == "max" and self.kind("accuracy") != self.kind("accuracy_pct_reading"):
+            raise ParamError(f"{qid}: 'whichever is greater' needs accuracy and accuracy_pct_reading of the same kind")
         for k, s in DEFAULT_SOURCES.items():
             self.sources.setdefault(k, s)
 
@@ -185,11 +202,13 @@ class MeasurementModel:
         for req in ("range", "resolution"):
             if req not in params:
                 raise ParamError(f"{quantity_id}: {req} is required")
-        kw, sources = {}, {}
+        kw, sources, kinds = {}, {}, {}
         for name, p in params.items():
             check_source(name, p)
             sources[name] = p["source"]
             kw[name] = _to_canonical(q, name, p)
+            if "kind" in p:
+                kinds[name] = p["kind"]
         if "bias_distribution" in params and not str(params["bias_distribution"]["source"]).startswith("ASSUMPTION"):
             raise ParamError(f"{quantity_id}: bias_distribution is never in a datasheet; its source must be an ASSUMPTION")
         if "bandwidth_hz" not in kw and "odr_hz" in kw:
@@ -205,7 +224,7 @@ class MeasurementModel:
         kw["range"] = tuple(tuple(r) if isinstance(r, (list, tuple)) else r for r in kw["range"])
         if kw.get("mounting_orientation") is not None:
             kw["mounting_orientation"] = tuple(kw["mounting_orientation"])
-        return cls(quantity=q, sources=sources, **kw)
+        return cls(quantity=q, sources=sources, kinds=kinds, **kw)
 
     # helpers
     @property
@@ -222,27 +241,49 @@ class MeasurementModel:
         v = self.t90_up_s if rising else self.t90_down_s
         return self.t90_s if v is None else v
 
+    def kind(self, param) -> str:
+        return self.kinds.get(param, "max")
+
+    def hard(self, param) -> float:
+        """Largest value a unit can have: the max bound, or ±3σ of a typical spread."""
+        return getattr(self, param) * (TYPICAL_TRUNCATE if self.kind(param) == "typical" else 1.0)
+
     def error_bound(self, x):
-        """Bias bound at true value x: accuracy and % of reading, combined as declared."""
-        a, b = self.accuracy, self.accuracy_pct_reading / 100.0 * np.abs(x)
+        """Largest bias at true value x: accuracy and % of reading, combined as declared (typical
+        parts counted at 3σ). The gate can rely on it."""
+        a, b = self.hard("accuracy"), self.hard("accuracy_pct_reading") / 100.0 * np.abs(x)
         return a + b if self.accuracy_combine == "sum" else np.maximum(a, b)
 
-    def _unit_fraction(self, rng, size):
-        """Fractions of a bound in [-1, 1]: uniform, or normal with sd 1/3 truncated at ±1."""
-        if self.bias_distribution == "uniform":
+    def bias(self, x, draw: "UnitDraw"):
+        """This unit's bias at true value x."""
+        a, b = draw.u_bias * self.accuracy, self.accuracy_pct_reading / 100.0 * np.abs(x)
+        if self.accuracy_combine == "sum":
+            return a + (draw.u_pct if draw.u_pct is not None else draw.u_bias) * b
+        return draw.u_bias * np.maximum(self.accuracy, b)
+
+    def _unit_fraction(self, rng, size, param):
+        """Multiples of a datasheet value: typical -> normal sd 1 cut at ±3; max -> within ±1, uniform
+        or normal with sd 1/3 (bias_distribution)."""
+        if self.kind(param) == "typical":
+            sd, lim = 1.0, TYPICAL_TRUNCATE
+        elif self.bias_distribution == "uniform":
             return rng.uniform(-1, 1, size)
-        u = rng.normal(0, 1 / 3, size)
-        while (bad := np.abs(u) > 1).any():
-            u[bad] = rng.normal(0, 1 / 3, int(bad.sum()))
+        else:
+            sd, lim = 1 / 3, 1.0
+        u = rng.normal(0, sd, size)
+        while (bad := np.abs(u) > lim).any():
+            u[bad] = rng.normal(0, sd, int(bad.sum()))
         return u
 
     def draw(self, rng) -> UnitDraw:
-        d = UnitDraw(self._unit_fraction(rng, self.n_axes), self._unit_fraction(rng, self.n_axes))
+        d = UnitDraw(self._unit_fraction(rng, self.n_axes, "accuracy"),
+                     self._unit_fraction(rng, self.n_axes, "drift_per_hour"),
+                     self._unit_fraction(rng, self.n_axes, "accuracy_pct_reading"))
         if self.quantity.vector:
-            c = self._unit_fraction(rng, (3, 3)) * self.cross_axis_pct / 100.0
+            c = self._unit_fraction(rng, (3, 3), "cross_axis_pct") * self.cross_axis_pct / 100.0
             np.fill_diagonal(c, 0.0)
             axis = rng.normal(size=3)
-            angle = np.radians(self.misalignment_deg) * abs(self._unit_fraction(rng, 1)[0])
+            angle = np.radians(self.misalignment_deg) * abs(self._unit_fraction(rng, 1, "misalignment_deg")[0])
             mis = rot.to_matrix(rot.from_axis_angle(axis / np.linalg.norm(axis) * angle))
             d.axes = mis @ (np.eye(3) + c)
         return d
@@ -278,7 +319,7 @@ class MeasurementModel:
         return _first_order(x, 1 - np.exp(-2 * np.pi * self.bandwidth_hz * dt))
 
     def bias_drift(self, y, t_h, draw: UnitDraw):
-        return (y + draw.u_bias * self.error_bound(y)
+        return (y + self.bias(y, draw)
                 + draw.u_drift * self.drift_per_hour * t_h.reshape((-1,) + (1,) * (y.ndim - 1)))
 
     def hysteresize(self, y):
