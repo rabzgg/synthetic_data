@@ -1,0 +1,90 @@
+{
+  "device": "msa_altair_io4",
+  "engine": "gas_detector",
+  "model": "MSA ALTAIR io4",
+  "source_document": "MSA spec sheet 1708-056",
+  "channels": {
+    "lel": {
+      "name": "Combustible gas",
+      "column": "lel_pct_lel",
+      "range_min": {
+        "value": 0,
+        "unit": "%LEL",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "%LEL",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "%LEL",
+        "source": "MSA spec sheet 1708-056"
+      }
+    },
+    "o2": {
+      "name": "Oxygen",
+      "column": "o2_pct_vol",
+      "range_min": {
+        "value": 0,
+        "unit": "%vol",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "range_max": {
+        "value": 30,
+        "unit": "%vol",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "%vol",
+        "source": "MSA spec sheet 1708-056"
+      }
+    },
+    "co": {
+      "name": "Carbon monoxide",
+      "column": "co_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "range_max": {
+        "value": 1999,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056"
+      }
+    },
+    "h2s": {
+      "name": "Hydrogen sulfide",
+      "column": "h2s_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "range_max": {
+        "value": 199,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "MSA spec sheet 1708-056"
+      }
+    }
+  },
+  "state_columns": {},
+  "battery_runtime_h": {
+    "value": 17,
+    "unit": "h",
+    "source": "MSA spec sheet 1708-056"
+  }
+}
