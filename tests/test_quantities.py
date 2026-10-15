@@ -12,6 +12,7 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from core.quantities import CATALOG, MeasurementModel, ParamError, normalize
+from core.quantities import rotation as rot
 from core.quantities.normalize import DOC, RULES, markdown
 
 T = "ASSUMPTION: test value"
@@ -200,8 +201,86 @@ class TestStages(unittest.TestCase):
         m = self.bare(t90_s=P(5, "s"), noise_sd=P(0.1, "ppm"), cross_sensitivity=P(
             {"air.h2s_ppm": {"factor": 0.1, "ref": 0}}, "-"))
         r = m.measure(np.full(10, 1.0), 1.0, self.rng, others={"air.h2s_ppm": np.zeros(10)}, keep_stages=True)
-        self.assertEqual(list(r.stages), ["world", "cross", "response", "bias_drift", "noise", "hysteresis",
-                                          "deadband", "quantized"])
+        self.assertEqual(list(r.stages), ["world", "frame", "cross", "response", "bandwidth", "bias_drift", "noise",
+                                          "hysteresis", "deadband", "quantized"])
+
+    def test_bandwidth_low_pass(self):
+        dt, fc = 0.001, 5.0
+        m = self.bare(bandwidth_hz=P(fc, "Hz"))
+        y = m.measure(np.r_[0.0, np.full(2000, 100.0)], dt, self.rng).values
+        tau = 1 / (2 * np.pi * fc)
+        self.assertAlmostEqual(np.argmax(y >= 100 * (1 - np.exp(-1))) * dt, tau, delta=2 * dt)
+
+    def test_bandwidth_after_response(self):
+        # response then bandwidth: two first-order stages in series are slower than either alone
+        dt = 0.01
+        x = np.r_[0.0, np.full(3000, 100.0)]
+        both = self.bare(t90_s=P(1, "s"), bandwidth_hz=P(0.5, "Hz")).measure(x, dt, self.rng, keep_stages=True)
+        np.testing.assert_allclose(both.stages["bandwidth"], self.bare(bandwidth_hz=P(0.5, "Hz")).band_limit(
+            both.stages["response"], dt))
+
+    def test_odr_gives_bandwidth(self):
+        m = self.bare(odr_hz=P(100, "Hz"))
+        self.assertEqual(m.bandwidth_hz, 50)
+        self.assertTrue(m.sources["bandwidth_hz"].startswith("ASSUMPTION"))
+        self.assertEqual(self.bare(odr_hz=P(100, "Hz"), bandwidth_hz=P(20, "Hz")).bandwidth_hz, 20)
+
+    def test_bias_distribution(self):
+        m = self.bare(accuracy=P(1, "ppm"))
+        self.assertTrue(m.sources["bias_distribution"].startswith("ASSUMPTION"))
+        self.assertEqual(m.bias_distribution, "uniform")
+        n = self.bare(accuracy=P(1, "ppm"), bias_distribution=P("normal", "-"))
+        rng = np.random.default_rng(4)
+        u = np.array([n.draw(rng).u_bias[0] for _ in range(20000)])
+        self.assertLessEqual(np.abs(u).max(), 1.0)
+        self.assertAlmostEqual(u.std(), 1 / 3, delta=0.01)
+        uu = np.array([m.draw(rng).u_bias[0] for _ in range(20000)])
+        self.assertAlmostEqual(uu.std(), 1 / np.sqrt(3), delta=0.01)
+        with self.assertRaises(ParamError):
+            self.bare(bias_distribution={"value": "normal", "unit": "-", "source": "datasheet X p.1"})
+
+
+class TestVectorFrames(unittest.TestCase):
+    rng = np.random.default_rng(0)
+
+    def vec(self, qid="body.accel_g", unit="g", **kw):
+        return MeasurementModel.from_params(qid, {"range": P([-100, 100], unit), "resolution": P(1e-6, unit), **kw})
+
+    def test_mounting_orientation(self):
+        # sensor rolled 90° on the body: body z (up) lies along sensor y
+        m = self.vec(**normalize("mounting_euler", (90, 0, 0), "°", T))
+        y = m.measure(np.tile([0.0, 0.0, 1.0], (5, 1)), 1.0, self.rng).values
+        np.testing.assert_allclose(y, np.tile([0, 1, 0], (5, 1)), atol=1e-6)
+
+    def test_body_orientation_from_world(self):
+        # body yawed 90° (body -> world): world north appears on body −y
+        m = self.vec("body.mag_ut", "µT")
+        q = np.tile(rot.from_euler_deg(0, 0, 90), (3, 1))
+        y = m.measure(np.tile([30.0, 0.0, -40.0], (3, 1)), 1.0, self.rng, body_quat=q).values
+        np.testing.assert_allclose(y, np.tile([0, -30, -40], (3, 1)), atol=1e-5)
+
+    def test_cross_axis_bound(self):
+        m = self.vec(cross_axis_pct=P(2, "%"))
+        for s in range(50):
+            a = m.draw(np.random.default_rng(s)).axes
+            np.testing.assert_allclose(np.diag(a), 1.0)
+            self.assertLessEqual(np.abs(a - np.diag(np.diag(a))).max(), 0.02 + 1e-12)
+
+    def test_misalignment_bound(self):
+        m = self.vec(misalignment_deg=P(1, "deg"))
+        angles = []
+        for s in range(50):
+            a = m.draw(np.random.default_rng(s)).axes
+            np.testing.assert_allclose(a @ a.T, np.eye(3), atol=1e-12)           # a pure rotation
+            angles.append(np.degrees(np.arccos(np.clip((np.trace(a) - 1) / 2, -1, 1))))
+        self.assertLessEqual(max(angles), 1.0 + 1e-9)
+        self.assertGreater(max(angles), 0.5)
+
+    def test_vector_only_params_rejected_for_scalar(self):
+        with self.assertRaises(ParamError):
+            model("air.co_ppm", cross_axis_pct=P(1, "%"))
+        with self.assertRaises(ParamError):
+            model("air.co_ppm", mounting_orientation=P([1, 0, 0, 0], "-"))
 
     def test_cross_sensitivity(self):
         m = MeasurementModel.from_params("air.h2s_ppm", {

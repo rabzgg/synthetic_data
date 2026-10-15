@@ -86,6 +86,12 @@ def _temp_coef(v, u, s, ref_c=None):
                                     f"factor in {num} per °C" + (f"; {note}" if note else ""))}
 
 
+def _mounting(v, u, s):
+    from .rotation import from_euler_deg
+    q = [round(float(c), 9) for c in from_euler_deg(*v)]
+    return {"mounting_orientation": _p(q, "-", s, f"from roll/pitch/yaw {list(v)}° (Z-Y-X)")}
+
+
 def _cross(v, u, s, gas, applied):
     return {"cross_sensitivity": _p({gas: {"factor": v / applied, "ref": 0.0}}, "-", s,
                                     f"{applied:g} of {gas} reads as {v:g} {u}: factor {v / applied:g}")}
@@ -152,6 +158,21 @@ RULES = [
          ("air.humidity_rh", 1, "%RH", {}, {"hysteresis": 2})),
     Rule("hysteresis", "Hysteresis X (difference between rising and falling)", "hysteresis", "taken as is",
          lambda v, u, s: {"hysteresis": _p(v, u, s)}, ("air.humidity_rh", 0.5, "%RH", {}, {"hysteresis": 0.5})),
+    Rule("bandwidth", "Bandwidth X Hz; −3 dB cutoff X Hz", "bandwidth_hz", "first-order low-pass with cutoff X",
+         lambda v, u, s: {"bandwidth_hz": _p(v, u, s)}, ("body.accel_g", 62.5, "Hz", {}, {"bandwidth_hz": 62.5})),
+    Rule("odr", "Output data rate (ODR) X Hz", "odr_hz", "taken as is; without a bandwidth, bandwidth = ODR / 2",
+         lambda v, u, s: {"odr_hz": _p(v, u, s)}, ("body.gyro_dps", 100, "Hz", {}, {"odr_hz": 100, "bandwidth_hz": 50}),
+         "Only when the datasheet gives no bandwidth: ODR / 2 (Nyquist)."),
+    Rule("cross_axis", "Cross-axis sensitivity ±X %", "cross_axis_pct",
+         "each off-diagonal element of one unit's axes matrix drawn within ±X %",
+         lambda v, u, s: {"cross_axis_pct": _p(v, "%", s)}, ("body.accel_g", 1, "%", {}, {"cross_axis_pct": 1})),
+    Rule("misalignment", "Axis misalignment / alignment error ±X°", "misalignment_deg",
+         "one unit's axes rotated by up to X° about a random axis",
+         lambda v, u, s: {"misalignment_deg": _p(v, "deg", s)}, ("body.mag_ut", 0.5, "°", {}, {"misalignment_deg": 0.5})),
+    Rule("mounting_euler", "Mounting as roll, pitch, yaw (degrees, Z-Y-X)", "mounting_orientation",
+         "quaternion sensor → body from yaw, then pitch, then roll", _mounting,
+         ("body.accel_g", (90, 0, 0), "°", {}, {"mounting_orientation": (0.7071068, 0.7071068, 0.0, 0.0)}),
+         example_text="roll 90°, pitch 0°, yaw 0°"),
     Rule("deadband", "Zero deadband / zero suppression X", "deadband (deadband_center = 0)",
          "values within ±X of zero are reported as zero",
          lambda v, u, s, center=0.0: {"deadband": _p(v, u, s), "deadband_center": _p(center, u, s)},
@@ -187,7 +208,7 @@ def markdown() -> str:
     for q in CATALOG.values():
         b = f"{'−∞' if q.lower is None else f'{q.lower:g}'} … {'∞' if q.upper is None else f'{q.upper:g}'}"
         L.append(f"| `{q.id}` | {q.name} | {q.unit} | `{', '.join(q.columns())}` | {b} | {q.note} |")
-    stages = mdoc.split("The stages always run in this order:")[1].split("Every parameter")[0].strip("\n")
+    stages = mdoc.split("The stages always run in this order:")[1].split("What is fixed")[0].strip("\n")
     L += ["", "## Model parameters", "",
           "Every parameter in a part file is `{value, unit, source}`; `source` starts with `datasheet` or "
           "`ASSUMPTION`. Units are converted to the quantity's unit (`q` below).", "",
@@ -195,7 +216,9 @@ def markdown() -> str:
     for n, p in PARAMETERS.items():
         d = "required" if p.default is None and n in ("range", "resolution") else ("—" if p.default in (None, {}) else p.default)
         L.append(f"| `{n}` | {p.kind} | {d} | {p.meaning} |")
+    unit_errors = " ".join(mdoc.split("What is fixed")[1].split("Every parameter")[0].split())
     L += ["", "## Order of the stages", "", "```", "\n".join(s[4:] for s in stages.splitlines()), "```", "",
+          "What is fixed " + unit_errors, "",
           "## Normalisation rules", "",
           "| rule | the datasheet says | maps to | conversion | example | assumption |", "|---|---|---|---|---|---|"]
     for r in RULES:
@@ -216,13 +239,13 @@ def _fmt(e):
     if isinstance(e, dict):
         return "; ".join(f"{q}: factor {c['factor']:g}, ref {c['ref']:g}" for q, c in e.items())
     if isinstance(e, tuple):
-        return "[" + ", ".join(_fmt(x) for x in e) + "]"
+        return "[" + ", ".join(f"{x:.4g}" if isinstance(x, float) else str(x) for x in e) + "]"
     return f"{e:.6g}" if isinstance(e, float) else str(e)
 
 
 def _unit(q, param):
     kind = PARAMETERS[param].kind
-    u = {"q": q.unit, "q/h": q.unit + "/h", "s": "s", "Hz": "Hz", "%": " %"}.get(kind, "")
+    u = {"q": q.unit, "q/h": q.unit + "/h", "s": "s", "Hz": "Hz", "%": " %", "deg": "°"}.get(kind, "")
     return f" {u}" if u and u != " %" else u
 
 

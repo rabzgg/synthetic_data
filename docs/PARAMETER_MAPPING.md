@@ -33,9 +33,11 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 | `accuracy` | q | 0.0 | ± bound of the bias of one unit (absolute part) |
 | `accuracy_pct_reading` | % | 0.0 | ± bound of the bias of one unit, in % of the reading |
 | `accuracy_combine` | - | sum | how the two accuracy parts combine: sum (±(a + b %)) or max (whichever greater) |
+| `bias_distribution` | - | uniform | how per-unit errors are drawn within their bound: uniform, or normal (sd = bound / 3, truncated at the bound); source must be an ASSUMPTION |
 | `noise_sd` | q | 0.0 | standard deviation of the white noise per sample |
 | `noise_density` | q/√Hz | — | noise spectral density; noise_sd = noise_density × √bandwidth_hz |
-| `bandwidth_hz` | Hz | — | measurement bandwidth, used with noise_density |
+| `bandwidth_hz` | Hz | — | cutoff of the first-order low-pass on the signal; also sets noise_sd from noise_density |
+| `odr_hz` | Hz | — | output data rate; when bandwidth_hz is not given, bandwidth = ODR / 2 (ASSUMPTION) |
 | `t90_s` | s | 0.0 | time to reach 90 % of a step; 0 = instant |
 | `t90_up_s` | s | — | t90 for a rising input (default t90_s) |
 | `t90_down_s` | s | — | t90 for a falling input (default t90_s) |
@@ -44,19 +46,27 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 | `deadband` | q | 0.0 | values within ±deadband of deadband_center are reported as deadband_center |
 | `deadband_center` | q | 0.0 | centre of the deadband (e.g. 0 for a toxic gas, 20.9 for O2) |
 | `cross_sensitivity` | cross | — | {quantity: {factor, ref}}: adds factor × (other − ref) to the input |
+| `mounting_orientation` | quat | — | how the part sits on the body: quaternion [w, x, y, z] from sensor frame to body frame (default: aligned) |
+| `cross_axis_pct` | % | 0.0 | ± bound of each off-diagonal element of the cross-axis matrix of one unit |
+| `misalignment_deg` | deg | 0.0 | ± bound of the angle by which the axes of one unit are rotated |
 
 ## Order of the stages
 
 ```
+f. frame               vector quantities: world frame -> body (world's orientation) -> sensor
+                       (mounting_orientation) -> this unit's axes (misalignment, cross-axis)
 0. cross-sensitivity   interfering quantities are added to what the sensing element sees
 1. response            first order, time constant tau = t90 / ln(10)
-2. bias + drift        one bias per unit and axis, drawn once within ±accuracy; drift grows linearly
-3. noise               white Gaussian, sd per sample
-4. hysteresis          play operator: the output lags a reversal by up to hysteresis / 2
-5. deadband            values within ±deadband of deadband_center read as deadband_center
-6. quantisation        to the resolution
-7. clip                to the range; over_range / under_range flag what was cut off
+2. bandwidth           first-order low-pass, cutoff bandwidth_hz (default ODR / 2 when only odr_hz is given)
+3. bias + drift        one bias per unit and axis, drawn once within ±accuracy; drift grows linearly
+4. noise               white Gaussian, sd per sample
+5. hysteresis          play operator: the output lags a reversal by up to hysteresis / 2
+6. deadband            values within ±deadband of deadband_center read as deadband_center
+7. quantisation        to the resolution
+8. clip                to the range; over_range / under_range flag what was cut off
 ```
+
+What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit, within the datasheet bound, from bias_distribution: uniform (default) or normal with sd = bound / 3, truncated at the bound. Both are ASSUMPTIONs: datasheets give the bound, not the distribution.
 
 ## Normalisation rules
 
@@ -84,6 +94,11 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 | `drift` | Long-term stability / drift ±X per year (month, day) | drift_per_hour | unit conversion to per hour (year = 8760 h, month = 730 h) | Relative humidity: 0.25 %RH/year → drift_per_hour = 2.85388e-05 %RH/h | — |
 | `hysteresis_pm` | Hysteresis ±X | hysteresis | full width = 2X | Relative humidity: 1 %RH → hysteresis = 2 %RH | — |
 | `hysteresis` | Hysteresis X (difference between rising and falling) | hysteresis | taken as is | Relative humidity: 0.5 %RH → hysteresis = 0.5 %RH | — |
+| `bandwidth` | Bandwidth X Hz; −3 dB cutoff X Hz | bandwidth_hz | first-order low-pass with cutoff X | Acceleration: 62.5 Hz → bandwidth_hz = 62.5 Hz | — |
+| `odr` | Output data rate (ODR) X Hz | odr_hz | taken as is; without a bandwidth, bandwidth = ODR / 2 | Angular rate: 100 Hz → odr_hz = 100 Hz, bandwidth_hz = 50 Hz | Only when the datasheet gives no bandwidth: ODR / 2 (Nyquist). |
+| `cross_axis` | Cross-axis sensitivity ±X % | cross_axis_pct | each off-diagonal element of one unit's axes matrix drawn within ±X % | Acceleration: 1 % → cross_axis_pct = 1 % | — |
+| `misalignment` | Axis misalignment / alignment error ±X° | misalignment_deg | one unit's axes rotated by up to X° about a random axis | Magnetic field: 0.5 ° → misalignment_deg = 0.5 ° | — |
+| `mounting_euler` | Mounting as roll, pitch, yaw (degrees, Z-Y-X) | mounting_orientation | quaternion sensor → body from yaw, then pitch, then roll | Acceleration: roll 90°, pitch 0°, yaw 0° → mounting_orientation = [0.7071, 0.7071, 0, 0] | — |
 | `deadband` | Zero deadband / zero suppression X | deadband (deadband_center = 0) | values within ±X of zero are reported as zero | Carbon monoxide: 2 ppm → deadband = 2 ppm, deadband_center = 0 ppm | — |
 | `temperature_coefficient` | Temperature coefficient X per °C (of offset) | cross_sensitivity to air.temperature_c | adds X × (T − T_ref) to the input | Air pressure: 0.01 hPa/°C (ref_c=25) → cross_sensitivity = air.temperature_c: factor 0.01, ref 25 | Reference 25 °C when the datasheet gives none. |
 | `cross_gas` | Cross-sensitivity: C of gas G reads as R | cross_sensitivity to G | factor = R / C, ref 0 | Hydrogen sulfide: 6 ppm (gas=air.co_ppm, applied=300) → cross_sensitivity = air.co_ppm: factor 0.02, ref 0 | — |
