@@ -1,0 +1,34 @@
+# Bosch BME280: combined humidity, pressure and temperature sensor.
+# Values and pages from BST-BME280-DS001-23 (revision 1.23, 01/2022).
+name: Bosch BME280
+datasheet: "BST-BME280-DS001-23, revision 1.23"
+measures:
+  - quantity: air.temperature_c
+    params:
+      range: {value: [-40, 85], unit: "°C", source: "datasheet BST-BME280-DS001-23 p.11 (operating range)"}
+      resolution: {value: 0.01, unit: "°C", source: "datasheet BST-BME280-DS001-23 p.12 (API output resolution)"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 0.5, unit: "°C", source: "datasheet BST-BME280-DS001-23 p.12 (absolute accuracy 0…65 °C, typical)"}
+      - {rule: noise_rms, value: 0.005, unit: "°C", source: "datasheet BST-BME280-DS001-23 p.12 (RMS noise, lowest oversampling)"}
+  - quantity: air.humidity_rh
+    params:
+      range: {value: [0, 100], unit: "%RH", source: "datasheet BST-BME280-DS001-23 p.9 (operating range)"}
+      resolution: {value: 0.008, unit: "%RH", source: "datasheet BST-BME280-DS001-23 p.9"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 3, unit: "%RH", source: "datasheet BST-BME280-DS001-23 p.9 (absolute accuracy tolerance 20…80 %RH, 25 °C, typical)"}
+      - {rule: hysteresis_pm, value: 1, unit: "%RH", source: "datasheet BST-BME280-DS001-23 p.9 (difference of each branch to the averaged curve)"}
+      - {rule: noise_rms, value: 0.02, unit: "%RH", source: "datasheet BST-BME280-DS001-23 p.9 (RMS noise, highest oversampling)"}
+      - {rule: t63, value: 1, unit: "s", source: "datasheet BST-BME280-DS001-23 p.9 (response time to 63 % of a step, 1 m/s air flow)"}
+      - {rule: drift, value: 0.5, unit: "%RH/year", source: "datasheet BST-BME280-DS001-23 p.9 (long-term stability)"}
+  - quantity: air.pressure_hpa
+    params:
+      range: {value: [300, 1100], unit: "hPa", source: "datasheet BST-BME280-DS001-23 p.10 (operating pressure range, full accuracy)"}
+      resolution: {value: 0.18, unit: "Pa", source: "datasheet BST-BME280-DS001-23 p.11 (highest oversampling)"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 1.0, unit: "hPa", source: "datasheet BST-BME280-DS001-23 p.11 (absolute accuracy 300…1100 hPa, 0…65 °C, typical)"}
+      - {rule: noise_rms, value: 1.3, unit: "Pa", source: "datasheet BST-BME280-DS001-23 p.11 (full bandwidth, highest oversampling)"}
+      - {rule: drift, value: 1.0, unit: "hPa/year", source: "datasheet BST-BME280-DS001-23 p.11 (long-term stability)"}
+notes:
+  - "p.8: typical values of offsets and drifts are ±1σ, min/max are ±3σ; the typical accuracies above are used as bounds (ASSUMPTION), so real units can be worse."
+  - "Humidity accuracy (p.9) includes hysteresis; hysteresis is also modelled on its own, so the humidity error bound here is up to ±4 %RH."
+  - "Not modelled: pressure temperature coefficient of offset ±1.5 Pa/K (p.11; sign varies per unit); self-heating of the temperature reading (p.12, note 7)."

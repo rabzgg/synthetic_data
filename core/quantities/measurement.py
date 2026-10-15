@@ -55,7 +55,7 @@ class Param:
 
 
 PARAMETERS = {
-    "range": Param("q", None, "[low, high] the sensor can report; required"),
+    "range": Param("q", None, "[low, high] the sensor can report (vectors: one pair, or one pair per axis); required"),
     "resolution": Param("q", None, "smallest reported step; required"),
     "accuracy": Param("q", 0.0, "± bound of the bias of one unit (absolute part)"),
     "accuracy_pct_reading": Param("%", 0.0, "± bound of the bias of one unit, in % of the reading"),
@@ -140,9 +140,11 @@ class MeasurementModel:
 
     def __post_init__(self):
         qid = self.quantity.id
-        lo, hi = self.range
-        if not lo < hi:
-            raise ParamError(f"{qid}: range low {lo} must be below high {hi}")
+        r = np.asarray(self.range, float)
+        if r.shape not in ((2,), (self.n_axes, 2)):
+            raise ParamError(f"{qid}: range must be [low, high]" + (" or one pair per axis" if self.quantity.vector else ""))
+        if not (r[..., 0] < r[..., 1]).all():
+            raise ParamError(f"{qid}: range low must be below high, got {self.range}")
         if self.resolution <= 0:
             raise ParamError(f"{qid}: resolution must be > 0")
         if self.accuracy_combine not in ("sum", "max"):
@@ -200,7 +202,7 @@ class MeasurementModel:
                 raise ParamError(f"{quantity_id}: give noise_sd or noise_density, not both")
             kw["noise_sd"] = kw.pop("noise_density") * float(np.sqrt(kw["bandwidth_hz"]))
             sources["noise_sd"] = f"{sources['noise_density']}; noise_density × √bandwidth_hz ({sources['bandwidth_hz']})"
-        kw["range"] = tuple(kw["range"])
+        kw["range"] = tuple(tuple(r) if isinstance(r, (list, tuple)) else r for r in kw["range"])
         if kw.get("mounting_orientation") is not None:
             kw["mounting_orientation"] = tuple(kw["mounting_orientation"])
         return cls(quantity=q, sources=sources, **kw)
@@ -209,6 +211,12 @@ class MeasurementModel:
     @property
     def n_axes(self) -> int:
         return len(self.quantity.axes) or 1
+
+    @property
+    def bounds(self):
+        """(low, high), each a float or an array per axis."""
+        r = np.asarray(self.range, float)
+        return r[..., 0], r[..., 1]
 
     def t90(self, rising: bool) -> float:
         v = self.t90_up_s if rising else self.t90_down_s
@@ -325,7 +333,7 @@ class MeasurementModel:
         y = st["hysteresis"] = self.hysteresize(y)
         y = st["deadband"] = self.apply_deadband(y)
         y = st["quantized"] = self.quantize(y)
-        lo, hi = self.range
+        lo, hi = self.bounds
         r = Reading(np.clip(y, lo, hi) + 0.0, y > hi, y < lo)
         if keep_stages:
             r.stages = st

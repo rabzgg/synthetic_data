@@ -66,8 +66,9 @@ def factor_compound(unit: str, target: str) -> float:
 
 
 def convert(value, unit: str, target: str):
-    """Convert a number or a list of numbers (e.g. a range) from `unit` to `target`."""
+    """Convert a number or a (nested) list of numbers, e.g. a range, from `unit` to `target`."""
     f = factor_compound(unit, target)
-    if isinstance(value, (list, tuple)):
-        return [v * f for v in value]
-    return value * f
+
+    def scale(v):
+        return [scale(x) for x in v] if isinstance(v, (list, tuple)) else v * f
+    return scale(value)

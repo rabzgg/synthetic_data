@@ -1,0 +1,14 @@
+# Maxim (Analog Devices) MAX44009: ambient light sensor with auto-ranging.
+# [USER TO VERIFY] The datasheet could not be downloaded while writing this file (analog.com timed out).
+# Values are ASSUMPTIONs from the product page and distributor listings and must be checked.
+name: Maxim MAX44009
+datasheet: "MAX44009 data sheet (not available when written: [USER TO VERIFY])"
+measures:
+  - quantity: light.lux
+    params:
+      range: {value: [0.045, 188000], unit: "lx", source: "ASSUMPTION: [USER TO VERIFY] 0.045 … 188,000 lux (product page)"}
+      resolution: {value: 0.045, unit: "lx", source: "ASSUMPTION: [USER TO VERIFY] 0.045 lux per LSB, finest setting (product page)"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 15, unit: "%", source: "ASSUMPTION: [USER TO VERIFY] total error 15 % (distributor listing)"}
+notes:
+  - "Auto-ranging: the step grows with the light level (the XDK recordings step by 2.88 lux at about 75 lux). Not modelled: one fixed resolution."

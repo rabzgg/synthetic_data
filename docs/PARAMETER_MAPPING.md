@@ -28,7 +28,7 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 
 | parameter | unit | default | meaning |
 |---|---|---|---|
-| `range` | q | required | [low, high] the sensor can report; required |
+| `range` | q | required | [low, high] the sensor can report (vectors: one pair, or one pair per axis); required |
 | `resolution` | q | required | smallest reported step; required |
 | `accuracy` | q | 0.0 | ± bound of the bias of one unit (absolute part) |
 | `accuracy_pct_reading` | % | 0.0 | ± bound of the bias of one unit, in % of the reading |

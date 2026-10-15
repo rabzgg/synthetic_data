@@ -1,0 +1,13 @@
+# Bosch BMG160: triaxial gyroscope, 16 bit.
+# [USER TO VERIFY] The datasheet (BST-BMG160-DS000) could not be downloaded while writing this file
+# (Bosch no longer hosts it; mirrors timed out). Every value is therefore an ASSUMPTION taken from
+# distributor listings and search snippets, and must be checked against the datasheet.
+name: Bosch BMG160
+datasheet: "BST-BMG160-DS000 (not available when written: [USER TO VERIFY])"
+measures:
+  - quantity: body.gyro_dps
+    from_datasheet:
+      - {rule: range_symmetric, value: 2000, unit: "°/s", source: "ASSUMPTION: [USER TO VERIFY] ±125 … ±2000 °/s selectable (distributor listing); widest here"}
+      - {rule: sensitivity_lsb, value: 16.4, unit: "LSB/°/s", source: "ASSUMPTION: [USER TO VERIFY] 16.4 LSB/(°/s) at ±2000 °/s (search snippet of the datasheet)"}
+      - {rule: accuracy_typical, value: 1, unit: "°/s", source: "ASSUMPTION: [USER TO VERIFY] zero-rate offset ±1 °/s typical (search snippet of the datasheet)"}
+      - {rule: noise_density, value: 0.014, unit: "°/s/√Hz", bandwidth_hz: 12, source: "ASSUMPTION: [USER TO VERIFY] 0.014 °/s/√Hz; another snippet says 0.007, the larger is used; bandwidth 12 Hz = lowest of the 12 … 230 Hz settings in the distributor listing"}

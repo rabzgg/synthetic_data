@@ -93,7 +93,8 @@ class TestConstantWorld(unittest.TestCase):
                 res, sd = m.resolution, m.noise_sd
                 # resolution grid and range
                 self.assertTrue(np.allclose(v / res, np.round(v / res), atol=1e-6), "not on the resolution grid")
-                self.assertTrue((v >= m.range[0]).all() and (v <= m.range[1]).all())
+                lo, hi = m.bounds
+                self.assertTrue((v >= lo).all() and (v <= hi).all())
                 self.assertFalse(r.over_range.any() or r.under_range.any())
                 # bias: where the unit's draw puts it, and within ±accuracy
                 mean_err = v.mean(axis=0) - xt
@@ -275,6 +276,14 @@ class TestVectorFrames(unittest.TestCase):
             angles.append(np.degrees(np.arccos(np.clip((np.trace(a) - 1) / 2, -1, 1))))
         self.assertLessEqual(max(angles), 1.0 + 1e-9)
         self.assertGreater(max(angles), 0.5)
+
+    def test_range_per_axis(self):
+        m = self.vec("body.mag_ut", "µT", range=P([[-1300, 1300], [-1300, 1300], [-2500, 2500]], "µT"))
+        r = m.measure(np.tile([2000.0, 0.0, 2000.0], (2, 1)), 1.0, self.rng)
+        np.testing.assert_allclose(r.values[0], [1300, 0, 2000])
+        np.testing.assert_array_equal(r.over_range[0], [True, False, False])
+        with self.assertRaises(ParamError):
+            self.vec(range=P([[-1, 1], [-1, 1]], "g"))
 
     def test_vector_only_params_rejected_for_scalar(self):
         with self.assertRaises(ParamError):

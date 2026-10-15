@@ -1,0 +1,37 @@
+# Preset: Bosch XDK, as in the robot-arm recordings (data/arm6/original). Resolutions and the 10 Hz
+# rate are what the recordings show; the sensor values are from the part datasheets.
+name: Bosch XDK
+slug: bosch_xdk
+device_id_prefix: XDK
+description: "Bosch XDK110: BME280 (temperature, humidity, pressure), MAX44009 (light), BMA280 (acceleration), BMG160 (gyroscope, used for orientation only), BMM150 (magnetic field); writes an orientation quaternion (x, y, z)."
+created: "2026-10-15"
+version: 1
+preset: true
+datasheet: "XDK110 parts: see each part file"
+parts:
+  - part: bosch_bme280
+    overrides:
+      air.humidity_rh:
+        resolution: {value: 1, unit: "%RH", source: "ASSUMPTION: the XDK writes whole %RH (step 1 in the recordings)"}
+      air.pressure_hpa:
+        resolution: {value: 1, unit: "Pa", source: "ASSUMPTION: the XDK writes whole Pa (step 1 Pa in the recordings)"}
+  - part: maxim_max44009
+  - part: bosch_bma280
+    overrides:
+      range: {value: [-2, 2], unit: "g", source: "ASSUMPTION: [USER TO VERIFY] XDK range setting not recorded; ±2 g covers the recorded maximum of 1.09 g"}
+      resolution: {value: 1, unit: "mg", source: "ASSUMPTION: the XDK writes whole mg (step 0.001 g in the recordings)"}
+  - part: bosch_bmg160
+    log: false
+    note: "Not written by the XDK; feeds the orientation filter."
+  - part: bosch_bmm150
+    overrides:
+      resolution: {value: 1, unit: "µT", source: "ASSUMPTION: the XDK writes whole µT (step 1 in the recordings)"}
+features:
+  sample_interval_s: {value: 0.1, unit: "s", source: "ASSUMPTION: 10 Hz as in the recordings (median step 0.100 s)"}
+  derived:
+    - kind: orientation_quat
+      params:
+        write_w: {value: false, unit: "-", source: "ASSUMPTION: the XDK writes quaternion x, y, z only (recordings)"}
+notes:
+  - "Mounting of the sensors inside the XDK is taken as aligned with the XDK body (ASSUMPTION)."
+  - "Which arm link each XDK sits on is not part of the device: [USER TO VERIFY], see the robot-arm world (phase 6)."

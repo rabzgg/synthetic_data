@@ -1,0 +1,139 @@
+# Preset: MSA ALTAIR io6, rebuilt from parts with the numbers of configs/gas/msa_altair_io6/spec.json
+name: MSA ALTAIR io6
+slug: msa_altair_io6
+device_id_prefix: MSA_ALTAIR_IO6
+description: 'MSA ALTAIR io6: 4-gas detector plus PID (VOC) and a sampling pump.'
+created: '2026-10-15'
+version: 1
+preset: true
+datasheet: MSA spec sheet 1708-056 (ALTAIR io4 spec sheet)
+parts:
+- part: msa_altair_lel
+  note: 'ASSUMPTION: same sensors as io4 (io6 sensor table not found)'
+- part: msa_altair_o2_cell
+  note: 'ASSUMPTION: same sensors as io4 (io6 sensor table not found)'
+- part: msa_altair_co_cell
+  note: 'ASSUMPTION: same sensors as io4 (io6 sensor table not found)'
+- part: msa_altair_h2s_cell
+  note: 'ASSUMPTION: same sensors as io4 (io6 sensor table not found)'
+- part: msa_altair_pid_voc
+  note: 'ASSUMPTION: borrowed from Blackline PID (G7c R28); io6 PID table not found'
+features:
+  sample_interval_s:
+    value: 10
+    unit: s
+    source: 'ASSUMPTION: Datasheets give no logging interval; 10 s as set in the task brief.'
+  alarms:
+    latching:
+      value: false
+      unit: '-'
+      source: 'ASSUMPTION: Brief: alarm = value >= threshold. For O2 the low alarm is a deficiency alarm, so it triggers at or below the setpoint. Alarms are modelled as non-latching (they clear when the
+        value does).'
+    air.lel_pct:
+      low:
+        value: 10
+        unit: '%LEL'
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+      high:
+        value: 20
+        unit: '%LEL'
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+    air.o2_pct:
+      low:
+        value: 19.5
+        unit: '%vol'
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: below
+      high:
+        value: 23.5
+        unit: '%vol'
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+    air.co_ppm:
+      low:
+        value: 25
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+      high:
+        value: 100
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+      stel:
+        value: 200
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+      twa:
+        value: 25
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+    air.h2s_ppm:
+      low:
+        value: 10
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+      high:
+        value: 15
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+      stel:
+        value: 15
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+      twa:
+        value: 10
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+    air.voc_ppm:
+      low:
+        value: 50
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+      high:
+        value: 100
+        unit: ppm
+        source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+        when: above
+  exposure:
+    window_s:
+      value: 900
+      unit: s
+      source: 'ASSUMPTION: Brief: STEL = rolling 15-min mean. How the first 15 min are handled is not specified; zero-fill chosen.'
+    period_s:
+      value: 28800
+      unit: s
+      source: 'ASSUMPTION: Brief: TWA = 8-h average. Computed as the accumulated dose divided by 8 h (the 8-h TWA of the shift so far), not as a mean over the elapsed time.'
+  over_range:
+    value: at_or_above_max
+    unit: '-'
+    source: 'ASSUMPTION: Brief: alarm = value >= threshold. For O2 the low alarm is a deficiency alarm, so it triggers at or below the setpoint. Alarms are modelled as non-latching (they clear when the
+      value does).'
+    quantities:
+    - air.lel_pct
+    - air.o2_pct
+    - air.co_ppm
+    - air.h2s_ppm
+    - air.voc_ppm
+  bump_test:
+    value: true
+    unit: '-'
+    source: 'ASSUMPTION: Example mix from the task brief; every detector of the gas engine runs a bump test at the start of the shift'
+  states:
+    pump:
+      value: true
+      unit: '-'
+      source: 'ASSUMPTION: same sensors as io4 (io6 sensor table not found)'
+  battery_hours:
+    value: 17
+    unit: h
+    source: 'ASSUMPTION: same battery as io4 (io6 battery table not found)'
+  connectivity:
+    value: cellular
+    unit: '-'
+    source: 'ASSUMPTION: No signal specification given. Bounded random walk, one step per logging interval. Reported by every device.'

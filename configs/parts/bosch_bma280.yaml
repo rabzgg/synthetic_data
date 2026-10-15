@@ -1,0 +1,16 @@
+# Bosch BMA280: triaxial accelerometer, 14 bit.
+# Values and pages from BST-BMA280-DS000-11 (revision 1.8, August 2014).
+name: Bosch BMA280
+datasheet: "BST-BMA280-DS000-11, revision 1.8"
+measures:
+  - quantity: body.accel_g
+    from_datasheet:
+      - {rule: range_symmetric, value: 16, unit: "g", source: "datasheet BST-BMA280-DS000-11 p.8 (selectable ±2 / ±4 / ±8 / ±16 g; widest here, a device picks its own)"}
+      - {rule: sensitivity_lsb, value: 512, unit: "LSB/g", source: "datasheet BST-BMA280-DS000-11 p.9 (±16 g range)"}
+      - {rule: accuracy_typical, value: 50, unit: "mg", source: "datasheet BST-BMA280-DS000-11 p.9 (zero-g offset over lifetime, typical)"}
+      - {rule: noise_density, value: 120, unit: "µg/√Hz", odr_hz: 2000, source: "datasheet BST-BMA280-DS000-11 p.10 (output noise density); ODR 2000 Hz unfiltered from p.9"}
+      - {rule: cross_axis, value: 1, unit: "%", source: "datasheet BST-BMA280-DS000-11 p.10 (cross-axis sensitivity)"}
+      - {rule: misalignment, value: 0.5, unit: "°", source: "datasheet BST-BMA280-DS000-11 p.10 (alignment error relative to the package)"}
+notes:
+  - "p.8: min/max values are ±3σ."
+  - "Bandwidth is selectable (8 … 500 Hz, p.9); without a device setting it is taken as ODR / 2 (ASSUMPTION)."
