@@ -1,0 +1,41 @@
+# World preset: a worker indoors, walking between rooms and standing still, in clean air.
+name: indoor_worker_walking
+title: "Indoor worker, walking"
+realism: ASSUMPTION
+description: "Clean indoor air at room temperature with slow variation; the worker alternates walking and standing; lights change between rooms; now and then the stairs to another floor. No real recording behind it."
+grid:
+  air_dt_s: {value: 1, unit: s, source: "ASSUMPTION: air changes over seconds; the fastest gas sensor t90 is 15 s"}
+  body_dt_s: {value: 0.04, unit: s, source: "ASSUMPTION: 25 Hz resolves steps (about 2 Hz) and a fall impact (about 0.1 s)"}
+time:
+  start_utc: {value: "2026-01-05T06:00:00Z", unit: "ISO 8601", source: "ASSUMPTION: same shift start as configs/gas/assumptions.json"}
+  utc_offset_h: {value: 0, unit: h, source: "ASSUMPTION: local time = UTC"}
+clean_air:
+  o2_pct: {value: 20.9, unit: "%vol", source: "ASSUMPTION: normal air, as clean_air_baseline in configs/gas/assumptions.json"}
+  co2_ppm: {value: 420, unit: ppm, source: "ASSUMPTION: outdoor background CO2, about 420 ppm"}
+  lel_gas_vol_pct: {value: 5.0, unit: "%vol", source: "ASSUMPTION: methane, 100 %LEL = 5.0 %vol (a common calibration; IEC 60079-20-1 gives 4.4 %vol)"}
+earth_field_ut: {value: [19.5, 0.0, -44.5], unit: µT, source: "ASSUMPTION: mid-latitude field in world axes (x north, z up), about 49 µT, inclination about 66°"}
+drivers:
+  air.temperature_c: {model: ou, mean: {value: 21, unit: "°C", source: "ASSUMPTION: heated room"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION: heating cycles"}, tau_s: {value: 1800, unit: s, source: "ASSUMPTION: changes over half an hour"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}
+  air.vapour_pressure_hpa: {model: from_rh, rh_pct: {value: 40, unit: "%RH", source: "ASSUMPTION: heated room in winter"}, at_temperature_c: {value: 21, unit: "°C", source: "ASSUMPTION: the room mean"}, noise: {sd: {value: 0.2, unit: hPa, source: "ASSUMPTION: people and ventilation"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION: slow"}}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}
+  air.sea_level_pressure_hpa: {model: ou, mean: {value: 1013.25, unit: hPa, source: "ASSUMPTION: standard atmosphere"}, sd: {value: 8, unit: hPa, source: "ASSUMPTION: weather systems"}, tau_s: {value: 172800, unit: s, source: "ASSUMPTION: weather changes over days"}, smooth_s: {value: 43200, unit: s, source: "ASSUMPTION: weather pressure changes smoothly, a few hPa over half a day"}}
+  floor_altitude_m: {model: floors, floor_height_m: {value: 3.5, unit: m, source: "ASSUMPTION: storey height"}, floors: {value: 2, unit: "-", source: "ASSUMPTION: ground floor plus two"}, change_probability: {value: 0.15, unit: "-", source: "ASSUMPTION: some walks take the stairs"}, stairs_s: {value: 20, unit: s, source: "ASSUMPTION: one flight of stairs"}}
+  light.lux: {model: room_levels, levels: {value: [150, 300, 500, 750], unit: lx, source: "ASSUMPTION: corridor to workshop lighting levels (EN 12464-1 order of magnitude)"}, noise: {sd: {value: 5, unit: lx, source: "ASSUMPTION: shadows"}, tau_s: {value: 30, unit: s, source: "ASSUMPTION"}}}
+  air.co2_ppm: {model: ou, mean: {value: 700, unit: ppm, source: "ASSUMPTION: occupied, ventilated room"}, sd: {value: 120, unit: ppm, source: "ASSUMPTION: occupancy changes"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}
+  air.co_ppm: {model: constant, value: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.h2s_ppm: {model: constant, value: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.lel_pct: {model: constant, value: {value: 0, unit: "%LEL", source: "ASSUMPTION: clean air"}}
+  air.voc_ppm: {model: constant, value: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+motion:
+  model: walk_still
+  walk_bout_s: {value: [30, 300], unit: s, source: "ASSUMPTION: walks between work spots"}
+  still_bout_s: {value: [60, 900], unit: s, source: "ASSUMPTION: work at one spot"}
+  speed_m_s: {value: 1.3, unit: m/s, source: "ASSUMPTION: usual walking speed"}
+  surge_m_s: {value: 0.1, unit: m/s, source: "ASSUMPTION: speed varies within a step"}
+  step_hz: {value: 1.8, unit: Hz, source: "ASSUMPTION: about 108 steps per minute"}
+  bob_m: {value: 0.02, unit: m, source: "ASSUMPTION: a chest-worn device rises and falls about 2 cm per step"}
+  sway_deg: {value: 2, unit: "°", source: "ASSUMPTION: trunk sway while walking"}
+  turn_rate_sd_dps: {value: 20, unit: "°/s", source: "ASSUMPTION: turns while walking"}
+  turn_tau_s: {value: 3, unit: s, source: "ASSUMPTION"}
+  device_height_m: {value: 1.3, unit: m, source: "ASSUMPTION: detector clipped at the chest"}
+  lying_height_m: {value: 0.15, unit: m, source: "ASSUMPTION: chest height of a person lying down"}
+  impact_s: {value: 0.08, unit: s, source: "ASSUMPTION: duration of the impact of a fall"}
