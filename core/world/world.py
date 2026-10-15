@@ -62,6 +62,48 @@ class Track:
         return np.column_stack([np.interp(t, x, self.values[:, k]) for k in range(self.values.shape[1])])
 
 
+@dataclass
+class Mount:
+    """Where a device sits in the world. body: worn on the moving body (it reads the body tracks and
+    the body's altitude). fixed: on a wall, shelf or post on the ground floor, at height_m, facing
+    heading_deg; it shares the air but not the body's movement, floors or falls."""
+    kind: str = "body"
+    height_m: float = 1.0
+    heading_deg: float = 0.0
+
+    def __post_init__(self):
+        if self.kind not in ("body", "fixed"):
+            raise ValueError(f"mount must be 'body' or 'fixed', got {self.kind!r}")
+
+
+class WorldView:
+    """The world as one device sees it from its mount."""
+
+    def __init__(self, world: "World", mount: Mount):
+        self.world, self.mount = world, mount
+
+    def at(self, name: str, t):
+        w, m = self.world, self.mount
+        if m.kind == "body":
+            return w.at(name, t)
+        n = len(np.atleast_1d(t))
+        if name == "body.accel_g":
+            return np.tile([0.0, 0.0, 1.0], (n, 1))
+        if name == "body.gyro_dps":
+            return np.zeros((n, 3))
+        if name == "body.orientation":
+            h = np.radians(m.heading_deg) / 2
+            return np.tile([np.cos(h), 0.0, 0.0, np.sin(h)], (n, 1))
+        if name in ("body.height_m", "altitude_m"):
+            return np.full(n, m.height_m)
+        if name == "air.pressure_hpa":
+            return P.pressure_at(w.at("air.sea_level_pressure_hpa", t), m.height_m)
+        return w.at(name, t)
+
+    def state_at(self, t):
+        return self.world.state_at(t) if self.mount.kind == "body" else np.full(len(np.atleast_1d(t)), "fixed", object)
+
+
 def load_preset(name: str, worlds_dir: str = WORLDS_DIR) -> dict:
     path = os.path.join(worlds_dir, f"{name}.yaml")
     if not os.path.exists(path):
@@ -200,6 +242,9 @@ class World:
     def quantities(self) -> list:
         """Catalog quantities this world provides."""
         return [q for q in CATALOG if q in self.tracks]
+
+    def view(self, mount: Mount = None) -> WorldView:
+        return WorldView(self, mount or Mount())
 
     def state_at(self, t):
         tr = self.motion_state

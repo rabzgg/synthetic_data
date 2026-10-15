@@ -31,6 +31,9 @@ motion:
   lying_height_m: {value: 0.15, unit: m, source: "ASSUMPTION: not used without a fall"}
   heading_deg: {value: 0, unit: "°", source: "ASSUMPTION: device faces magnetic north"}
   impact_s: {value: 0.08, unit: s, source: "ASSUMPTION: duration of the impact of a fall"}
+  fidget_deg: {value: 0, unit: "°", source: "ASSUMPTION: the device is not on a person"}
+  fidget_tau_s: {value: 2, unit: s, source: "ASSUMPTION: not used"}
+  stir_deg: {value: 0, unit: "°", source: "ASSUMPTION: the device is not on a person"}
   step_hz: {value: 1.8, unit: Hz, source: "ASSUMPTION: not used without walking"}
   speed_m_s: {value: 0, unit: m/s, source: "ASSUMPTION: not used without walking"}
   surge_m_s: {value: 0, unit: m/s, source: "ASSUMPTION: not used without walking"}

@@ -151,8 +151,10 @@ class TestBody(unittest.TestCase):
         still = self.w.motion_state.values == "still"
         away = still & (np.convolve(~still, np.ones(11), mode="same") == 0)      # 5 samples from any walk
         f = self.w.tracks["body.accel_g"].values[away]
-        np.testing.assert_allclose(f, np.tile([0, 0, 1.0], (len(f), 1)), atol=1e-9)
-        np.testing.assert_allclose(self.g[away], 0, atol=1e-9)
+        np.testing.assert_allclose(f, np.tile([0, 0, 1.0], (len(f), 1)), atol=1e-9)    # no translation
+        rate = np.linalg.norm(self.g[away], axis=1)
+        self.assertGreater(rate.mean(), 0.5)                    # a standing person sways a little
+        self.assertLess(rate.mean(), 20)
 
     def test_walking_mean_is_gravity(self):
         walk = self.w.motion_state.values == "walk"

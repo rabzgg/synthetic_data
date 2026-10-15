@@ -3,9 +3,12 @@ motion.py — how the body (the person or thing carrying the devices) moves, and
 body.accel_g, body.gyro_dps and body.mag_ut.
 
 A motion plan is a list of segments, each one of
-    still   standing or lying at rest (posture upright or lying)
-    walk    walking: forward speed, small turns, vertical bob and sway at the step frequency
-    fall    from upright to lying: free fall to the ground, an impact, a 90° forward rotation
+    still       a living body at rest, standing or lying (posture): small movements (fidget_deg)
+    motionless  no movement at all, standing or lying (events no_motion and collapse)
+    walk        walking: forward speed, small turns, vertical bob and sway at the step frequency
+    fall        from upright to lying: free fall to the ground, an impact, a 90° forward rotation
+    rise        from lying back to upright, smoothly
+    stir        lying but moving (stir_deg), e.g. between a fall and losing consciousness
 From the plan, one kinematic description is built on the body grid: heading, pitch and roll, and
 the position. Everything else is derived from it:
     orientation   body -> world quaternion (world: x = magnetic north, y = west, z = up)
@@ -21,7 +24,7 @@ from core.quantities import rotation as rot
 
 from .physics import G
 
-KINDS = ("still", "walk", "fall")
+KINDS = ("still", "walk", "fall", "rise", "stir", "motionless")
 
 
 def v(p):
@@ -48,8 +51,15 @@ class MotionPlan:
         return [(s["start"], s["end"]) for s in self.segments if s["kind"] == "walk"]
 
     def moving(self) -> bool:
-        return any(s["kind"] != "still" for s in self.segments) or \
+        return any(s["kind"] not in ("still", "motionless") for s in self.segments) or \
             len({s.get("posture") for s in self.segments}) > 1
+
+    def at(self, t: float) -> dict:
+        """The segment at time t."""
+        for s in self.segments:
+            if s["start"] <= t < s["end"]:
+                return s
+        return self.segments[-1]
 
     def insert(self, start: float, end: float, kind: str, posture: str = "upright"):
         """Put a segment over [start, end), cutting what was there (used by events)."""
@@ -96,7 +106,7 @@ def kinematics(plan: MotionPlan, dt: float, params: dict, rng) -> dict:
     p = {k: v(x) for k, x in params.items()}
     h_up, h_lying = p["device_height_m"], p["lying_height_m"]
     heading0 = np.radians(p.get("heading_deg", rng.uniform(0, 360)))
-    if not plan.moving():
+    if not plan.moving() and not (p.get("fidget_deg", 0) and any(x["kind"] == "still" for x in plan.segments)):
         q = _euler_quat(np.array([heading0]), np.zeros(1), np.zeros(1))
         return {"orientation": q, "gyro": np.zeros((1, 3)), "force": np.array([[0.0, 0.0, 1.0]]),
                 "height": np.array([h_up]), "state": np.array(["still"], dtype=object)}
@@ -104,36 +114,50 @@ def kinematics(plan: MotionPlan, dt: float, params: dict, rng) -> dict:
     t = np.arange(n) * dt
     state = np.empty(n, dtype=object)
     walking = np.zeros(n)                 # 0..1, ramps over 1 s at the ends of a walk
-    lying = np.zeros(n, bool)
-    fall_frac = np.zeros(n)               # 0..1 through a fall's rotation
+    tilt = np.zeros(n)                    # forward rotation: 0 upright, pi/2 lying face down
+    fidget = np.zeros(n)                  # amplitude (rad) of small movements of a living body
     z = np.full(n, h_up)
-    last = plan.segments[-1]
+    h_cur, last = h_up, plan.segments[-1]
     for s in plan.segments:
         m = (t >= s["start"]) & ((t < s["end"]) | ((s is last) & (t >= s["end"])))
-        state[m] = s["kind"] if s["kind"] != "still" else ("lying" if s.get("posture") == "lying" else "still")
-        if s["kind"] == "walk":
-            walking[m] = np.clip(np.minimum(t[m] - s["start"], s["end"] - t[m]), 0, 1)
-        elif s["kind"] == "fall":
-            tau = t[m] - s["start"]
-            t_ff = np.sqrt(2 * (h_up - h_lying) / G)
+        kind, lying = s["kind"], s.get("posture") == "lying"
+        state[m] = "lying" if (kind == "still" and lying) else kind
+        tau = t[m] - s["start"]
+        if kind == "walk":
+            walking[m] = np.clip(np.minimum(tau, s["end"] - t[m]), 0, 1)
+        elif kind == "fall":
+            t_ff = np.sqrt(2 * (h_cur - h_lying) / G)
             imp = p["impact_s"]
-            v_imp = G * t_ff
-            vz = np.where(tau < t_ff, -G * tau, np.where(tau < t_ff + imp, -v_imp * (1 - (tau - t_ff) / imp), 0.0))
-            z[m] = h_up + np.cumsum(vz) * dt
-            fall_frac[m] = np.clip(tau / (t_ff + imp), 0, 1)
-            after = t >= s["end"]
-            z[after] = z[m][-1] if m.any() else h_lying
-        if s.get("posture") == "lying" and s["kind"] == "still":
-            lying[m] = True
+            vz = np.where(tau < t_ff, -G * tau, np.where(tau < t_ff + imp, -G * t_ff * (1 - (tau - t_ff) / imp), 0.0))
+            z[m] = h_cur + np.cumsum(vz) * dt
+            tilt[m] = np.pi / 2 * np.clip(tau / (t_ff + imp), 0, 1)
+            h_cur = z[m][-1] if m.any() else h_lying
+            continue
+        elif kind == "rise":
+            frac = 0.5 - 0.5 * np.cos(np.pi * np.clip(tau / (s["end"] - s["start"]), 0, 1))
+            z[m] = h_cur + (h_up - h_cur) * frac
+            tilt[m] = np.pi / 2 * (1 - frac)
+            h_cur = h_up
+            continue
+        z[m] = h_cur
+        tilt[m] = np.pi / 2 if lying else 0.0
+        if kind == "still":
+            fidget[m] = np.radians(p.get("fidget_deg", 0.0))
+        elif kind == "stir":
+            fidget[m] = np.radians(p.get("stir_deg", 0.0))
+    from .drivers import ou, smooth
+    fidget = smooth(fidget, max(1, int(round(1.0 / dt))))            # no jumps in amplitude
+    tau_f = p.get("fidget_tau_s", 2.0)
+    wob_p = ou(n, dt, 0.0, 1.0, tau_f, rng, x0=0.0) * fidget
+    wob_r = ou(n, dt, 0.0, 1.0, tau_f, rng, x0=0.0) * fidget
     # heading: small turns while walking
-    from .drivers import ou
     yaw_rate = ou(n, dt, 0.0, np.radians(p["turn_rate_sd_dps"]), p["turn_tau_s"], rng, x0=0.0) * walking
     yaw = heading0 + np.cumsum(yaw_rate) * dt
     f = p["step_hz"]
     phase = 2 * np.pi * f * t
     sway = np.radians(p["sway_deg"]) * walking
-    pitch = sway * np.sin(phase) + np.where(lying, np.pi / 2, np.pi / 2 * fall_frac)
-    roll = sway * np.sin(phase / 2)
+    pitch = sway * np.sin(phase) + tilt + wob_p
+    roll = sway * np.sin(phase / 2) + wob_r
     q = _euler_quat(yaw, pitch, roll)
     # position: forward speed along the heading, vertical bob while walking
     speed = (p["speed_m_s"] + p["surge_m_s"] * np.sin(phase)) * walking

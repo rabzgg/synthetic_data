@@ -39,3 +39,6 @@ motion:
   device_height_m: {value: 1.3, unit: m, source: "ASSUMPTION: detector clipped at the chest"}
   lying_height_m: {value: 0.15, unit: m, source: "ASSUMPTION: chest height of a person lying down"}
   impact_s: {value: 0.08, unit: s, source: "ASSUMPTION: duration of the impact of a fall"}
+  fidget_deg: {value: 1.5, unit: "°", source: "ASSUMPTION: a person standing at work is never quite still (posture sway)"}
+  fidget_tau_s: {value: 2, unit: s, source: "ASSUMPTION: sway over seconds"}
+  stir_deg: {value: 8, unit: "°", source: "ASSUMPTION: a person on the ground still moving after a fall"}

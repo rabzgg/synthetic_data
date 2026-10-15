@@ -1,0 +1,15 @@
+# Scenario: a worker collapses in H2S; the G7c should raise fall and no-motion alerts.
+name: worker_collapse
+title: "Worker collapse in H2S"
+description: "H2S rises to 100 ppm, the worker falls after a minute, moves a little, then lies still for 10 min until rescued; one connection gap."
+realism: ASSUMPTION
+world: indoor_worker_walking
+duration: 2h
+seed: 42
+devices:
+  - {device: blackline_g7c, mount: body}
+  - {device: bme280_sensor_board, mount: fixed, height_m: 1.0}
+events:
+  - bump_test: {at: "00:02:00"}
+  - collapse: {at: "00:40:00", gas: h2s, level: 100, ramp_s: 30, duration_min: 30, fall_after_s: 60, no_motion_after_s: 20, no_motion_min: 10}
+  - connection_loss: {at: "01:20:00", duration_s: 70}
