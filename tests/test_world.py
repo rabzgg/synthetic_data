@@ -62,6 +62,30 @@ class TestAirRelations(unittest.TestCase):
         np.testing.assert_allclose(rh, np.minimum(100 * e / P.saturation_vapour_pressure(T), 100))
         self.assertLess(np.corrcoef(T, rh)[0, 1], -0.8)          # warmer -> drier, same vapour content
 
+    def test_saturation_caps_vapour(self):
+        """Air that cools below its dew point holds no more vapour than saturation: RH stops at 100."""
+        w = World("outdoor_day", 24 * HOUR, 1)
+        T, e = w.tracks["air.temperature_c"].values, w.tracks["air.vapour_pressure_hpa"].values
+        es = P.saturation_vapour_pressure(T)
+        self.assertTrue((e <= es + 1e-12).all())
+        capped = w.drivers["air.vapour_pressure_hpa"] > es
+        self.assertTrue(capped.any())                           # it happens in this world (dawn)
+        np.testing.assert_allclose(w.tracks["air.humidity_rh"].values[capped], 100.0)
+        self.assertLess(capped.mean(), 0.5)
+
+    def test_combustible_gas(self):
+        for gas, vol in (("methane", 5.0), ("propane", 2.1), ("hydrogen", 4.0)):
+            d = copy.deepcopy(load_preset("static_shelf"))
+            d["clean_air"]["combustible_gas"]["value"] = gas
+            w = World(d, 600, 1)
+            w.drivers["air.lel_pct"][:] = 100
+            w.drivers["air.co2_ppm"][:] = 420
+            w.derive()
+            np.testing.assert_allclose(w.tracks["air.o2_pct"].values, 20.9 * (1 - vol / 100))
+        d["clean_air"]["combustible_gas"]["value"] = "acetylene"
+        with self.assertRaises(ValueError):
+            World(d, 600, 1)
+
     def test_magnus(self):
         self.assertAlmostEqual(float(P.saturation_vapour_pressure(20.0)), 23.37, places=1)
         self.assertAlmostEqual(float(P.relative_humidity(20.0, P.vapour_pressure(20.0, 55.0))), 55.0)

@@ -148,7 +148,7 @@ class World:
         clean = {"air.co2_ppm": v(ca["co2_ppm"])}
         for g in GASES:
             tr[g] = np.maximum(d[g], 0.0)
-        frac = P.foreign_fraction({g: tr[g] for g in GASES}, clean, v(ca["lel_gas_vol_pct"]))
+        frac = P.foreign_fraction({g: tr[g] for g in GASES}, clean, self.lel_gas_vol_pct)
         tr["air.o2_pct"] = P.oxygen(v(ca["o2_pct"]), frac)
         self.tracks = {k: Track(dt, np.asarray(x, float)) for k, x in tr.items()}
         # body
@@ -172,6 +172,22 @@ class World:
         self.tracks["altitude_m"] = Track(dt, alt)
         self.tracks["air.pressure_hpa"] = Track(dt, P.pressure_at(tr["air.sea_level_pressure_hpa"], alt))
         return self
+
+    @property
+    def combustible_gas(self) -> str:
+        return v(self.preset["clean_air"]["combustible_gas"])
+
+    @property
+    def lel_gas_vol_pct(self) -> float:
+        """%vol of the combustible gas at 100 %LEL: given in the preset, or from the table in physics.py."""
+        ca = self.preset["clean_air"]
+        if "lel_vol_pct" in ca:
+            return float(v(ca["lel_vol_pct"]))
+        g = self.combustible_gas
+        if g not in P.COMBUSTIBLE_LEL_VOL_PCT:
+            raise ValueError(f"world {self.name}: combustible gas {g!r} has no LEL in the table "
+                             f"({', '.join(P.COMBUSTIBLE_LEL_VOL_PCT)}); give clean_air.lel_vol_pct")
+        return P.COMBUSTIBLE_LEL_VOL_PCT[g]
 
     # reading
     def at(self, name: str, t):
@@ -198,4 +214,5 @@ class World:
     def describe(self) -> dict:
         return {"name": self.name, "title": self.preset.get("title", self.name), "realism": self.realism,
                 "description": self.preset.get("description", ""), "start_utc": str(self.start) + "Z",
+                "combustible_gas": self.combustible_gas, "lel_vol_pct": self.lel_gas_vol_pct,
                 "duration_s": self.duration_s, "seed": self.seed}

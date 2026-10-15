@@ -50,10 +50,17 @@ FEATURES = {
     "battery_hours": "battery runtime (battery_pct column)",
     "connectivity": "how it reports (signal_strength_dbm column)",
     "gateway": "reports through a gateway (gateway id and link columns)",
+    "motion_alerts": "fall and no-motion detection from the accelerometer: fall_state and no_motion_state columns "
+                     "(ok / pre_alarm / alert), written last",
 }
+MOTION_ALERTS = {"fall": ("pre_alarm_s",), "no_motion": ("detect_s", "pre_alarm_s")}
 STATE_COLUMNS = {"sos": ["sos_state"], "pump": ["pump_state", "pump_alarm"]}
 GATEWAY_COLUMNS = {"bridge": ["bridge_id", "bridge_link"]}
 ALARM_LEVELS = ("low", "high", "stel", "twa")
+
+
+def v_(p):
+    return p["value"] if isinstance(p, dict) and "value" in p else p
 
 
 def slugify(name: str) -> str:
@@ -187,7 +194,8 @@ class Device:
 
     def columns(self) -> List[str]:
         """CSV columns, in this order: timestamp, device_id, gateway, readings, derived channels,
-        device_mode, states, battery, signal, then per alarmed quantity its alarm flags and over-range."""
+        device_mode, states, battery, signal, then per alarmed quantity its alarm flags and over-range,
+        then the motion alert states (added later, so the gas columns keep their old order)."""
         f = self.features
         cols = ["timestamp", "device_id"]
         if f.get("gateway"):
@@ -206,13 +214,14 @@ class Device:
         if f.get("connectivity"):
             cols.append("signal_strength_dbm")
         over = set((f.get("over_range") or {}).get("quantities", []))
+        tail = [f"{k}_state" for k in MOTION_ALERTS if v_(f.get("motion_alerts", {}).get(k))]
         flagged = list(self.alarms()) + [q for q in self.measured() if q in over and q not in self.alarms()]
         for q in flagged:
             a = self.alarms().get(q, {})
             cols += [f"{self.stem(q)}_alarm_{lv}" for lv in ALARM_LEVELS if lv in a]
             if q in over:
                 cols.append(f"{self.stem(q)}_over_range")
-        return cols
+        return cols + tail
 
     def device_id(self, n: int = 1) -> str:
         return f"{self.device_id_prefix}-{n:04d}"
@@ -253,6 +262,17 @@ class Device:
             if s not in STATE_COLUMNS:
                 raise ParamError(f"device {name!r}: unknown state {s!r}; known: {list(STATE_COLUMNS)}")
             check_source(f"{name}.states.{s}", v)
+        ma = self.features.get("motion_alerts") or {}
+        for k, spec in ma.items():
+            if k not in MOTION_ALERTS:
+                raise ParamError(f"device {name!r}: unknown motion alert {k!r}; known: {list(MOTION_ALERTS)}")
+            check_source(f"{name}.motion_alerts.{k}", spec)
+            for p in MOTION_ALERTS[k]:
+                if p not in spec:
+                    raise ParamError(f"device {name!r}: motion_alerts.{k} needs {p}")
+                check_source(f"{name}.motion_alerts.{k}.{p}", spec[p])
+        if ma and "body.accel_g" not in meas:
+            raise ParamError(f"device {name!r}: motion alerts need an accelerometer (body.accel_g)")
         gw = self.features.get("gateway")
         if gw and gw.get("kind") not in GATEWAY_COLUMNS:
             raise ParamError(f"device {name!r}: unknown gateway kind {gw.get('kind')!r}")

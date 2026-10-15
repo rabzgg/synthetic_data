@@ -12,7 +12,7 @@ time:
 clean_air:
   o2_pct: {value: 20.9, unit: "%vol", source: "ASSUMPTION: normal air, as clean_air_baseline in configs/gas/assumptions.json"}
   co2_ppm: {value: 420, unit: ppm, source: "ASSUMPTION: outdoor background CO2, about 420 ppm"}
-  lel_gas_vol_pct: {value: 5.0, unit: "%vol", source: "ASSUMPTION: methane, 100 %LEL = 5.0 %vol (a common calibration; IEC 60079-20-1 gives 4.4 %vol)"}
+  combustible_gas: {value: methane, unit: "-", source: "ASSUMPTION: methane, the usual LEL calibration gas; 100 %LEL = 5.0 %vol (table in core/world/physics.py; propane 2.1, hydrogen 4.0)"}
 earth_field_ut: {value: [19.5, 0.0, -44.5], unit: µT, source: "ASSUMPTION: mid-latitude field in world axes (x north, z up), about 49 µT, inclination about 66°"}
 drivers:
   air.temperature_c: {model: ou, mean: {value: 20, unit: "°C", source: "ASSUMPTION: controlled room"}, sd: {value: 0.3, unit: "°C", source: "ASSUMPTION: HVAC cycling"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}

@@ -1,8 +1,9 @@
 # Preset: Blackline G7c, rebuilt from parts with the numbers of configs/gas/blackline_g7c/spec.json
+# The accelerometer, fall_state and no_motion_state were added later (lego generator); they are not in the old CSVs.
 name: Blackline G7c
 slug: blackline_g7c
 device_id_prefix: BLACKLINE_G7C
-description: 'Blackline G7c: 4-gas wearable (LEL, O2, CO, H2S), cellular.'
+description: 'Blackline G7c: 4-gas wearable (LEL, O2, CO, H2S), cellular, with fall and no-motion detection.'
 created: '2026-10-15'
 version: 1
 preset: true
@@ -12,6 +13,9 @@ parts:
 - part: blackline_o2_cell
 - part: blackline_co_cell
 - part: blackline_h2s_cell
+- part: bosch_bma280
+  log: false
+  note: 'ASSUMPTION: the G7c datasheet does not name its accelerometer; the Bosch BMA280 part stands in. Measured for fall and no-motion detection, not written.'
 features:
   sample_interval_s:
     value: 10
@@ -114,3 +118,24 @@ features:
     value: cellular
     unit: '-'
     source: 'ASSUMPTION: No signal specification given. Bounded random walk, one step per logging interval. Reported by every device.'
+  motion_alerts:
+    fall:
+      value: true
+      unit: '-'
+      source: 'datasheet Blackline G7c datasheet R28 (page not recorded): fall detection'
+      pre_alarm_s:
+        value: 30
+        unit: s
+        source: 'ASSUMPTION: the wearer gets 30 s to cancel before the alert is sent'
+    no_motion:
+      value: true
+      unit: '-'
+      source: 'datasheet Blackline G7c datasheet R28 (page not recorded): no-motion detection, time configurable'
+      detect_s:
+        value: 120
+        unit: s
+        source: 'ASSUMPTION: configurable on the device; 2 min of no motion before the pre-alarm'
+      pre_alarm_s:
+        value: 30
+        unit: s
+        source: 'ASSUMPTION: the wearer gets 30 s to cancel before the alert is sent'

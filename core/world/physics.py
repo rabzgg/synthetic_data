@@ -4,7 +4,8 @@ the same world agrees with every other.
 
     humidity     RH from temperature and the water vapour pressure (Magnus formula): warmer air at
                  the same vapour content has a lower RH
-    oxygen       foreign gas displaces air: O2 = O2_clean × (1 − foreign volume fraction)
+    oxygen       foreign gas displaces air: O2 = O2_clean × (1 − foreign volume fraction); the
+                 combustible gas behind %LEL is chosen per world (methane, propane, hydrogen)
     pressure     from sea-level pressure and altitude (standard atmosphere), about −0.12 hPa per m
                  near sea level
     body motion  orientation, angular rate and specific force come from one kinematic description
@@ -33,6 +34,12 @@ def relative_humidity(t_c, e_hpa):
 
 def vapour_pressure(t_c, rh_pct):
     return np.asarray(rh_pct, float) / 100.0 * saturation_vapour_pressure(t_c)
+
+
+# %vol at 100 %LEL, the values most portable detectors are calibrated with
+COMBUSTIBLE_LEL_VOL_PCT = {"methane": 5.0, "propane": 2.1, "hydrogen": 4.0}
+COMBUSTIBLE_SOURCE = ("ASSUMPTION: LEL values common in detector calibration (methane 5.0, propane 2.1, hydrogen "
+                      "4.0 %vol); IEC 60079-20-1 lists 4.4, 1.7 and 4.0 %vol")
 
 
 def pressure_at(sea_level_hpa, altitude_m):

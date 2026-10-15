@@ -65,7 +65,8 @@ class TestGasPresets(unittest.TestCase):
                 old = pd.read_csv(os.path.join(ROOT, "data", "gas", f"{d}_shift_seed42.csv"), nrows=1)
                 expect = [c for c in old.columns if c not in ("gap_before_s", "event")]
                 dev = Device.load(d)
-                self.assertEqual(dev.columns(), expect)
+                new = ["fall_state", "no_motion_state"] if d == "blackline_g7c" else []     # added later, at the end
+                self.assertEqual(dev.columns(), expect + new)
                 self.assertEqual(dev.device_id(), old["device_id"].iloc[0])
 
     def test_numbers_match_spec_and_assumptions(self):
@@ -76,7 +77,7 @@ class TestGasPresets(unittest.TestCase):
                 spec = json.load(fh)
             dev = Device.load(d)
             models = {q: m for _, q, m in dev.models()}
-            self.assertEqual(set(models), {Q[g] for g in spec["channels"]})
+            self.assertEqual(set(models) - {"body.accel_g"}, {Q[g] for g in spec["channels"]})
             for g, ch in spec["channels"].items():
                 with self.subTest(f"{d}.{g}"):
                     m = models[Q[g]]
@@ -94,6 +95,17 @@ class TestGasPresets(unittest.TestCase):
             self.assertEqual(dev.feature("battery_hours"), v(spec["battery_runtime_h"]))
             self.assertEqual(v(dev.features["exposure"]["window_s"]), v(A["stel_rule"])["window_s"])
             self.assertEqual(v(dev.features["exposure"]["period_s"]), v(A["twa_rule"])["period_s"])
+
+    def test_g7c_motion_alerts(self):
+        dev = Device.load("blackline_g7c")
+        accel = [u for u in dev.parts if "body.accel_g" in u.part.quantities()][0]
+        self.assertFalse(accel.logged("body.accel_g"))
+        self.assertTrue(accel.note.startswith("ASSUMPTION"))
+        self.assertEqual(dev.columns()[-2:], ["fall_state", "no_motion_state"])
+        bad = {"name": "No Accel", "parts": [{"part": "blackline_h2s_cell"}],
+               "features": {"motion_alerts": dev.features["motion_alerts"]}}
+        with self.assertRaises(ParamError):
+            Device.from_dict(bad)
 
     def test_io6_assumptions_carried(self):
         dev = Device.load("msa_altair_io6")
