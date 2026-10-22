@@ -120,6 +120,30 @@ output_format:
 - The gate reads the vendor's names and units, converts back and checks as usual; the manifest
   lists the formats in `output_transforms`.
 
+Raw counts: the unit `counts` writes a reading as its register / ADC code, round(reading /
+resolution), a signed integer (no offset); the manifest records the bits per column
+(`device.reading_columns`) and the gate converts back before it checks.
+
+```yaml
+output_format:
+  temperature_c: {value: temperature_c_counts, unit: counts, source: "ASSUMPTION: the vendor exports raw codes"}
+```
+
+## 3c. A generic part (no product named yet)
+
+For pre-sales every quantity has one generic part (`docs/PRESALES.md`): a typical sensor of its class,
+every value an `ASSUMPTION` that says what it was anchored on. It adds two keys and needs `range`,
+`resolution`, `noise_sd`, `t90_s` and `odr_hz`:
+
+```yaml
+name: Generic CO2 sensor (NDIR)
+generic_for: air.co2_ppm
+class: "low-cost NDIR CO2 module, 0-5000 ppm, ±(50 ppm + 3 %)"
+```
+
+A new quantity needs its generic part too (`tests/test_generic_parts.py`), no better than the best
+datasheet part for that quantity in `configs/parts/`.
+
 ## 4. Run it
 
 ```bash
@@ -128,4 +152,4 @@ python3 cli/generate.py --scenario worker_collapse --devices my_new_device:fixed
 ```
 
 Read `<device>_<scenario>_seed<n>_gate.json`: every check, its value and threshold. A failing check
-names the column. The manifest lists every parameter that went into the run with its source.
+names the column. `_profile.json` holds the data profile. The manifest lists every parameter that went into the run with its source.

@@ -1,0 +1,16 @@
+# Default air temperature sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic air temperature sensor
+generic_for: air.temperature_c
+class: "digital ambient temperature IC on a logger board, ±1 °C"
+datasheet: "none: a generic digital temperature IC (all values ASSUMPTION)"
+measures:
+  - quantity: air.temperature_c
+    params:
+      range: {value: [-40, 85], unit: "°C", source: "ASSUMPTION: the usual industrial IC range; the same as the BME280 in this repo"}
+      resolution: {value: 0.1, unit: "°C", source: "ASSUMPTION: 0.1 °C output step; coarser than the BME280 (0.01) and DS18B20 (0.0625) in this repo"}
+      noise_sd: {value: 0.05, unit: "°C", source: "ASSUMPTION: about half a step; not below the DS18B20 in this repo (0.03 °C)"}
+      t90_s: {value: 60, unit: s, source: "ASSUMPTION: a small IC inside a vented housing in still air (the bare DS18B20 TO-92 in this repo: 120 s)"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: one conversion a second, enough for air temperature"}
+    from_datasheet:
+      - {rule: accuracy, value: 1, unit: "°C", kind: max, source: "ASSUMPTION: ±1 °C, typical for this class; wider than the DS18B20 (±0.5 °C) in this repo"}

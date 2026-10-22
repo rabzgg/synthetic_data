@@ -31,6 +31,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+import numpy as np
 import yaml
 
 from core.logic import MOTION_BLOCKS, build as build_block, outputs as block_outputs
@@ -43,6 +44,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 DEVICES_DIR = os.path.join(ROOT, "configs", "devices")
 
 FEATURES = {"sample_interval_s": "logging interval", "connectivity": "how the device reports"}
+RAW_COUNTS = "counts"           # output_format unit: the raw register / ADC code of a reading
 DEFAULT_INTERVAL = {"value": 1, "unit": "s", "source": "ASSUMPTION: default logging interval of one second"}
 
 
@@ -135,6 +137,30 @@ class Device:
                 out.setdefault(q, []).append(u)
         return out
 
+    def used(self) -> set:
+        """Quantities that are logged or read by a logic block. A part's other quantities (a BME280
+        bought for its temperature only) are neither measured nor needed from the world."""
+        from core.quantities import ALIASES
+        out = {q for u in self.parts for q in u.part.quantities() if u.logged(q)}
+
+        def walk(x):
+            if isinstance(x, dict):
+                for y in x.values():
+                    walk(y)
+            elif isinstance(x, (list, tuple)):
+                for y in x:
+                    walk(y)
+            elif isinstance(x, str):
+                q = ALIASES.get(x, x)
+                if q in self.measured():
+                    out.add(q)
+        walk(self.logic)
+        for b in self.blocks():
+            if b.kind == "orientation_quat":
+                from core.derived import OrientationQuat
+                out.update(OrientationQuat(b.spec.get("params")).inputs())
+        return out
+
     def models(self):
         """[(part use, quantity, MeasurementModel)] in part order."""
         return [(u, q, m) for u in self.parts for q, m in u.part.models(u.overrides).items()]
@@ -225,16 +251,49 @@ class Device:
         """The CSV header as written: columns() with output_format's new names."""
         return [v_(self.output_format[c]) if c in self.output_format else c for c in self.columns()]
 
+    def reading_models(self) -> Dict[str, object]:
+        """{column: MeasurementModel} for every logged reading column."""
+        return {c: u.part.models(u.overrides)[q] for u, q, cols in self.reading_columns() for c in cols}
+
+    def generic_columns(self) -> List[str]:
+        """Logged reading columns that come from a generic part (as written, after output_format)."""
+        names = dict(zip(self.columns(), self.output_columns()))
+        return [names[c] for u, q, cols in self.reading_columns() if u.part.generic_for for c in cols]
+
+    def column_bits(self) -> Dict[str, int]:
+        """{column as written: bits per sample} of every logged reading: what its range and resolution
+        need, ceil(log2(span / resolution + 1)). A raw-count column with a negative range needs no
+        offset; it is a signed integer of the same number of bits plus a sign bit at most."""
+        names = dict(zip(self.columns(), self.output_columns()))
+        out = {}
+        for c, m in self.reading_models().items():
+            lo, hi = (np.asarray(b, float) for b in m.bounds)
+            span = float(np.max(hi - lo))
+            out[names[c]] = int(np.ceil(np.log2(span / m.resolution + 1)))
+        return out
+
     def output_transforms(self) -> Dict[str, tuple]:
-        """{column: (new name, scale, offset)}: written value = value × scale + offset."""
+        """{column: (new name, scale, offset)}: written value = value × scale + offset. The unit
+        "counts" writes a reading as its raw register / ADC code, round(reading / resolution), a
+        signed integer (no offset)."""
         from core.quantities.units import output_transform
         units, out = self.column_units(), {}
+        models = self.reading_models()
         for c, f in self.output_format.items():
             u, absolute = units[c]
             target = f.get("unit", u)
-            sc, off = (1.0, 0.0) if target in ("-", u) else output_transform(u, target, absolute)
+            if target == RAW_COUNTS:
+                if c not in models:
+                    raise ParamError(f"{c}: raw counts only for a sensor reading (it needs a resolution)")
+                sc, off = 1.0 / models[c].resolution, 0.0
+            else:
+                sc, off = (1.0, 0.0) if target in ("-", u) else output_transform(u, target, absolute)
             out[c] = (v_(f), sc, off)
         return out
+
+    def raw_count_columns(self) -> List[str]:
+        """Columns (as written) that hold raw counts."""
+        return [v_(f) for c, f in self.output_format.items() if f.get("unit") == RAW_COUNTS]
 
     def device_id(self, n: int = 1) -> str:
         return f"{self.device_id_prefix}-{n:04d}"
@@ -351,6 +410,56 @@ def save_device(d: dict, devices_dir: str = DEVICES_DIR, parts_dir: str = PARTS_
         yaml.safe_dump(dev.to_dict(), fh, sort_keys=False, allow_unicode=True)
     dev.path = path
     return dev
+
+
+def columns_spec(choice: dict, name: str = "Device from columns", sample_interval_s: float = None,
+                 overrides: dict = None, raw_counts: bool = False, parts_dir: str = PARTS_DIR) -> dict:
+    """A device spec from the columns a client logs (pre-sales: "we measure A and B with sensor X").
+
+    choice: {quantity (id, alias or CSV column): part slug or "generic"}. One part chosen for several
+    quantities is one part entry; what a part measures but nobody chose is not logged (log: [list]).
+    overrides: {quantity: {param: value or {value, unit, source}}} (a tweak without a source is
+    "ASSUMPTION: user tweak"). raw_counts: write every reading as its raw count (output_format unit
+    "counts", column <name>_counts)."""
+    from core.quantities import ALIASES
+    from .parts import generic_part
+    by_column = {CATALOG[q].column: q for q in CATALOG}
+    uses = {}                                           # part slug -> [quantities], in the order chosen
+    for key, slug in choice.items():
+        q = key if key in CATALOG else ALIASES.get(key) or by_column.get(key)
+        if q is None:
+            raise ParamError(f"unknown column or quantity {key!r}")
+        slug = generic_part(q, parts_dir) if slug in (None, "", "generic") else slug
+        part = Part.load(slug, parts_dir)
+        if q not in part.measures:
+            raise ParamError(f"{part.name} does not measure {q}; it measures {', '.join(part.quantities())}")
+        uses.setdefault(slug, []).append(q)
+    if not uses:
+        raise ParamError("choose at least one column")
+    parts = []
+    for slug, qs in uses.items():
+        part = Part.load(slug, parts_dir)
+        e = {"part": slug}
+        if set(qs) != set(part.quantities()):
+            e["log"] = [q for q in part.quantities() if q in qs]
+        ov = {q: (overrides or {})[q] for q in qs if (overrides or {}).get(q)}
+        if ov:
+            e["overrides"] = ov
+        parts.append(e)
+    spec = {"name": name, "parts": parts,
+            "features": {"sample_interval_s": {"value": sample_interval_s, "unit": "s", "source": "ASSUMPTION: chosen "
+                                               "for this device"} if sample_interval_s else DEFAULT_INTERVAL}}
+    if raw_counts:
+        dev = Device.from_dict(spec, parts_dir)
+        spec["output_format"] = {c: {"value": f"{c}_counts", "unit": RAW_COUNTS,
+                                     "source": "ASSUMPTION: raw counts, round(reading / resolution)"}
+                                 for _, _, cols in dev.reading_columns() for c in cols}
+    return spec
+
+
+def device_from_columns(choice: dict, **kw) -> Device:
+    """Device.from_dict(columns_spec(choice, ...)); see columns_spec."""
+    return Device.from_dict(columns_spec(choice, **kw), kw.get("parts_dir", PARTS_DIR))
 
 
 def list_devices(devices_dir: str = DEVICES_DIR) -> List[str]:

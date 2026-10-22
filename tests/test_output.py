@@ -132,7 +132,7 @@ class TestCli(unittest.TestCase):
                                 "--out", d], cwd=ROOT, capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("gate PASSED", r.stdout)
-            self.assertEqual(len(os.listdir(d)), 4)
+            self.assertEqual(len(os.listdir(d)), 5)                  # csv, labels, manifest, gate, profile
         finally:
             shutil.rmtree(d)
 

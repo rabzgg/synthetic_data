@@ -45,8 +45,10 @@ physics.
 5. **Logging.** One row every `sample_interval_s`; no rows during a connection loss.
 6. **Files and gate.** `<device>_<scenario>_seed<n>.csv` (clean), `_labels.csv` (ground truth),
    `_manifest.json` (every parameter with its source, the world's defaults, the events, the code
-   version), `_gate.json`. The gate is derived from the spec in the manifest and recomputes what it
-   can from the CSV.
+   version), `_gate.json`, `_profile.json` (`core/output/profile.py`: bits, noise / resolution,
+   repeats and gzip ratios per column). The gate is derived from the spec in the manifest and
+   recomputes what it can from the CSV. Pre-sales (a device from the client's columns, generic
+   parts): `docs/PRESALES.md`.
 
 ## Rules the code keeps
 

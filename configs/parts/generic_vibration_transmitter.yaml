@@ -1,6 +1,8 @@
 # A vibration transmitter that reports RMS velocity (ISO 10816 / 20816 style), 0-25 mm/s.
 # No particular product: every value is an ASSUMPTION of a typical transmitter of this class.
 name: Generic vibration transmitter 25 mm/s
+generic_for: machine.vibration_mm_s
+class: "RMS velocity vibration transmitter 0-25 mm/s (ISO 10816 style)"
 datasheet: "none: a generic RMS velocity transmitter (all values ASSUMPTION)"
 measures:
   - quantity: machine.vibration_mm_s
@@ -9,5 +11,6 @@ measures:
       resolution: {value: 0.01, unit: mm/s, source: "ASSUMPTION: digital output step"}
       noise_sd: {value: 0.02, unit: mm/s, source: "ASSUMPTION"}
       t90_s: {value: 5, unit: s, source: "ASSUMPTION: the RMS is averaged over a few seconds"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the RMS output is updated once a second"}
     from_datasheet:
       - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "ASSUMPTION: ±5 % of reading, typical for this class"}

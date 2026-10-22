@@ -34,7 +34,8 @@ class TestDocs(unittest.TestCase):
         self.assertEqual([e.kind for e in p.events], ["leak"])
 
     def test_referenced_files_exist(self):
-        for doc in ("ARCHITECTURE.md", "HOW_TO_ADD_A_SENSOR.md", "HOW_TO_ADD_A_WORLD.md", "HOW_TO_ADD_AN_EVENT.md"):
+        for doc in ("ARCHITECTURE.md", "HOW_TO_ADD_A_SENSOR.md", "HOW_TO_ADD_A_WORLD.md", "HOW_TO_ADD_AN_EVENT.md",
+                    "PRESALES.md", "UI.md"):
             with open(os.path.join(ROOT, "docs", doc)) as fh:
                 text = fh.read()
             for path in set(re.findall(r"`((?:configs|core|validation|cli|docs)/[\w./-]+\.(?:py|yaml|md))`", text)):

@@ -6,6 +6,13 @@ given directly as model parameters (`params`) or in the datasheet's own wording 
 normalised by core/quantities/normalize.py). Every value is {value, unit, source}. A new sensor is a
 new file; no code.
 
+A generic part stands for a class of sensors when no product is named yet (pre-sales: "we measure
+CO2"). It says which quantity it is the default for and its class; every value is an ASSUMPTION with
+its anchor in the source. Each quantity in the catalog has exactly one:
+
+    generic_for: air.co2_ppm
+    class: "low-cost NDIR CO2 module, 0-5000 ppm, ±(50 ppm + 3 %)"
+
     name: Bosch BME280
     datasheet: "BST-BME280-DS001-23, revision 1.23"
     measures:
@@ -37,13 +44,16 @@ class Part:
     measures: Dict[str, dict]                 # {quantity_id: {param: {value, unit, source}}}
     notes: List[str] = field(default_factory=list)
     path: str = ""
+    generic_for: str = ""                     # the quantity this generic part is the default for
+    cls: str = ""                             # its sensor class, shown in the UI
 
     @classmethod
     def from_dict(cls, slug: str, d: dict, path: str = "") -> "Part":
         for k in ("name", "datasheet", "measures"):
             if k not in d:
                 raise ParamError(f"part {slug}: '{k}' is missing")
-        unknown = set(d) - {"name", "datasheet", "datasheet_url", "measures", "notes", "description"}
+        unknown = set(d) - {"name", "datasheet", "datasheet_url", "measures", "notes", "description", "generic_for",
+                            "class"}
         if unknown:
             raise ParamError(f"part {slug}: unknown key(s) {sorted(unknown)}")
         measures = {}
@@ -63,7 +73,17 @@ class Part:
                     params[k] = v
             measures[qid] = params
             MeasurementModel.from_params(qid, params)           # fail early on a bad file
-        return cls(slug, d["name"], d["datasheet"], measures, list(d.get("notes") or []), path)
+        gen = d.get("generic_for", "")
+        if gen or "class" in d:
+            if gen not in measures or not d.get("class"):
+                raise ParamError(f"part {slug}: a generic part needs generic_for (a quantity it measures) and class")
+            bad = [f"{q}.{k}" for q, ps in measures.items() for k, p in ps.items()
+                   if not str(p["source"]).startswith("ASSUMPTION")]
+            if bad:
+                raise ParamError(f"part {slug}: a generic part has no datasheet; every value is an ASSUMPTION "
+                                 f"(not: {', '.join(bad)})")
+        return cls(slug, d["name"], d["datasheet"], measures, list(d.get("notes") or []), path, gen,
+                   d.get("class", ""))
 
     @classmethod
     def load(cls, slug: str, parts_dir: str = PARTS_DIR) -> "Part":
@@ -119,3 +139,26 @@ def _default_unit(qid, param):
 
 def list_parts(parts_dir: str = PARTS_DIR) -> List[str]:
     return sorted(f[:-5] for f in os.listdir(parts_dir) if f.endswith(".yaml"))
+
+
+def generic_parts(parts_dir: str = PARTS_DIR) -> Dict[str, List[str]]:
+    """{quantity: [slugs of the generic parts for it]} (exactly one each, tests/test_generic_parts.py)."""
+    out = {}
+    for s in list_parts(parts_dir):
+        p = Part.load(s, parts_dir)
+        if p.generic_for:
+            out.setdefault(p.generic_for, []).append(s)
+    return out
+
+
+def generic_part(quantity: str, parts_dir: str = PARTS_DIR) -> str:
+    found = generic_parts(parts_dir).get(quantity, [])
+    if len(found) != 1:
+        raise ParamError(f"{quantity}: expected one generic part, found {found or 'none'}")
+    return found[0]
+
+
+def parts_measuring(quantity: str, parts_dir: str = PARTS_DIR) -> List[str]:
+    """Slugs of the non-generic parts that measure a quantity."""
+    return [s for s in list_parts(parts_dir) if quantity in Part.load(s, parts_dir).measures
+            and not Part.load(s, parts_dir).generic_for]

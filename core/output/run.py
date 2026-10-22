@@ -12,6 +12,8 @@ Per device, in the output folder:
                                              with its source, logic, world (with the defaults it used),
                                              scenario, events placed, seed, generator version
     <slug>_<scenario>_seed<n>_gate.json      the gate (validation/auto_gate.py)
+    <slug>_<scenario>_seed<n>_profile.json   data profile per column: bits, noise / resolution, repeats,
+                                             gzip ratios (core/output/profile.py)
 """
 import json
 import os
@@ -25,6 +27,8 @@ from core.events import prepare
 from core.events.scenario import hms
 from core.logic import Context, Stream, build, outputs
 from core.quantities import CATALOG
+
+from .profile import profile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -52,7 +56,10 @@ def measure_device(world, view, seed: int):
     wv = w.view(view.mount)
     by_col, by_q, internal, draws = {}, {}, {}, {}
     cols = {(id(u), q): c for u, q, c in dev.reading_columns()}
+    used = dev.used()
     for u, q, m in dev.models():
+        if q not in used:                                   # neither logged nor read by logic
+            continue
         if q not in w.tracks:
             raise ValueError(f"world {w.name} has no {q}, which {dev.name} ({u.part.slug}) measures; "
                              f"the world provides {', '.join(w.quantities())}")
@@ -162,12 +169,30 @@ def _labels_frame(world, labels):
     return pd.DataFrame(rows, columns=["start_s", "end_s", "start_utc", "end_utc", "event", "detail", "scope"])
 
 
+def reading_columns(dev) -> dict:
+    """{column as written: what it holds}: quantity, part, generic or not, resolution, noise and bits per
+    sample (from range / resolution), raw counts or not."""
+    names = dict(zip(dev.columns(), dev.output_columns()))
+    bits, raw = dev.column_bits(), set(dev.raw_count_columns())
+    out = {}
+    for u, q, cols in dev.reading_columns():
+        m = u.part.models(u.overrides)[q]
+        for c in cols:
+            n = names[c]
+            out[n] = {"column": c, "quantity": q, "unit": CATALOG[q].unit, "part": u.part.slug,
+                      "generic": bool(u.part.generic_for), "resolution": m.resolution, "noise_sd": m.noise_sd,
+                      "range": [float(np.min(m.bounds[0])), float(np.max(m.bounds[1]))], "bits": bits[n],
+                      "raw_counts": n in raw}
+    return out
+
+
 def manifest(prepared, view, seed, scenario_name, extra) -> dict:
     dev, w = view.device, prepared.world
     parts = []
     for u in dev.parts:
         ms = u.part.models(u.overrides)
         parts.append({"part": u.part.slug, "name": u.part.name, "datasheet": u.part.datasheet, "logged": u.log,
+                      "generic": bool(u.part.generic_for), "class": u.part.cls,
                       "alias": u.alias, "note": u.note, "notes": u.part.notes,
                       "quantities": {q: {"parameters": u.part.params(u.overrides)[q], "kinds": m.kinds,
                                          "derived_sources": {k: s for k, s in m.sources.items()
@@ -178,6 +203,8 @@ def manifest(prepared, view, seed, scenario_name, extra) -> dict:
                        "logic": dev.logic, "mount": vars(view.mount), "columns": dev.output_columns(),
                        "internal_columns": dev.columns(), "output_format": dev.output_format,
                        "output_transforms": dev.output_transforms(),
+                       "reading_columns": reading_columns(dev),
+                       "generic_columns": dev.generic_columns(), "raw_count_columns": dev.raw_count_columns(),
                        "device_id": dev.device_id()},
             "parts": parts, "world": w.describe(),
             "scenario": {"name": scenario_name, "title": prepared.scenario.get("title", ""),
@@ -206,11 +233,16 @@ def run(scenario, seed: int = None, out_dir: str = "out", devices=None, duration
         labels.to_csv(base + "_labels.csv", index=False)
         man = manifest(p, view, seed, name, extra)
         man["files"] = {k: os.path.basename(base + s) for k, s in
-                        (("csv", ".csv"), ("labels", "_labels.csv"), ("manifest", "_manifest.json"), ("gate", "_gate.json"))}
+                        (("csv", ".csv"), ("labels", "_labels.csv"), ("manifest", "_manifest.json"), ("gate", "_gate.json"),
+                         ("profile", "_profile.json"))}
         with open(base + "_manifest.json", "w") as fh:
             json.dump(man, fh, indent=1, default=_json)
         rec = {"device": view.slug, "csv": base + ".csv", "labels": base + "_labels.csv",
                "manifest": base + "_manifest.json"}
+        prof = profile(base + ".csv", base + "_manifest.json")
+        with open(base + "_profile.json", "w") as fh:
+            json.dump(prof, fh, indent=1, default=_json)
+        rec["profile"] = base + "_profile.json"
         if gate:
             g = check_device(base + ".csv", base + "_labels.csv", base + "_manifest.json")
             with open(base + "_gate.json", "w") as fh:

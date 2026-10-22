@@ -1,11 +1,13 @@
 """
-The Streamlit UI (ui/app.py) runs both ways in: a scenario, and a device built from parts and named
-by the user, with only the worlds and events it can use; both end with files that pass the gate.
-Skipped when streamlit is not installed.
+The Streamlit UI (ui/app.py) runs every way in: columns (pre-sales, the default), a device built from
+parts and named by the user, and a scenario; each offers only the worlds and events it can use and
+ends with files that pass the gate, with a data profile. Skipped when streamlit is not installed.
 """
 import os
 import sys
 import unittest
+
+import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -21,7 +23,7 @@ APP = os.path.join(ROOT, "ui", "app.py")
 class TestUi(unittest.TestCase):
     def test_scenario(self):
         at = AppTest.from_file(APP, default_timeout=300).run()
-        self.assertEqual(at.sidebar.radio[0].value, "Build a device")                  # the default
+        self.assertEqual(at.sidebar.radio[0].value, "Start from columns")              # the default
         at.sidebar.radio[0].set_value("A scenario (in progress)").run()
         at.sidebar.selectbox[0].set_value("fridge_compressor_failure").run()
         at.sidebar.button[0].click().run()
@@ -44,6 +46,36 @@ class TestUi(unittest.TestCase):
         at.button[-1].click().run()
         self.assertEqual(at.exception, [])
         self.assertIn("tank_monitor_v1: gate PASSED", [h.value for h in at.subheader])
+
+    def test_columns_generic_motion_with_a_fall(self):
+        at = AppTest.from_file(APP, default_timeout=600).run()
+        at.multiselect(key="cols/body").set_value(["body.accel_g", "body.gyro_dps"]).run()
+        at.selectbox(key="world_choice").set_value("indoor_worker_walking").run()
+        self.assertEqual(at.selectbox(key="part/body.accel_g").value, "generic")      # the default
+        self.assertEqual(at.number_input(key="hours").value, 1)
+        next(c for c in at.checkbox if c.label == "fall").check().run()
+        at.button(key="generate").click().run()
+        self.assertEqual(at.exception, [])
+        self.assertIn("client_device: gate PASSED", [h.value for h in at.subheader])
+        self.assertTrue(any(m.value.startswith("**Data profile**") for m in at.markdown))
+        self.assertTrue(any("NOT the Bitteiler algorithm" in c.value for c in at.caption))
+        self.assertTrue(os.path.exists(at.session_state["results"][0]["profile"]))
+
+    def test_columns_temperature_via_bme280_as_raw_counts(self):
+        at = AppTest.from_file(APP, default_timeout=600).run()
+        at.multiselect(key="cols/air").set_value(["air.temperature_c"]).run()
+        at.selectbox(key="world_choice").set_value("fridge").run()
+        part = at.selectbox(key="part/air.temperature_c")
+        self.assertIn("Bosch BME280 (also measures humidity_rh, pressure_hpa (not logged))", part.options)
+        part.set_value("bosch_bme280").run()
+        at.checkbox(key="raw").check().run()
+        at.number_input(key="hours").set_value(2).run()
+        at.button(key="generate").click().run()
+        self.assertEqual(at.exception, [])
+        self.assertIn("client_device: gate PASSED", [h.value for h in at.subheader])
+        d = pd.read_csv(at.session_state["results"][0]["csv"])
+        self.assertEqual(list(d.columns), ["timestamp", "device_id", "temperature_c_counts"])
+        self.assertTrue(pd.api.types.is_integer_dtype(d["temperature_c_counts"]))
 
     def test_no_world_for_these_parts(self):
         at = AppTest.from_file(APP, default_timeout=300).run()

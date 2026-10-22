@@ -58,10 +58,11 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
             a.axvspan(at(r.start_s), at(max(r.end_s, r.start_s + 1)), color=GAP if r.event == "connection_loss"
                       else colour[r.event], alpha=0.35 if r.event == "connection_loss" else 0.25, lw=0, zorder=0)
     i = 0
+    generic = set(man["device"].get("generic_columns", []))
     for c in vals:
         a = axes[i]
         a.plot(t, df[c], color="black", lw=0.8, zorder=2)
-        a.set_ylabel(c, fontsize=8)
+        a.set_ylabel(c + ("\n(generic)" if c in generic else ""), fontsize=8)
         shade(a)
         i += 1
     if alarms:
@@ -91,7 +92,8 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     axes[-1].set_xlabel("Time (UTC)")
     for a in axes:
         a.grid(alpha=0.3)
-    handles = [Line2D([], [], color="black", lw=1, label="reading")]
+    handles = [Line2D([], [], color="black", lw=1, label="reading" + (" ((generic) = generic part, all values "
+                                                                       "ASSUMPTION)" if generic else ""))]
     if alarms:
         handles.append(Line2D([], [], color="#c1121f", lw=1, label="alarm (0/1)"))
     handles += [Patch(facecolor=colour[k], alpha=0.5, label=k) for k in kinds]
@@ -109,14 +111,14 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
 
 
 def zip_run(results) -> bytes:
-    """ZIP of every device's CSV, labels, manifest and gate (results of core.output.run)."""
+    """ZIP of every device's CSV, labels, manifest, gate and profile (results of core.output.run)."""
     import io
     import os
     import zipfile
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for r in results:
-            for k in ("csv", "labels", "manifest", "gate"):
+            for k in ("csv", "labels", "manifest", "gate", "profile"):
                 if r.get(k):
                     z.write(r[k], os.path.basename(r[k]))
     return buf.getvalue()

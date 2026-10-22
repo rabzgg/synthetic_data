@@ -1,0 +1,17 @@
+# Default magnetometer when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic magnetometer
+generic_for: body.mag_ut
+class: "consumer 3-axis magnetometer ±1200 µT, uncalibrated"
+datasheet: "none: a generic 3-axis magnetometer (all values ASSUMPTION)"
+measures:
+  - quantity: body.mag_ut
+    params:
+      range: {value: [-1200, 1200], unit: "µT", source: "ASSUMPTION: ±1200 µT on every axis; within the BMM150 in this repo"}
+      resolution: {value: 0.3, unit: "µT", source: "ASSUMPTION: 0.3 µT, as the BMM150 in this repo"}
+      noise_sd: {value: 0.8, unit: "µT", source: "ASSUMPTION: not below the BMM150 in this repo (0.6 µT)"}
+      t90_s: {value: 0, unit: s, source: "ASSUMPTION: no lag beyond the low-pass set by the ODR (bandwidth = ODR / 2)"}
+      odr_hz: {value: 10, unit: Hz, source: "ASSUMPTION: 10 Hz, as the BMM150 in this repo"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 40, unit: "µT", source: "ASSUMPTION: offset 40 µT typical (1σ) without hard-iron calibration, as the BMM150 in this repo"}
+      - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "ASSUMPTION: gain error ±5 %, as the BMM150 in this repo"}

@@ -133,7 +133,7 @@ def prepare(scenario, devices=None, seed: int = None, duration_s: float = None) 
     run = device_entries(sc, devices)
     world = World(sc["world"], duration, seed)
     views = [DeviceView(d, m) for d, m in run]
-    measured = set().union(*(set(d.measured()) for d, _ in run))
+    measured = set().union(*(set(d.used()) for d, _ in run))
     notes, events, labels = [], [], {v.slug: [] for v in views}
     by_kind = {}                                   # spacing_s keeps repeats of a kind apart, across entries
     lib = EVENTS
@@ -185,7 +185,7 @@ def _snapshot(world, run, start, end):
     for d, m in run:
         view = world.view(m)
         q_body = None
-        for q in d.measured():
+        for q in d.used():
             if q not in world.tracks:
                 continue
             if CATALOG[q].vector:                  # what the sensor feels: the vector in the body frame
@@ -213,7 +213,7 @@ def world_visibility(world, run, ev) -> dict:
     seen = {}
     for d, m in run:
         best = None
-        for q in d.measured():
+        for q in d.used():
             if (d.slug, q) not in before:
                 continue
             change = float(np.max(np.abs(after[(d.slug, q)] - before[(d.slug, q)]))) if len(before[(d.slug, q)]) else 0.0
@@ -303,7 +303,7 @@ def event_rows(run, world_name: str = None, at_s: float = 1800.0, duration_s: fl
                 for d, _ in run:
                     p2 = dict(params)
                     if qp:
-                        p2[qp] = {"value": next(iter(d.measured())), "unit": "-", "source": "ASSUMPTION: first measured"}
+                        p2[qp] = {"value": next(q for q in d.measured() if q in d.used()), "unit": "-", "source": "ASSUMPTION: first measured"}
                     cells[d.slug] = defn(ev.at, p2).device_visible(d)
                 rows.append({"name": f"{kind} (any measured quantity)" if qp else name, "kind": kind,
                              "params": params, "defn": defn, "at": ev.at, "cells": cells})

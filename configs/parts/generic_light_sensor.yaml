@@ -1,0 +1,16 @@
+# Default light sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic light sensor
+generic_for: light.lux
+class: "digital ambient light sensor, 0-100 000 lx, 1 lx step"
+datasheet: "none: a generic ambient light sensor (all values ASSUMPTION)"
+measures:
+  - quantity: light.lux
+    params:
+      range: {value: [0, 100000], unit: lx, source: "ASSUMPTION: up to full daylight; narrower than the MAX44009 entry in this repo (188 000 lx, itself not checked against a datasheet)"}
+      resolution: {value: 1, unit: lx, source: "ASSUMPTION: 1 lx step on its daylight range; coarser than the MAX44009 entry in this repo (0.045 lx, itself not checked against a datasheet)"}
+      noise_sd: {value: 1, unit: lx, source: "ASSUMPTION: about one step"}
+      t90_s: {value: 0.1, unit: s, source: "ASSUMPTION: an integration time of about 100 ms"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: one reading a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 20, unit: "%", kind: max, source: "ASSUMPTION: ±20 % of reading (spectral mismatch and part spread); wider than the MAX44009 entry in this repo (15 %, itself not checked against a datasheet)"}

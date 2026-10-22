@@ -9,7 +9,16 @@ streamlit run ui/app.py --server.address 127.0.0.1    # then open http://localho
 from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.plot_run`,
 `core.output.zip_run`) and the gate from `validation/auto_gate.py`.
 
-## Two ways in
+## Three ways in
+
+**Start from columns** (the default; pre-sales, `docs/PRESALES.md`).
+1. Pick the columns the client logs, grouped by domain, each with its unit.
+2. Pick the situation: only worlds that provide every chosen column.
+3. Per column: "Generic (default): <class>" or a part from a datasheet that measures it; a part's
+   other quantities are not logged ("also measures X (not logged)").
+4. Sample interval, and per column resolution and noise (a change is marked "ASSUMPTION: user
+   tweak"); optionally raw counts (integer register / ADC codes).
+5. Name, mount, duration, seed, the events it can see, Generate, Save.
 
 **Build a device.**
 1. Pick parts (sensors from datasheets); the list shows each part with the CSV columns it writes
@@ -30,12 +39,16 @@ layout and options are still being finished, so the page is marked in progress.
 ## Results
 
 Per device: the gate verdict and every check, a figure (one panel per column, events shaded, gaps
-yellow, expected device responses hatched), the labels, the first rows of the CSV, and one ZIP with
-the CSV, labels, manifest and gate of every device.
+yellow, expected device responses hatched, generic columns marked "(generic)"), the **data profile**
+(bits per sample, noise / resolution, repeated rows, gzip ratios of the CSV and of the raw counts; a
+rough benchmark, not the Bitteiler algorithm), the labels, the first rows of the CSV, and one ZIP
+with the CSV, labels, manifest, gate and profile of every device. "Run 5 seeds" repeats the run with
+five seeds and shows each ratio as min … max.
 
 ## Not in the UI (do it in the files)
 
 - Event parameters other than the start time (the defaults are used; edit a scenario file for more).
 - Several devices in one run when building a device (scenarios can hold several).
-- `output_format`, logic blocks other than a threshold alarm, `log: false`, aliases, mounting.
+- `output_format` (other than raw counts), logic blocks other than a threshold alarm, `log: false`,
+  aliases, mounting.
 - New quantities, worlds and events (`docs/HOW_TO_ADD_A_WORLD.md`, `docs/HOW_TO_ADD_AN_EVENT.md`).

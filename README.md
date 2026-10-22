@@ -11,9 +11,12 @@ scenarios are YAML files; adding one needs no Python.
 - [ ] **Install:** `python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt` (Python ≥ 3.10).
 - [ ] **Check:** `python3 -m unittest discover -s tests` (about 2 min, all pass).
 - [ ] **Generate (one command):** `python3 cli/generate.py --scenario worker_collapse --seed 42 --out out/collapse`
-      → CSV, labels, manifest and gate per device; `--list` shows the scenarios.
+      → CSV, labels, manifest, gate and profile per device; `--list` shows the scenarios.
 - [ ] **All scenarios + gate summary:** `python3 validation/run_all_scenarios.py` → `docs/GATE_RESULTS.md`.
 - [ ] **UI:** `streamlit run ui/app.py --server.address 127.0.0.1` (`docs/UI.md`).
+- [ ] **Pre-sales (columns first, sensor later, CSV last):** `docs/PRESALES.md`: one generic part per
+      quantity, a device from the client's columns, raw counts, and a data profile with gzip ratios
+      (a rough benchmark, not the Bitteiler algorithm).
 - [ ] **Add a sensor:** a part file from the datasheet, then a device file → `docs/HOW_TO_ADD_A_SENSOR.md`
       (first draft with an LLM: `docs/prompts/DATASHEET_TO_PART.md`; check every page it cites).
 - [ ] **Add a world:** signals and drivers from primitives → `docs/HOW_TO_ADD_A_WORLD.md`.
@@ -40,7 +43,8 @@ python3 -m unittest discover -s tests
 ```
 Per device: `<device>_<scenario>_seed<n>.csv` (clean), `_labels.csv` (what happened and what the
 device should do), `_manifest.json` (every parameter with its datasheet page or ASSUMPTION),
-`_gate.json`. Current gate results: `docs/GATE_RESULTS.md`.
+`_gate.json`, `_profile.json` (bits, noise / resolution, repeats and gzip ratios per column; a rough
+benchmark, not the Bitteiler algorithm). Current gate results: `docs/GATE_RESULTS.md`.
 
 All worlds are labelled `realism: ASSUMPTION`: no real recording was used to build them. The data obey
 the datasheets and the stated rules; they are not fitted to field data.

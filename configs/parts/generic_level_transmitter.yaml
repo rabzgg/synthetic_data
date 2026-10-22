@@ -1,6 +1,8 @@
 # A hydrostatic level transmitter in a tank, reporting the filling in percent.
 # No particular product: every value is an ASSUMPTION of a typical transmitter of this class.
 name: Generic level transmitter
+generic_for: water.level_pct
+class: "hydrostatic level transmitter (4-20 mA), 0-100 %"
 datasheet: "none: a generic hydrostatic level transmitter (all values ASSUMPTION)"
 measures:
   - quantity: water.level_pct
@@ -9,5 +11,6 @@ measures:
       resolution: {value: 0.1, unit: "%", source: "ASSUMPTION: output step"}
       noise_sd: {value: 0.1, unit: "%", source: "ASSUMPTION: ripples on the surface"}
       t90_s: {value: 5, unit: s, source: "ASSUMPTION: damping of the transmitter"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the logger samples the loop once a second"}
     from_datasheet:
       - {rule: accuracy_pct_fs, value: 0.5, unit: "%", full_scale: 100, kind: max, source: "ASSUMPTION: ±0.5 % of full scale, typical for this class"}

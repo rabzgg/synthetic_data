@@ -1,6 +1,8 @@
 # A split-core current transformer clamp with a 0-5 A range on a logger input.
 # No particular product: every value is an ASSUMPTION of a typical clamp of this class.
 name: Generic current clamp 5 A
+generic_for: electrical.current_a
+class: "split-core current clamp 0-5 A on a logger input"
 datasheet: "none: a generic split-core current clamp (all values ASSUMPTION)"
 measures:
   - quantity: electrical.current_a
@@ -9,5 +11,6 @@ measures:
       resolution: {value: 10, unit: mA, source: "ASSUMPTION: logger ADC step on this range"}
       noise_sd: {value: 5, unit: mA, source: "ASSUMPTION: mains pick-up"}
       t90_s: {value: 2, unit: s, source: "ASSUMPTION: the logger averages the RMS over about a second"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the logger reads the RMS once a second"}
     from_datasheet:
       - {rule: accuracy_sum, value: [0.02, 2], unit: A, source: "ASSUMPTION: ±(20 mA + 2 % of reading), typical for this class"}

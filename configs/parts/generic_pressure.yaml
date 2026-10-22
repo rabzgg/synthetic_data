@@ -1,0 +1,17 @@
+# Default barometric pressure sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic barometric pressure sensor
+generic_for: air.pressure_hpa
+class: "MEMS barometric pressure sensor, 300-1100 hPa, ±1 hPa"
+datasheet: "none: a generic MEMS barometer (all values ASSUMPTION)"
+measures:
+  - quantity: air.pressure_hpa
+    params:
+      range: {value: [300, 1100], unit: hPa, source: "ASSUMPTION: the usual MEMS barometer range; the same as the BME280 in this repo"}
+      resolution: {value: 0.01, unit: hPa, source: "ASSUMPTION: 1 Pa output step; coarser than the BME280 (0.18 Pa) in this repo"}
+      noise_sd: {value: 0.03, unit: hPa, source: "ASSUMPTION: 3 Pa RMS at low oversampling; not below the BME280 in this repo (1.3 Pa)"}
+      t90_s: {value: 1, unit: s, source: "ASSUMPTION: the internal filter settles in about a second"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: one conversion a second"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 1, unit: hPa, source: "ASSUMPTION: ±1 hPa typical (1σ), the same as the BME280 in this repo"}
+      - {rule: drift, value: 1, unit: "hPa/year", kind: typical, source: "ASSUMPTION: 1 hPa a year, as the BME280 in this repo"}
