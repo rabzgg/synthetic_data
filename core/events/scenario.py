@@ -279,40 +279,61 @@ def expected_alerts(world, view: DeviceView) -> List[Label]:
     return expected_labels(world, view)
 
 
-def compatibility(devices=None, mount: str = "body", at_s: float = 1800.0, duration_s: float = 7200.0) -> list:
-    """Rows of (event, {device slug: (True, "") or (False, why)}) for every event with default parameters;
-    one row per choice of a quantity parameter (e.g. the gas). World events are tried in a probe world
-    (the event's probe_world, default indoor_worker_walking), each device at the given mount."""
-    from core.devices import list_devices
-    devs = [Device.load(s) for s in (devices or list_devices())]
-    run = [(d, Mount(mount)) for d in devs]
+def event_rows(run, world_name: str = None, at_s: float = 1800.0, duration_s: float = 7200.0) -> list:
+    """Every event (default parameters; one row per choice of a quantity parameter, e.g. the gas) with,
+    per device of the run [(Device, Mount)], whether it can see it: [{name, kind, params, defn, cells:
+    {slug: (True, "") or (False, why)}}]. World events are tried in world_name, or in each event's
+    probe_world (default indoor_worker_walking)."""
     rows = []
     for kind, defn in EVENTS.items():
         if defn.building_block:
             continue
         choice = next((k for k, p in defn.PARAMS.items() if p.get("choices") and
                        all(_is_quantity(c) for c in p["choices"])), None)
-        variants = [(f"{kind} ({c})", {choice: {"value": c, "unit": "-", "source": "ASSUMPTION: table"}})
+        variants = [(f"{kind} ({c})", {choice: {"value": c, "unit": "-", "source": "ASSUMPTION: default choice"}})
                     for c in defn.PARAMS[choice]["choices"]] if choice else [(kind, {})]
         for name, params in variants:
             ev = defn(at_s, params)
+            if ev.end > duration_s:
+                ev = defn(max(0.0, duration_s - ev.duration_s() - 60.0), params)
             if ev.scope == "device":
                 qp = next((e["quantity"][1:] for e in defn.effects if isinstance(e.get("quantity"), str)
                            and e["quantity"].startswith("$")), None)
                 cells = {}
-                for d in devs:
+                for d, _ in run:
                     p2 = dict(params)
                     if qp:
-                        p2[qp] = {"value": next(iter(d.measured())), "unit": "-", "source": "ASSUMPTION: table"}
-                    cells[d.slug] = defn(at_s, p2).device_visible(d)
-                rows.append((f"{kind} (any measured quantity)" if qp else name, cells))
+                        p2[qp] = {"value": next(iter(d.measured())), "unit": "-", "source": "ASSUMPTION: first measured"}
+                    cells[d.slug] = defn(ev.at, p2).device_visible(d)
+                rows.append({"name": f"{kind} (any measured quantity)" if qp else name, "kind": kind,
+                             "params": params, "defn": defn, "at": ev.at, "cells": cells})
                 continue
-            world = World(defn.probe_world or PROBE_WORLD, duration_s, 1)
+            world = World(world_name or defn.probe_world or PROBE_WORLD, duration_s, 1)
             try:
                 seen, _, _ = world_visibility(world, run, ev)
             except ScenarioError as err:
-                seen = {d.slug: (False, str(err).split(": ", 1)[-1]) for d in devs}
-            rows.append((name, seen))
+                seen = {d.slug: (False, str(err).split(": ", 1)[-1]) for d, _ in run}
+            rows.append({"name": name, "kind": kind, "params": params, "defn": defn, "at": ev.at, "cells": seen})
+    return rows
+
+
+def compatibility(devices=None, mount: str = "body", at_s: float = 1800.0, duration_s: float = 7200.0) -> list:
+    """Rows of (event, {device slug: (True, "") or (False, why)}) for the device presets at one mount, each
+    world event in its probe world (docs/EVENTS.md)."""
+    from core.devices import list_devices
+    run = [(Device.load(s), Mount(mount)) for s in (devices or list_devices())]
+    return [(r["name"], r["cells"]) for r in event_rows(run, None, at_s, duration_s)]
+
+
+def compatible_events(world_name: str, devices, duration_s: float, at_s: float = None) -> list:
+    """The events a run of these devices ([(Device, Mount)] or entries as in a scenario) can see in this
+    world, for the UI: rows as event_rows, plus ok (some device sees it) and why (when none does)."""
+    run = devices if devices and isinstance(devices[0], tuple) else device_entries({}, devices)
+    probe = min(float(duration_s), 4 * 3600.0)
+    rows = event_rows(run, world_name, at_s if at_s is not None else probe / 3, probe)
+    for r in rows:
+        r["ok"] = any(v for v, _ in r["cells"].values())
+        r["why"] = "" if r["ok"] else "; ".join(f"{s}: {w}" for s, (_, w) in r["cells"].items())
     return rows
 
 

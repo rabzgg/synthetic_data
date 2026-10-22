@@ -25,6 +25,13 @@ device should do), `_manifest.json` (every parameter with its datasheet page or 
 All worlds are labelled `realism: ASSUMPTION`: no real recording was used to build them. The data obey
 the datasheets and the stated rules; they are not fitted to field data.
 
+## UI
+```bash
+streamlit run ui/app.py --server.address 127.0.0.1
+```
+Pick a scenario, or build a device from parts, name it, choose a world and the events it can see,
+generate, look at plots and the gate, download a ZIP. See `docs/UI.md`.
+
 ## Docs
 - `docs/ARCHITECTURE.md`: the six blocks and a run, on one page
 - `docs/HOW_TO_ADD_A_SENSOR.md`, `docs/HOW_TO_ADD_A_WORLD.md`, `docs/HOW_TO_ADD_AN_EVENT.md`
