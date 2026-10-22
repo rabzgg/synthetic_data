@@ -253,8 +253,11 @@ class TestStages(unittest.TestCase):
         self.assertAlmostEqual(u.std(), 1 / 3, delta=0.01)
         uu = np.array([m.draw(rng).u_bias[0] for _ in range(20000)])
         self.assertAlmostEqual(uu.std(), 1 / np.sqrt(3), delta=0.01)
+        stated = self.bare(accuracy=P(1, "ppm"),                     # a datasheet that says its limits are 3-sigma
+                           bias_distribution={"value": "normal", "unit": "-", "source": "datasheet X p.2 note 3"})
+        self.assertEqual(stated.bias_distribution, "normal")
         with self.assertRaises(ParamError):
-            self.bare(bias_distribution={"value": "normal", "unit": "-", "source": "datasheet X p.1"})
+            self.bare(bias_distribution={"value": "gamma", "unit": "-", "source": "ASSUMPTION: x"})
 
 
 class TestKinds(unittest.TestCase):

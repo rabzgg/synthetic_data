@@ -28,8 +28,8 @@ depends on the kind of datasheet value (field "kind" on accuracy, accuracy_pct_r
 drift_per_hour, cross_axis_pct, misalignment_deg): kind typical = a spread, drawn normal with
 sd = the value (typical = ±1σ, as Bosch datasheets state), truncated at ±3σ; kind max (default:
 min / max / limit values) = a hard bound, drawn from bias_distribution: uniform (default) or normal
-with sd = bound / 3, truncated at the bound. The distributions within a max bound are ASSUMPTIONs:
-datasheets give the bound, not the distribution.
+with sd = bound / 3, truncated at the bound. The distribution is an ASSUMPTION unless the datasheet
+states it (e.g. "limits are 3-sigma values": normal, with the datasheet as its source).
 
 Every parameter in a part file is {"value", "unit", "source"}; the source is either
 "datasheet <document> p.<page>" or "ASSUMPTION: <reason>". from_params enforces that and converts
@@ -65,7 +65,8 @@ PARAMETERS = {
     "accuracy_pct_reading": Param("%", 0.0, "bias of one unit in % of the reading: ± bound, or 1σ when kind is typical"),
     "accuracy_combine": Param("-", "sum", "how the two accuracy parts combine: sum (±(a + b %)) or max (whichever greater)"),
     "bias_distribution": Param("-", "uniform", "how per-unit errors are drawn within a max bound: uniform, or normal "
-                                               "(sd = bound / 3, truncated at the bound); source must be an ASSUMPTION"),
+                                               "(sd = bound / 3, truncated at the bound); an ASSUMPTION unless the datasheet "
+                                               "states it (limits given as 3-sigma)"),
     "noise_sd": Param("q", 0.0, "standard deviation of the white noise per sample"),
     "noise_density": Param("q/√Hz", None, "noise spectral density; noise_sd = noise_density × √bandwidth_hz"),
     "bandwidth_hz": Param("Hz", None, "cutoff of the first-order low-pass on the signal; also sets noise_sd from "
@@ -209,8 +210,6 @@ class MeasurementModel:
             kw[name] = _to_canonical(q, name, p)
             if "kind" in p:
                 kinds[name] = p["kind"]
-        if "bias_distribution" in params and not str(params["bias_distribution"]["source"]).startswith("ASSUMPTION"):
-            raise ParamError(f"{quantity_id}: bias_distribution is never in a datasheet; its source must be an ASSUMPTION")
         if "bandwidth_hz" not in kw and "odr_hz" in kw:
             kw["bandwidth_hz"] = kw["odr_hz"] / 2
             sources["bandwidth_hz"] = f"ASSUMPTION: bandwidth = ODR / 2 (no bandwidth given; ODR: {sources['odr_hz']})"

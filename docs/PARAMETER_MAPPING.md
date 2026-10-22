@@ -40,7 +40,7 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 | `accuracy` | q | 0.0 | bias of one unit (absolute part): ± bound, or 1σ when kind is typical (field `kind`: typical or max) |
 | `accuracy_pct_reading` | % | 0.0 | bias of one unit in % of the reading: ± bound, or 1σ when kind is typical (field `kind`: typical or max) |
 | `accuracy_combine` | - | sum | how the two accuracy parts combine: sum (±(a + b %)) or max (whichever greater) |
-| `bias_distribution` | - | uniform | how per-unit errors are drawn within a max bound: uniform, or normal (sd = bound / 3, truncated at the bound); source must be an ASSUMPTION |
+| `bias_distribution` | - | uniform | how per-unit errors are drawn within a max bound: uniform, or normal (sd = bound / 3, truncated at the bound); an ASSUMPTION unless the datasheet states it (limits given as 3-sigma) |
 | `noise_sd` | q | 0.0 | standard deviation of the white noise per sample |
 | `noise_density` | q/√Hz | — | noise spectral density; noise_sd = noise_density × √bandwidth_hz |
 | `bandwidth_hz` | Hz | — | cutoff of the first-order low-pass on the signal; also sets noise_sd from noise_density |
@@ -73,7 +73,7 @@ f. frame               vector quantities: world frame -> body (world's orientati
 8. clip                to the range; over_range / under_range flag what was cut off
 ```
 
-What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit. How depends on the kind of datasheet value (field "kind" on accuracy, accuracy_pct_reading, drift_per_hour, cross_axis_pct, misalignment_deg): kind typical = a spread, drawn normal with sd = the value (typical = ±1σ, as Bosch datasheets state), truncated at ±3σ; kind max (default: min / max / limit values) = a hard bound, drawn from bias_distribution: uniform (default) or normal with sd = bound / 3, truncated at the bound. The distributions within a max bound are ASSUMPTIONs: datasheets give the bound, not the distribution.
+What is fixed for one physical unit (bias, drift rate, axis errors) is drawn once per unit. How depends on the kind of datasheet value (field "kind" on accuracy, accuracy_pct_reading, drift_per_hour, cross_axis_pct, misalignment_deg): kind typical = a spread, drawn normal with sd = the value (typical = ±1σ, as Bosch datasheets state), truncated at ±3σ; kind max (default: min / max / limit values) = a hard bound, drawn from bias_distribution: uniform (default) or normal with sd = bound / 3, truncated at the bound. The distribution is an ASSUMPTION unless the datasheet states it (e.g. "limits are 3-sigma values": normal, with the datasheet as its source).
 
 ## Normalisation rules
 

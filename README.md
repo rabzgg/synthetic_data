@@ -20,7 +20,11 @@ scenarios are YAML files; adding one needs no Python.
 - [ ] **Add an event or scenario:** effects on world nodes, the body or a device → `docs/HOW_TO_ADD_AN_EVENT.md`.
 - [ ] **Overview:** `docs/ARCHITECTURE.md` (one page).
 - [ ] **Open decisions (owner):** merging `feature/lego-generator` into `main`; what happens to the XDK
-      data and code (kept unchanged until then); values marked `[USER TO VERIFY]` in `configs/parts/`.
+      data and code (kept unchanged until then).
+- [ ] **Parts still `[USER TO VERIFY]`:** `configs/parts/bosch_bmg160.yaml` and `configs/parts/maxim_max44009.yaml`
+      were written without their datasheets (search snippets and distributor listings only). Each needs the
+      datasheet PDF and a pass with `docs/prompts/DATASHEET_TO_PART.md`, then a check of every cited page.
+      No preset device uses them.
 
 ## Install
 ```bash
