@@ -12,6 +12,7 @@ The battery drains faster than normal for a while, e.g. from a weak signal or a 
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `battery`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -24,6 +25,7 @@ A pump bearing wears: while the pump runs, its vibration grows slowly to a multi
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `pump_vibration`
+- After the event: `hold` (stays as reached)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -37,6 +39,7 @@ Test gas is applied to the detector's inlet for a minute to check that every sen
 - Changes: one device; reaches the device it is given to.
 - Affects: `air.lel_pct`, `air.h2s_ppm`, `air.co_ppm`, `air.o2_pct`
 - Needs the device feature: `bump_test`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -69,6 +72,7 @@ The fridge's compressor stops: no current is drawn for it and the inside warms t
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `compressor`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -80,6 +84,7 @@ The device loses its connection: it keeps measuring, but no rows reach the log u
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `connectivity`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -91,6 +96,7 @@ A door to the outside stays open: the air inside mixes towards the outside tempe
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `air.temperature_c`, `air.vapour_pressure_hpa`, `air.co2_ppm`, `light.lux`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -122,6 +128,7 @@ A gas leaks into the air around the devices, holds at a level for a while, then 
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `air.h2s_ppm` (with the default gas)
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -132,17 +139,29 @@ A gas leaks into the air around the devices, holds at a level for a while, then 
 
 ### `irrigation`: Irrigation
 
-The field is watered: soil moisture rises while the water is applied, then drains back down over a day or so.
+The field is watered: water flows into the soil while it runs; the soil then drains and dries back down by itself. Needs a world whose soil moisture integrates an irrigation inflow signal.
 
 - Changes: the world; reaches every device that measures what it affects.
-- Affects: `soil.moisture_pct`
+- Affects: `irrigation`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
 | `duration_s` | 1800 | s | ASSUMPTION: half an hour of watering |
 | `added_pct` | 12 | %VWC | ASSUMPTION: about 25 mm of water into the top 20 cm |
-| `rise_tau_s` | 600 | s | ASSUMPTION: water reaches the probe depth within minutes |
-| `drain_tau_s` | 86400 | s | ASSUMPTION: drainage and uptake over about a day |
+
+### `leak`: Leak
+
+A tank leaks: an extra outflow while the leak lasts; afterwards the level recovers by its normal inflow. Needs a world with a leak outflow signal.
+
+- Changes: the world; reaches every device that measures what it affects.
+- Affects: `leak`
+- After the event: `revert` (goes back)
+
+| parameter | default | unit | source |
+|---|---|---|---|
+| `duration_s` | 10800 | s | ASSUMPTION: three hours until it is found |
+| `rate_pct_per_h` | 25 | %/h | ASSUMPTION: a large leak, more than the normal use |
 
 ### `no_motion`: No motion
 
@@ -161,6 +180,7 @@ The sampling pump stops: the pump alarm is on; the gas readings are not changed.
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `states.pump`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -172,6 +192,7 @@ One sensor of the device fails for a while: it sticks at its last value, reads z
 
 - Changes: one device; reaches the device it is given to.
 - Affects: `air.h2s_ppm`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -186,6 +207,7 @@ The wearer presses the SOS button; the SOS state is on for a while.
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `states.sos`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -197,6 +219,7 @@ The air warms or cools by a set amount and stays there for a while; RH follows.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `air.temperature_c`
+- After the event: `revert` (goes back)
 
 | parameter | default | unit | source |
 |---|---|---|---|
@@ -262,31 +285,32 @@ Device presets with default event parameters. Gas releases at the default level 
 
 ### Worn on the body
 
-| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `soil_moisture_probe` |
-|---|---|---|---|---|---|---|---|---|---|
-| battery_drain | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | ✓ |
-| bearing_wear | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) |
-| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) |
-| collapse (lel) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) |
-| collapse (co) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) |
-| collapse (h2s) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) |
-| collapse (voc) | ✓ | – (4) | – (4) | ✓ | – (2) | – (4) | ✓ | – (2) | – (2) |
-| collapse (co2) | ✓ | – (4) | – (4) | ✓ | – (2) | – (4) | – (4) | – (2) | – (2) |
-| compressor_failure | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) |
-| connection_loss | ✓ | ✓ | ✓ | – (5) | ✓ | ✓ | ✓ | – (5) | ✓ |
-| door_open | – (6) | – (6) | – (6) | ✓ | ✓ | – (6) | – (6) | – (2) | – (2) |
-| fall | ✓ | – (2) | – (2) | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) |
-| gas_release (lel) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) |
-| gas_release (co) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) |
-| gas_release (h2s) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) |
-| gas_release (voc) | – (4) | – (4) | – (4) | – (2) | – (2) | – (4) | ✓ | – (2) | – (2) |
-| gas_release (co2) | – (4) | – (4) | – (4) | – (2) | – (2) | – (4) | – (4) | – (2) | – (2) |
-| irrigation | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ |
-| no_motion | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) |
-| pump_fault | – (7) | – (7) | – (7) | – (7) | – (7) | – (7) | ✓ | – (7) | – (7) |
-| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| sos | – (8) | – (8) | ✓ | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) |
-| temperature_change | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) |
+| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `soil_moisture_probe` | `water_tank_monitor` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| battery_drain | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | ✓ | – (1) |
+| bearing_wear | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) | – (2) |
+| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) | – (3) |
+| collapse (lel) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| collapse (co) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| collapse (h2s) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| collapse (voc) | ✓ | – (4) | – (4) | ✓ | – (2) | – (4) | ✓ | – (2) | – (2) | – (2) |
+| collapse (co2) | ✓ | – (4) | – (4) | ✓ | – (2) | – (4) | – (4) | – (2) | – (2) | – (2) |
+| compressor_failure | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | ✓ |
+| connection_loss | ✓ | ✓ | ✓ | – (5) | ✓ | ✓ | ✓ | – (5) | ✓ | ✓ |
+| door_open | – (6) | – (6) | – (6) | ✓ | ✓ | – (6) | – (6) | – (2) | – (2) | – (2) |
+| fall | ✓ | – (2) | – (2) | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) |
+| gas_release (lel) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| gas_release (co) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| gas_release (h2s) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| gas_release (voc) | – (4) | – (4) | – (4) | – (2) | – (2) | – (4) | ✓ | – (2) | – (2) | – (2) |
+| gas_release (co2) | – (4) | – (4) | – (4) | – (2) | – (2) | – (4) | – (4) | – (2) | – (2) | – (2) |
+| irrigation | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) |
+| leak | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ |
+| no_motion | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) |
+| pump_fault | – (7) | – (7) | – (7) | – (7) | – (7) | – (7) | ✓ | – (7) | – (7) | – (7) |
+| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| sos | – (8) | – (8) | ✓ | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) |
+| temperature_change | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) |
 
 (1) it needs the device feature battery  
 (2) it changes nothing this device measures  
@@ -299,31 +323,32 @@ Device presets with default event parameters. Gas releases at the default level 
 
 ### Fixed (wall, shelf, post)
 
-| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `soil_moisture_probe` |
-|---|---|---|---|---|---|---|---|---|---|
-| battery_drain | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | ✓ |
-| bearing_wear | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) |
-| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) |
-| collapse (lel) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) |
-| collapse (co) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) |
-| collapse (h2s) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) |
-| collapse (voc) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | ✓ | – (4) | – (4) |
-| collapse (co2) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | – (5) | – (4) | – (4) |
-| compressor_failure | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) |
-| connection_loss | ✓ | ✓ | ✓ | – (6) | ✓ | ✓ | ✓ | – (6) | ✓ |
-| door_open | – (7) | – (7) | – (7) | ✓ | ✓ | – (7) | – (7) | – (2) | – (2) |
-| fall | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
-| gas_release (lel) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) |
-| gas_release (co) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) |
-| gas_release (h2s) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) |
-| gas_release (voc) | – (8) | – (8) | – (8) | – (2) | – (2) | – (8) | ✓ | – (2) | – (2) |
-| gas_release (co2) | – (8) | – (8) | – (8) | – (2) | – (2) | – (8) | – (8) | – (2) | – (2) |
-| irrigation | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ |
-| no_motion | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
-| pump_fault | – (9) | – (9) | – (9) | – (9) | – (9) | – (9) | ✓ | – (9) | – (9) |
-| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| sos | – (10) | – (10) | ✓ | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) |
-| temperature_change | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) |
+| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `soil_moisture_probe` | `water_tank_monitor` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| battery_drain | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | ✓ | – (1) |
+| bearing_wear | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) | – (2) |
+| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) | – (3) |
+| collapse (lel) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) |
+| collapse (co) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) |
+| collapse (h2s) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) |
+| collapse (voc) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | ✓ | – (4) | – (4) | – (4) |
+| collapse (co2) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | – (5) | – (4) | – (4) | – (4) |
+| compressor_failure | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | ✓ |
+| connection_loss | ✓ | ✓ | ✓ | – (6) | ✓ | ✓ | ✓ | – (6) | ✓ | ✓ |
+| door_open | – (7) | – (7) | – (7) | ✓ | ✓ | – (7) | – (7) | – (2) | – (2) | – (2) |
+| fall | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
+| gas_release (lel) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| gas_release (co) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| gas_release (h2s) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
+| gas_release (voc) | – (8) | – (8) | – (8) | – (2) | – (2) | – (8) | ✓ | – (2) | – (2) | – (2) |
+| gas_release (co2) | – (8) | – (8) | – (8) | – (2) | – (2) | – (8) | – (8) | – (2) | – (2) | – (2) |
+| irrigation | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) |
+| leak | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ |
+| no_motion | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
+| pump_fault | – (9) | – (9) | – (9) | – (9) | – (9) | – (9) | ✓ | – (9) | – (9) | – (9) |
+| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| sos | – (10) | – (10) | ✓ | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) |
+| temperature_change | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) |
 
 (1) it needs the device feature battery  
 (2) it changes nothing this device measures  
@@ -349,4 +374,5 @@ Device presets with default event parameters. Gas releases at the default level 
 | `gas_twa_alarm` | Test: TWA alarm (CO) | `indoor_worker_walking` | `blackline_g7c` (body) | bump_test, gas_release, gas_release, connection_loss, sos |
 | `gas_voc_exposure` | Test: VOC exposure | `indoor_worker_walking` | `msa_altair_io6` (body) | bump_test, gas_release, gas_release, connection_loss, sos |
 | `pump_bearing_wear` | Pump bearing wear | `pump_room` | `pump_vibration_sensor` (fixed) | bearing_wear |
+| `water_tank_leak` | Water tank leak | `water_tank` | `water_tank_monitor` (fixed) | leak |
 | `worker_collapse` | Worker collapse in H2S | `indoor_worker_walking` | `blackline_g7c` (body), `bme280_sensor_board` (fixed) | bump_test, collapse, connection_loss |

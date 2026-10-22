@@ -11,12 +11,13 @@ params:
   recovery_tau_s: {value: 900, unit: s, source: "ASSUMPTION: time constant of getting back after the door closes"}
 label: "outside {outside_temperature_c} °C"
 effects:
-  - {target: air.temperature_c, op: approach, value: $outside_temperature_c, tau_s: $exchange_tau_s, recovery_tau_s: $recovery_tau_s}
+  - {target: air.temperature_c, op: approach, value: $outside_temperature_c, tau_s: $exchange_tau_s, recovery_tau_s: $recovery_tau_s, after: revert}
   - target: air.vapour_pressure_hpa
     op: approach
     value: {vapour_from_rh: {rh_pct: $outside_rh_pct, temperature_c: $outside_temperature_c}}
     tau_s: $exchange_tau_s
     recovery_tau_s: $recovery_tau_s
+    after: revert
     optional: true
   - {target: air.co2_ppm, op: approach, value: $outside_co2_ppm, tau_s: $exchange_tau_s, recovery_tau_s: $recovery_tau_s, optional: true}
-  - {target: light.lux, op: add, shape: {pulse: {duration_s: $duration_s, level: $light_add_lux}}, optional: true}
+  - {target: light.lux, op: add, shape: {pulse: {duration_s: $duration_s, level: $light_add_lux}}, after: revert, optional: true}

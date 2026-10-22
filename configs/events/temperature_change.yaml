@@ -11,3 +11,4 @@ effects:
   - target: air.temperature_c
     op: add
     shape: {pulse: {duration_s: $duration_s, ramp_s: $ramp_s, level: $delta_c}}
+    after: revert

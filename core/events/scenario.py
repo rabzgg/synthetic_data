@@ -66,11 +66,12 @@ def list_scenarios(scenarios_dir: str = SCENARIOS_DIR) -> list:
     return sorted(f[:-5] for f in os.listdir(scenarios_dir) if f.endswith(".yaml"))
 
 
-def _seconds_aliases(params: dict) -> dict:
+def _seconds_aliases(params: dict, known=()) -> dict:
+    """x_min / x_h -> x_s (times 60 / 3600) where the event has an x_s parameter."""
     out = {}
     for k, v in params.items():
         for suf, f in (("_min", 60), ("_h", 3600)):
-            if k.endswith(suf):
+            if k.endswith(suf) and k[: -len(suf)] + "_s" in known:
                 k = k[: -len(suf)] + "_s"
                 v = {kk: ([x * f for x in vv] if kk in ("random", "random_int") else vv * f if kk == "value" else vv)
                      for kk, vv in v.items()} if isinstance(v, dict) else v * f
@@ -142,7 +143,8 @@ def prepare(scenario, devices=None, seed: int = None, duration_s: float = None) 
         kind, spec = next(iter(entry.items()))
         if kind not in lib:
             raise ScenarioError(f"event {i + 1}: unknown event {kind!r}; known: {', '.join(lib)}")
-        defn, spec = lib[kind], _seconds_aliases(dict(spec or {}))
+        defn = lib[kind]
+        spec = _seconds_aliases(dict(spec or {}), defn.PARAMS)
         rng = np.random.default_rng([seed, zlib.crc32(f"{sc.get('name', '')}/event{i}".encode())])
         count = draw(spec.get("count", 1), rng, {})
         placed, same = [], by_kind.setdefault(kind, [])

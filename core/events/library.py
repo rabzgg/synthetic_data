@@ -20,8 +20,11 @@ Effects on the world (target = a world node: a quantity id, a short alias such a
 input, or a named signal of the world):
     op: add | multiply   shape: a spec (core/world/primitives.py) in time since the event start
     op: set             value: a spec, during the event
-    op: approach        value: a spec, tau_s, recovery_tau_s: moves towards the value during the event,
-                        then back with recovery_tau_s
+    op: approach        value: a spec, tau_s: moves towards the value during the event; afterwards back
+                        with recovery_tau_s (instantly without it)
+    after: revert       (default) the effect ends with the event: the node goes back (add 0, multiply 1,
+                        set / approach released)
+    after: hold         what the effect reached at the end stays for the rest of the run (wear, damage)
     optional: true      skip the effect in a world without that node
 Effects on the body: {target: motion, segments: [{kind, duration, posture, needs, label}]}, one after
 the other from the event start (kinds in core/world/motion.py; posture current keeps the posture).
@@ -31,6 +34,7 @@ Effects on a device (scope: device; requires: [device features]):
     {target: device.gap}                      no rows written
     {target: device.state, state: pump}       a device state is on
     {target: device.battery, extra_pct_per_h} faster drain
+    after: hold on a device effect keeps it to the end of the run (a sensor that stays broken)
 A composite event has steps instead of effects: [{event, at or after, params, label}]; at = offset from
 the start, after = gap after the previous step's end; params are expressions of the composite's own.
 building_block: true marks a small event meant for composites (left out of lists and tables).
@@ -266,7 +270,7 @@ class Instance:
                                     f"(nodes: {', '.join(world.nodes())})")
             eff = {"target": node, "op": e.get("op", "add"), "at": self.at, "end": self.end, "names": self.names,
                    "rng_stream": f"event{self.index}/{self.kind}/{self.at}"}
-            for k in ("shape", "value", "tau_s", "recovery_tau_s"):
+            for k in ("shape", "value", "tau_s", "recovery_tau_s", "after"):
                 if k in e:
                     eff[k] = e[k]
             world.add_effect(eff)
@@ -286,6 +290,9 @@ class Instance:
         given = []
         for e in self.defn.effects:
             t = e["target"]
+            if e.get("after", "revert") not in ("hold", "revert"):
+                raise ScenarioError(f"{self.kind}: after must be hold or revert")
+            end = np.inf if e.get("after") == "hold" else self.end
             if t == "device.input":
                 op = self.ev(e.get("op", "set"))
                 if op not in ("set", "add", "stuck", "zero", "offset"):
@@ -295,14 +302,14 @@ class Instance:
                 for qname, val in pairs:
                     q = resolve_quantity(qname)
                     if q in view.device.measured():
-                        view.overrides.append((q, self.at, self.end, "value" if op == "set" else op, float(val)))
+                        view.overrides.append((q, self.at, end, "value" if op == "set" else op, float(val)))
                         given.append(f"{CATALOG[q].alias or q} {_fmt(float(val))}")
             elif t == "device.gap":
-                view.gaps.append((self.at, self.end))
+                view.gaps.append((self.at, end))
             elif t == "device.state":
-                view.states.setdefault(e["state"], []).append((self.at, self.end))
+                view.states.setdefault(e["state"], []).append((self.at, end))
             elif t == "device.battery":
-                view.battery.append((self.at, self.end, float(self.ev(e["extra_pct_per_h"]))))
+                view.battery.append((self.at, end, float(self.ev(e["extra_pct_per_h"]))))
         detail = self.detail() or (", ".join(given) if given else "")
         return [Label(self.at, self.end, self.kind, detail, "device")]
 

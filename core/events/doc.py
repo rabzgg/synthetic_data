@@ -60,6 +60,10 @@ def markdown() -> str:
                      (" (with the default gas)" if "gas" in cls.PARAMS else ""))
         if e.requires():
             L.append(f"- Needs the device feature: {', '.join(f'`{r}`' for r in e.requires())}")
+        afters = sorted({ef.get("after", "revert") for ef in cls.effects if ef.get("target") != "motion"})
+        if afters:
+            L.append("- After the event: " + " / ".join(
+                {"revert": "`revert` (goes back)", "hold": "`hold` (stays as reached)"}[a] for a in afters))
         L += ["", "| parameter | default | unit | source |", "|---|---|---|---|"]
         for k, p in cls.PARAMS.items():
             L.append(f"| `{k}` | {_cell(p['value'])} | {_cell(p['unit'])} | {_cell(p['source'])} |")

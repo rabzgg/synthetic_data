@@ -58,7 +58,7 @@ class TestRefusals(unittest.TestCase):
         with self.assertRaises(ScenarioError) as e:
             prepare(dict(base, world="indoor_worker_walking", devices=[{"device": "blackline_g7c"}],
                          events=[{"irrigation": {"at": 600}}]))
-        self.assertIn("has no 'soil.moisture_pct'", str(e.exception))
+        self.assertIn("has no 'irrigation'", str(e.exception))           # the soil's inflow signal
         with self.assertRaises(ScenarioError) as e:
             prepare(dict(base, world="fridge", devices=[{"device": "blackline_g7c", "mount": "fixed"}],
                          events=[{"compressor_failure": {"at": 600, "duration_s": 3600}}]))

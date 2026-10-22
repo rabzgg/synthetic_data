@@ -39,7 +39,7 @@ class TestPresets(unittest.TestCase):
     def test_every_catalog_quantity_within_bounds(self):
         for p in list_presets():
             w = World(p, 2 * HOUR, 1)
-            self.assertTrue({"air.temperature_c", "body.accel_g"} <= set(w.quantities()), p)
+            self.assertIn("body.accel_g", w.quantities(), p)
             for q in w.quantities():
                 lo, hi = CATALOG[q].lower, CATALOG[q].upper
                 x = w.tracks[q].values

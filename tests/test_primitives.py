@@ -87,6 +87,83 @@ def event(d):
     return EventDef(dict({"kind": "t", "params": {"duration_s": {"value": 600, "unit": "s", "source": "ASSUMPTION: t"}}}, **d))
 
 
+class TestIntegrate(unittest.TestCase):
+    def test_stock_stays_within_bounds(self):
+        c = ctx(n=7201)
+        lv = evaluate({"integrate": {"start": 50, "inflow": [{"step": {"at_s": 3600, "value": 100}}], "outflow": [20],
+                                     "per": "h", "lower": 0, "upper": 100}}, c)
+        self.assertAlmostEqual(lv[1800], 50 - 10, places=6)               # -20 %/h for half an hour
+        self.assertEqual(lv[3600:].max(), 100)                            # stops at the top, does not pass it
+        empty = evaluate({"integrate": {"start": 5, "outflow": [50], "per": "h", "lower": 0, "upper": 100}}, c)
+        self.assertEqual(empty.min(), 0)
+        self.assertEqual(empty[-1], 0)
+
+    def test_relax(self):
+        lv = evaluate({"integrate": {"start": 40, "relax_to": 25, "relax_tau_s": 3600}}, ctx(n=3601))
+        self.assertAlmostEqual(lv[3600] - 25, 15 * np.exp(-1), delta=0.01)
+
+    def test_leak_is_an_outflow(self):
+        w = World("water_tank", 48 * 3600, 42)
+        base = w.tracks["water.level_pct"].values.copy()
+        ev = event({"params": {"duration_s": {"value": 3 * 3600, "unit": "s", "source": "ASSUMPTION: t"}},
+                    "effects": [{"target": "leak", "op": "add", "shape": 25, "after": "revert"}]})(12 * 3600.0)
+        ev.apply_world(w)
+        w.evaluate()
+        lv = w.tracks["water.level_pct"].values
+        np.testing.assert_allclose(lv[:12 * 3600 + 1], base[:12 * 3600 + 1])
+        self.assertGreaterEqual(lv.min(), 0)
+        self.assertLess(lv[15 * 3600], base[15 * 3600] - 30)              # drained by the leak
+        self.assertGreater(lv[-1], 90)                                    # and filled again by the pump
+
+    def test_energy_counts_up(self):
+        e = World("pump_room", 24 * 3600, 42).tracks["electrical.energy_kwh"].values
+        self.assertTrue((np.diff(e) >= 0).all())
+        self.assertAlmostEqual(e[-1], 16 * 14 * 0.589, delta=10)         # 16 h at about 8.2 kW
+
+
+class TestAfter(unittest.TestCase):
+    def apply(self, op, after, shape=None, value=None):
+        w = World("static_shelf", 4 * 3600, 3)
+        T0 = w.tracks["air.temperature_c"].values.copy()
+        eff = {"target": "air.temperature_c", "op": op, "after": after}
+        eff.update({"shape": shape} if shape is not None else {"value": value})
+        event({"effects": [eff]})(3600.0, {"duration_s": {"value": 3600, "unit": "s", "source": "ASSUMPTION: t"}}).apply_world(w)
+        w.evaluate()
+        return w.tracks["air.temperature_c"].values - T0
+
+    def test_revert_and_hold(self):
+        ramp = {"ramp": {"start_s": 0, "duration_s": 3600, "from": 0, "to": 4}}
+        d = self.apply("add", "revert", ramp)
+        self.assertEqual((d[3599], d[7199] > 3.9, d[7200], d[-1]), (0, True, 0, 0))
+        d = self.apply("add", "hold", ramp)
+        self.assertGreater(d[-1], 3.9)                                    # stays as reached
+        d = self.apply("set", "hold", value=-10)
+        self.assertTrue(np.allclose(d[7200:] + self.apply("set", "revert", value=0)[0], d[7200:]))
+        T = World("static_shelf", 4 * 3600, 3).tracks["air.temperature_c"].values
+        np.testing.assert_allclose((T + d)[7200:], -10)
+
+    def test_bad_after(self):
+        with self.assertRaises(ValueError):
+            self.apply("add", "forever", 1)
+
+
+class TestDefaults(unittest.TestCase):
+    def test_minimal_world(self):
+        w = World({"name": "one", "realism": "ASSUMPTION",
+                   "drivers": {"water.ph": {"constant": {"value": 7.1, "unit": "pH", "source": "ASSUMPTION: t"}}}}, 3600, 1)
+        np.testing.assert_allclose(w.tracks["water.ph"].values, 7.1)
+        self.assertEqual(set(w.defaults_used), {"grid", "time", "earth_field_ut", "motion"})
+        self.assertTrue(all("ASSUMPTION" in str(v) for v in w.defaults_used.values()))
+        np.testing.assert_allclose(w.at("body.accel_g", [0.0]), [[0, 0, 1]])
+        with self.assertRaises(ValueError):                               # realism is never defaulted
+            World({"name": "x", "drivers": {}}, 60, 1)
+
+    def test_short_presets(self):
+        for name in ("fridge", "aquarium", "pump_room", "water_tank"):
+            w = World(name, 3600, 1)
+            self.assertIn("motion", w.defaults_used, name)
+
+
 class TestEffects(unittest.TestCase):
     def test_signal_drives_several_quantities(self):
         w = World("fridge", 6 * 3600, 3)
@@ -140,7 +217,9 @@ class TestEffects(unittest.TestCase):
                                 {"target": "water.ph", "op": "add", "shape": 1}]})(0.0)
         ok.apply_world(w)
         w.evaluate()
-        self.assertGreater(w.tracks["water.ph"].values.min(), 7.5)
+        ph = w.tracks["water.ph"].values
+        self.assertGreater(ph[:600].min(), 7.5)                          # during the event
+        self.assertLess(ph[700:].max(), 7.4)                             # reverted after it
 
 
 if __name__ == "__main__":

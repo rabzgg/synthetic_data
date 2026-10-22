@@ -27,6 +27,11 @@ Primitives (time t in seconds from the start of the world, or of the event insid
     schedule        segments [[from_hour, to_hour, value], ...], default: by local hour of the day
     solar           latitude_deg, clear_sky, cloud_mean, cloud_sd, cloud_tau_s: daylight with clouds
     vapour_from_rh  rh_pct, temperature_c: the water vapour pressure of air at that RH and temperature
+    integrate       start, inflow [specs], outflow [specs], lower, upper, per (s | min | h, the time unit of the
+                    flows; default s), relax_to and relax_tau_s (optional): a stock, e.g. a tank level,
+                    energy or a battery: level = start + ∫(Σ inflow − Σ outflow) dt − (level − relax_to)/relax_tau,
+                    held within [lower, upper] (it stops at a bound, it does not pass it). Name the flows as
+                    signals ({ref: ...}) so that an event can change one of them (a leak = an extra outflow).
     levels_on_walk  levels: a new level from the list each time the body starts walking (room lights)
     floors_on_walk  floor_height_m, floors, change_probability, stairs_s: floor changes during walks
 """
@@ -211,6 +216,25 @@ def _vapour_from_rh(c, p):
     return np.full(len(c.t), float(vapour_pressure(c.p(p, "temperature_c"), c.p(p, "rh_pct"))))
 
 
+def _integrate(c, p):
+    per = {"s": 1.0, "min": 60.0, "h": 3600.0}[str(c.p(p, "per", "s"))]
+    flow = np.zeros(len(c.t))
+    for s in value(p.get("inflow", []), c.names) or []:
+        flow = flow + evaluate(s, c)
+    for s in value(p.get("outflow", []), c.names) or []:
+        flow = flow - evaluate(s, c)
+    step = flow * c.dt / per
+    lo, hi = float(c.p(p, "lower", -np.inf)), float(c.p(p, "upper", np.inf))
+    relax = "relax_tau_s" in p
+    to, k = (float(c.p(p, "relax_to")), c.dt / float(c.p(p, "relax_tau_s"))) if relax else (0.0, 0.0)
+    out = np.empty(len(c.t))
+    x = float(c.p(p, "start"))
+    for i in range(len(c.t)):
+        out[i] = x
+        x = min(hi, max(lo, x + step[i] - k * (x - to)))
+    return out
+
+
 def _levels_on_walk(c, p):
     levels = np.asarray(value(p["levels"], c.names), float)
     x = np.full(len(c.t), c.rng.choice(levels))
@@ -235,7 +259,7 @@ def _floors_on_walk(c, p):
 PRIMITIVES = {"constant": _constant, "step": _step, "ramp": _ramp, "pulse": _pulse, "exp_rise_decay": _exp_rise_decay,
               "periodic": _periodic, "duty_cycle": _duty_cycle, "daily_cycle": _daily_cycle,
               "random_walk": _random_walk, "schedule": _schedule, "solar": _solar, "vapour_from_rh": _vapour_from_rh,
-              "levels_on_walk": _levels_on_walk, "floors_on_walk": _floors_on_walk}
+              "integrate": _integrate, "levels_on_walk": _levels_on_walk, "floors_on_walk": _floors_on_walk}
 OPERATORS = ("ref", "sum", "product", "lowpass", "smooth", "clip")
 
 

@@ -6,4 +6,4 @@ params:
   duration_s: {value: 21600, unit: s, source: "ASSUMPTION: six hours until someone notices"}
 label: "compressor off for {duration_s} s"
 effects:
-  - {target: compressor, op: set, value: 0}
+  - {target: compressor, op: set, value: 0, after: revert}

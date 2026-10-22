@@ -21,11 +21,13 @@ How a datasheet becomes a simulated reading: the **quantity catalog** says what 
 | `body.gyro_dps` | Angular rate | °/s | `gyro_x_dps, gyro_y_dps, gyro_z_dps` | −∞ … ∞ |  |
 | `body.mag_ut` | Magnetic field | µT | `mag_x_ut, mag_y_ut, mag_z_ut` | −∞ … ∞ |  |
 | `electrical.current_a` | Electric current | A | `current_a` | 0 … ∞ | RMS current drawn by a load; not signed. |
+| `electrical.energy_kwh` | Energy | kWh | `energy_kwh` | 0 … ∞ | Energy counted since the start of the run, as a meter does; it only grows. |
 | `light.lux` | Illuminance | lx | `light_lux` | 0 … ∞ |  |
 | `machine.vibration_mm_s` | Vibration velocity | mm/s | `vibration_mm_s` | 0 … ∞ | RMS vibration velocity, as in ISO 10816 / 20816 machine condition monitoring. |
 | `soil.moisture_pct` | Soil moisture | %VWC | `soil_moisture_pct_vwc` | 0 … 100 | Volumetric water content; a saturated mineral soil holds roughly 40-50 %VWC. |
 | `water.temperature_c` | Water temperature | °C | `water_temperature_c` | -2 … 100 | Liquid water at about 1 atm (salt water freezes a little below 0 °C). |
 | `water.ph` | pH | pH | `water_ph` | 0 … 14 |  |
+| `water.level_pct` | Water level | % | `water_level_pct` | 0 … 100 | Filling of a tank or basin: 0 = empty, 100 = full. |
 
 ## Model parameters
 

@@ -2,3 +2,5 @@ domain: electrical
 quantities:
   - {id: electrical.current_a, name: Electric current, unit: A, column: current_a, lower: 0, upper: null,
      note: "RMS current drawn by a load; not signed."}
+  - {id: electrical.energy_kwh, name: Energy, unit: kWh, column: energy_kwh, lower: 0, upper: null,
+     note: "Energy counted since the start of the run, as a meter does; it only grows."}

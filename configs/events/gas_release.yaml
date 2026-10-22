@@ -12,3 +12,4 @@ effects:
   - target: $gas
     op: add
     shape: {pulse: {duration_s: $duration_s, ramp_s: $ramp_s, level: $level}}
+    after: revert

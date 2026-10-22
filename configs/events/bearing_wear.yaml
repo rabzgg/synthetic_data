@@ -10,3 +10,4 @@ effects:
   - target: pump_vibration
     op: multiply
     shape: {ramp: {start_s: 0, duration_s: $duration_s, from: 1, to: $factor}}
+    after: hold

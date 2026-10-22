@@ -58,6 +58,10 @@ FIXTURES = {
                               "noise_sd": P(0.02, "A")}, 5.0),
     "machine.vibration_mm_s": ({"range": P([0, 25], "mm/s"), "resolution": P(0.01, "mm/s"), "accuracy": P(0.1, "mm/s"),
                                 "noise_sd": P(0.05, "mm/s")}, 2.5),
+    "water.level_pct": ({"range": P([0, 100], "%"), "resolution": P(0.1, "%"), "accuracy": P(0.5, "%"),
+                         "noise_sd": P(0.2, "%")}, 60.0),
+    "electrical.energy_kwh": ({"range": P([0, 1e6], "kWh"), "resolution": P(0.1, "kWh"), "accuracy_pct_reading": P(1, "%"),
+                               "noise_sd": P(0.1, "kWh")}, 120.0),
     "soil.moisture_pct": ({"range": P([0, 60], "%VWC"), "resolution": P(0.1, "%"), "accuracy": P(3, "%VWC"),
                            "noise_sd": P(0.2, "%VWC")}, 25.0),
 }

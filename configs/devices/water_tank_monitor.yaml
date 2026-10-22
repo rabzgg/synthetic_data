@@ -1,0 +1,13 @@
+# A tank monitor: level transmitter plus a current clamp on the fill pump.
+name: Water Tank Monitor
+device_id_prefix: TANKLVL
+description: "Level of a water tank and the current of its fill pump, logged every minute."
+created: "2026-10-22"
+version: 1
+preset: true
+parts:
+  - part: generic_level_transmitter
+  - part: generic_current_clamp_5a
+features:
+  sample_interval_s: {value: 60, unit: s, source: "ASSUMPTION: one reading a minute"}
+  connectivity: {value: cellular, unit: "-", source: "ASSUMPTION: remote tank with a cellular logger"}

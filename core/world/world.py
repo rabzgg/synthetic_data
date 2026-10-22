@@ -2,9 +2,12 @@
 world.py — block [D]: one timeline of physical truth that every sensor in a run reads.
 
 A world is a preset file (configs/worlds/<name>.yaml) made of
+    realism    ASSUMPTION or recorded (required)
     signals    named helper signals (e.g. a compressor that is on or off), not quantities
     drivers    one spec per quantity id (configs/quantities/) or relation input (below)
-    motion     how the body moves (core/world/motion.py); optional, default: at rest
+and optionally grid, time, earth_field_ut and motion (how the body moves, core/world/motion.py);
+what is left out gets the defaults below (DEFAULTS, each an ASSUMPTION, listed in the manifest). A
+world without people or movement only needs realism, signals and drivers.
 Signals and drivers are specs built from the primitives in core/world/primitives.py; a spec can
 refer to other nodes with {ref: name}. Evaluation runs in two steps:
     1. nodes     every signal and driver, in reference order; events' effects are applied to a node
@@ -50,6 +53,11 @@ DEFAULT_MOTION = {"model": "still", "device_height_m": _A(1.0, "m", "default: a 
                   "fidget_deg": _A(0, "°", "default: not on a person"), "fidget_tau_s": _A(2, "s", "default"),
                   "stir_deg": _A(0, "°", "default")}
 DEFAULT_EARTH_FIELD = _A([19.5, 0.0, -44.5], "µT", "mid-latitude field in world axes (x north, z up), about 49 µT")
+DEFAULT_GRID = {"air_dt_s": _A(1, "s", "default: air and slow quantities change over seconds"),
+                "body_dt_s": _A(0.04, "s", "default: 25 Hz resolves steps (about 2 Hz) and a fall impact (about 0.1 s)")}
+DEFAULT_TIME = {"start_utc": _A("2026-01-05T06:00:00Z", "ISO 8601", "default: a Monday 06:00, the shift start of the gas scenarios"),
+                "utc_offset_h": _A(0, "h", "default: local time = UTC")}
+DEFAULTS = {"grid": DEFAULT_GRID, "time": DEFAULT_TIME, "earth_field_ut": DEFAULT_EARTH_FIELD, "motion": DEFAULT_MOTION}
 
 
 def v(p):
@@ -126,6 +134,7 @@ def load_preset(name: str, worlds_dir: str = WORLDS_DIR) -> dict:
         raise FileNotFoundError(f"world preset {name!r} not found in {worlds_dir}")
     with open(path) as fh:
         d = yaml.safe_load(fh)
+    d.setdefault("name", name)
     check_preset(d, name)
     return d
 
@@ -176,9 +185,20 @@ def check_preset(d: dict, name: str = ""):
 
 class World:
     def __init__(self, preset, duration_s: float, seed: int, start: str = None, worlds_dir: str = WORLDS_DIR):
-        self.preset = load_preset(preset, worlds_dir) if isinstance(preset, str) else preset
+        import copy
+        self.preset = copy.deepcopy(load_preset(preset, worlds_dir) if isinstance(preset, str) else preset)
         if not isinstance(preset, str):
             check_preset(self.preset, self.preset.get("name", ""))
+        self.defaults_used = {}                    # what the preset left out and the code filled in (manifest)
+        for key, default in DEFAULTS.items():
+            if key not in self.preset:
+                self.preset[key] = copy.deepcopy(default)
+                self.defaults_used[key] = default
+            elif isinstance(default, dict) and "value" not in default:
+                for k, v_ in default.items():
+                    if k not in self.preset[key]:
+                        self.preset[key][k] = copy.deepcopy(v_)
+                        self.defaults_used[f"{key}.{k}"] = v_
         self.name = self.preset["name"]
         self.realism = self.preset["realism"]
         self.duration_s, self.seed = float(duration_s), int(seed)
@@ -234,24 +254,33 @@ class World:
                 continue
             at, end, names = e["at"], e["end"], e.get("names", {})
             c = self.context(self.t - at, self.rng(e.get("rng_stream", f"effect{at}")), names, self._node)
-            op = e["op"]
-            if op == "add":
-                x = x + PR.evaluate(e["shape"], c)
-            elif op == "multiply":
-                x = x * PR.evaluate(e["shape"], c)
+            op, hold = e["op"], e.get("after", "revert") == "hold"
+            if e.get("after", "revert") not in ("hold", "revert"):
+                raise ValueError(f"effect after must be hold or revert, got {e['after']!r}")
+            before, during, after = self.t < at, (self.t >= at) & (self.t < end), self.t >= end
+            last = max(0, min(np.searchsorted(self.t, end) - 1, len(self.t) - 1))     # last sample of the event
+            if op in ("add", "multiply"):
+                ident = 0.0 if op == "add" else 1.0
+                s = PR.evaluate(e["shape"], c)
+                s = np.where(before, ident, s)
+                s[after] = s[last] if hold and during.any() else ident
+                x = x + s if op == "add" else x * s
             elif op == "set":
-                on = (self.t >= at) & (self.t < end)
-                x = np.where(on, PR.evaluate(e["value"], c), x)
+                v = PR.evaluate(e["value"], c)
+                x = np.where(during, v, x)
+                if hold and during.any():
+                    x = np.where(after, v[last], x)
             elif op == "approach":
                 target = PR.evaluate(e["value"], c)
-                tau, tau_r = PR.value(e["tau_s"], names), PR.value(e["recovery_tau_s"], names)
-                during = (self.t >= at) & (self.t < end)
+                tau = PR.value(e["tau_s"], names)
                 d = np.zeros_like(x)
                 d[during] = (target[during] - x[during]) * (1 - np.exp(-(self.t[during] - at) / tau))
                 i = min(np.searchsorted(self.t, end), len(self.t) - 1)
                 d_end = (target[i] - x[i]) * (1 - np.exp(-(end - at) / tau))
-                after = self.t >= end
-                d[after] = d_end * np.exp(-(self.t[after] - end) / tau_r)
+                if hold:
+                    d[after] = target[after] - x[after]
+                elif "recovery_tau_s" in e:
+                    d[after] = d_end * np.exp(-(self.t[after] - end) / PR.value(e["recovery_tau_s"], names))
                 x = x + d
             else:
                 raise ValueError(f"unknown effect op {op!r}; known: add, multiply, set, approach")
@@ -388,7 +417,8 @@ class World:
     def describe(self) -> dict:
         d = {"name": self.name, "title": self.preset.get("title", self.name), "realism": self.realism,
              "description": self.preset.get("description", ""), "start_utc": str(self.start) + "Z",
-             "duration_s": self.duration_s, "seed": self.seed, "quantities": self.quantities()}
+             "duration_s": self.duration_s, "seed": self.seed, "quantities": self.quantities(),
+             "defaults_used": self.defaults_used}
         if "clean_air" in self.preset:
             d.update(combustible_gas=self.combustible_gas, lel_vol_pct=self.lel_gas_vol_pct)
         return d
