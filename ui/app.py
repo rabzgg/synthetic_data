@@ -42,6 +42,16 @@ def world_title(name):
 
 
 @st.cache_data(show_spinner=False)
+def part_label(slug):
+    """'Bosch BME280 → temperature_c, humidity_rh, pressure_hpa': the part and the CSV columns it writes."""
+    cols = []
+    for q in Part.load(slug).quantities():
+        c = CATALOG[q]
+        cols.append(c.column.replace("{axis}", "{" + ",".join(c.axes) + "}") if c.vector else c.column)
+    return f"{Part.load(slug).name} → {', '.join(cols)}"
+
+
+@st.cache_data(show_spinner=False)
 def world_quantities(name):
     from core.world import World
     return set(World(name, 60, 1).quantities())
@@ -109,8 +119,8 @@ if mode == SCENARIO:
 
 else:
     st.sidebar.markdown("**1. Parts**")
-    parts = st.sidebar.multiselect("Parts (sensors from datasheets)", list_parts(),
-                                   format_func=lambda s: f"{Part.load(s).name} ({s})")
+    parts = st.sidebar.multiselect("Parts (sensors from datasheets) → the columns they write", list_parts(),
+                                   format_func=part_label)
     name = st.sidebar.text_input("2. Name your device", "My Device")
     interval = st.sidebar.number_input("Logging interval (s)", 1, 3600, 60)
     entries, logic = [], []

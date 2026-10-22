@@ -12,7 +12,8 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 ## Two ways in
 
 **Build a device.**
-1. Pick parts (sensors from datasheets). Each part shows every parameter with its unit, source and
+1. Pick parts (sensors from datasheets); the list shows each part with the CSV columns it writes
+   (e.g. "Bosch BME280 → temperature_c, humidity_rh, pressure_hpa"). Each part shows every parameter with its unit, source and
    kind; accuracy, noise, t90 and resolution can be changed (a change is marked "ASSUMPTION: user
    tweak"). A threshold alarm can be added per measured quantity.
 2. Name the device and set the logging interval. "Save" writes `configs/devices/<slug>.yaml`
