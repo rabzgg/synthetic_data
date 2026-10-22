@@ -413,7 +413,7 @@ class World:
         return tr.values[idx]
 
     def timestamps(self, t):
-        return self.start + (np.asarray(t, float) * 1000).astype("timedelta64[ms]")
+        return self.start + np.round(np.asarray(t, float) * 1000).astype("timedelta64[ms]")   # 0.28 s is 0.2799… ms-wise
 
     def describe(self) -> dict:
         d = {"name": self.name, "title": self.preset.get("title", self.name), "realism": self.realism,
