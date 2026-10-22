@@ -16,6 +16,8 @@ device.py — block [C]: a device the user assembles from parts, names and saves
       connectivity: {value, unit, source}        # how it reports; optional
     logic:                                       # generic blocks (core/logic/blocks.py), in column order
       - {block: threshold_alarm, input: air.h2s_ppm, level: {...}, when: above, output: h2s_alarm_low}
+    output_format:                               # optional: the vendor's column names and units
+      temperature_c: {value: temp_f, unit: "°F", source: "ASSUMPTION: the vendor exports Fahrenheit"}
 
 The CSV columns follow from the parts and the logic: timestamp, device_id, the outputs of blocks
 with position: first, the logged readings, then the other block outputs in order. Nothing is typed
@@ -81,13 +83,14 @@ class Device:
     datasheet: str = ""
     notes: List[str] = field(default_factory=list)
     logic: list = field(default_factory=list)          # block specs as written
+    output_format: dict = field(default_factory=dict)  # {column: {value: new name, unit, source}}
     path: str = ""
 
     # loading
     @classmethod
     def from_dict(cls, d: dict, parts_dir: str = PARTS_DIR, path: str = "") -> "Device":
         unknown = set(d) - {"name", "slug", "device_id_prefix", "description", "created", "version", "preset",
-                            "datasheet", "parts", "features", "notes", "logic"}
+                            "datasheet", "parts", "features", "notes", "logic", "output_format"}
         if unknown:
             raise ParamError(f"device: unknown key(s) {sorted(unknown)}")
         name = d["name"]
@@ -108,7 +111,7 @@ class Device:
         dev = cls(name, slug, int(d.get("version", 1)), uses, d.get("features") or {},
                   d.get("device_id_prefix") or slug.upper(), d.get("description", ""), str(d.get("created", "")),
                   bool(d.get("preset", False)), d.get("datasheet", ""), list(d.get("notes") or []),
-                  list(d.get("logic") or []), path)
+                  list(d.get("logic") or []), dict(d.get("output_format") or {}), path)
         dev.validate()
         return dev
 
@@ -194,6 +197,45 @@ class Device:
         cols += [c for b in blocks if b.position != "first" for c in block_outputs(b)]
         return cols
 
+    def column_units(self) -> Dict[str, tuple]:
+        """{column: (unit, absolute)} for every column after the id: readings and the blocks' outputs.
+        absolute = an offset applies when the unit is written as °F or K; rates are differences."""
+        out = {}
+        for _, q, cols in self.reading_columns():
+            for c in cols:
+                out[c] = (CATALOG[q].unit, True)
+        unit_of = {q: CATALOG[q].unit for q in self.measured()}
+        unit_of.update({c: u for c, (u, _) in out.items()})
+        for b in self.blocks():
+            u, absolute = "-", False
+            if b.kind in ("rolling_mean", "cumulative_dose"):
+                u, absolute = unit_of.get(b.input, "-"), True
+            elif b.kind == "rate_of_change":
+                u = unit_of.get(b.input, "-") + "/" + b.spec.get("per", "min")
+            elif b.kind == "battery":
+                u = "%"
+            elif b.kind == "signal":
+                u = "dBm"
+            for c in block_outputs(b):
+                out[c] = (u, absolute)
+                unit_of[c] = u
+        return out
+
+    def output_columns(self) -> List[str]:
+        """The CSV header as written: columns() with output_format's new names."""
+        return [v_(self.output_format[c]) if c in self.output_format else c for c in self.columns()]
+
+    def output_transforms(self) -> Dict[str, tuple]:
+        """{column: (new name, scale, offset)}: written value = value × scale + offset."""
+        from core.quantities.units import output_transform
+        units, out = self.column_units(), {}
+        for c, f in self.output_format.items():
+            u, absolute = units[c]
+            target = f.get("unit", u)
+            sc, off = (1.0, 0.0) if target in ("-", u) else output_transform(u, target, absolute)
+            out[c] = (v_(f), sc, off)
+        return out
+
     def device_id(self, n: int = 1) -> str:
         return f"{self.device_id_prefix}-{n:04d}"
 
@@ -228,6 +270,18 @@ class Device:
         dup = {c for c in cols if cols.count(c) > 1}
         if dup:
             raise ParamError(f"device {name!r}: duplicate columns {sorted(dup)}; give the parts an 'as' alias")
+        for c, f in self.output_format.items():
+            if c not in cols[2:]:
+                raise ParamError(f"device {name!r}: output_format names {c!r}, which is not one of its columns {cols[2:]}")
+            check_source(f"{name}.output_format.{c}", f)
+        try:
+            self.output_transforms()
+        except Exception as e:
+            raise ParamError(f"device {name!r}: output_format: {e}") from None
+        out = self.output_columns()
+        dup = {c for c in out if out.count(c) > 1}
+        if dup:
+            raise ParamError(f"device {name!r}: output_format gives duplicate column names {sorted(dup)}")
 
     # saving
     def to_dict(self) -> dict:
@@ -256,6 +310,8 @@ class Device:
             d["features"] = self.features
         if self.logic:
             d["logic"] = self.logic
+        if self.output_format:
+            d["output_format"] = self.output_format
         return d
 
 

@@ -101,6 +101,25 @@ logic:                                 # optional; blocks in core/logic/blocks.p
 - What a device can do for events (bump test, pump state, battery, connectivity, fall and no-motion
   detection) follows from its blocks.
 
+## 3b. The vendor's column names and units (optional)
+
+A device can write its columns the way a vendor's export does. `output_format` renames a column and,
+if a unit is given, converts it; every entry is `{value: <new name>, unit, source}`. Example:
+`configs/devices/fridge_logger_us.yaml`.
+
+```yaml
+output_format:
+  temperature_c: {value: temp_f, unit: "°F", source: "ASSUMPTION: the vendor exports Fahrenheit"}
+  current_a: {value: compressor_ma, unit: mA, source: "ASSUMPTION: the vendor exports milliamperes"}
+  temperature_alarm_high: {value: alarm_hi, unit: "-", source: "ASSUMPTION: the vendor's name for the alarm"}
+```
+
+- The key is the device's own column name (`columns()`); logic blocks keep using those names.
+- Scaled units come from `factors` in `configs/units.yaml`, units with an offset (°F, K) from
+  `affine`. A rate (°C/min) is converted without the offset.
+- The gate reads the vendor's names and units, converts back and checks as usual; the manifest
+  lists the formats in `output_transforms`.
+
 ## 4. Run it
 
 ```bash

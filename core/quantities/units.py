@@ -4,7 +4,8 @@ units.py — unit spellings and linear conversions to the catalog's canonical un
 Datasheets write the same unit many ways (C, degC, °C) and often in another scale (Pa instead of
 hPa, mg instead of g, per year instead of per hour). Every parameter value is converted here
 before the measurement model sees it, so a part file can keep the datasheet's own unit.
-Only linear factors are supported (no offsets): temperatures in kelvin are not accepted.
+Only linear factors are supported for parameters (no offsets: temperatures in kelvin are not accepted);
+output_transform also knows units with an offset (°F, K) for writing columns.
 The tables are data: configs/units.yaml.
 """
 import os
@@ -14,12 +15,13 @@ def _load():
     with open(UNITS_FILE) as fh:
         d = yaml.safe_load(fh)
     return (d.get("aliases") or {}, {k: (v[0], float(v[1])) for k, v in (d.get("factors") or {}).items()},
-            {k: float(v) for k, v in (d.get("hours") or {}).items()}, tuple(d.get("percent_units") or ()))
+            {k: float(v) for k, v in (d.get("hours") or {}).items()}, tuple(d.get("percent_units") or ()),
+            {k: (v["to"], float(v["scale"]), float(v["offset"])) for k, v in (d.get("affine") or {}).items()})
 
 
 UNITS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "configs",
                           "units.yaml")
-ALIASES, FACTORS, HOURS, PERCENT_UNITS = _load()
+ALIASES, FACTORS, HOURS, PERCENT_UNITS, AFFINE = _load()
 ALIASES.setdefault("√Hz", "√Hz")
 
 
@@ -58,6 +60,24 @@ def factor_compound(unit: str, target: str) -> float:
     if ud not in HOURS or td not in HOURS:
         raise UnitError(f"cannot convert {unit!r} to {target!r}: unknown time unit")
     return factor(un, tn) * HOURS[td] / HOURS[ud]
+
+
+def output_transform(unit: str, target: str, absolute: bool = True):
+    """(scale, offset) so that value_in_target = value_in_unit × scale + offset, for writing a column in
+    another unit (output_format). `unit` is the column's own unit; a rate such as °C/min converts its
+    numerator only, and never with an offset. absolute=False: a difference (no offset)."""
+    u, t = canonical(unit), canonical(target)
+    if u == t:
+        return 1.0, 0.0
+    if "/" in u and "/" in t and u not in FACTORS and u != "°/s":
+        (un, ud), (tn, td) = u.rsplit("/", 1), t.rsplit("/", 1)
+        if ud != td:
+            raise UnitError(f"cannot write {unit!r} as {target!r}: the time units differ")
+        return output_transform(un, tn, absolute=False)[0], 0.0
+    if t in AFFINE and AFFINE[t][0] == u:
+        _, sc, off = AFFINE[t]
+        return float(f"{1.0 / sc:.12g}"), (-off if absolute else 0.0)
+    return float(f"{1.0 / factor(t, u):.12g}"), 0.0
 
 
 def convert(value, unit: str, target: str):

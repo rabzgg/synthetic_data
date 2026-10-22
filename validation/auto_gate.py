@@ -5,7 +5,8 @@ use the generator's code paths (it reads the measurement model only for ranges a
 and the logic block definitions only for their parameters).
 
 Checks (each with its threshold in the result):
-    columns          exactly the device's columns, in order
+    columns          exactly the device's columns, in order (after output_format: the vendor's names; the
+                     values are turned back to the catalog's units before the other checks)
     device_id        one id, the device's
     timestamps       every logging time is a row, or inside an announced connection gap; no row in a gap
     range / grid     every reading inside its sensor's range and on its resolution grid
@@ -104,8 +105,13 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
     duration = float(man["duration_s"])
     start = pd.Timestamp(man["world"]["start_utc"].replace("Z", ""))
 
-    # columns, id
+    # columns, id; output_format: written with the vendor's names and units, checked in the catalog's
     R.add("columns", "*", list(df.columns) == dev["columns"], len(df.columns), f"{len(dev['columns'])} columns in order")
+    for c, (name, sc, off) in (dev.get("output_transforms") or {}).items():
+        if name in df:
+            if (sc, off) != (1.0, 0.0):
+                df[name] = np.round((df[name].astype(float) - off) / sc, 9)   # back to the catalog unit, float noise off
+            df = df.rename(columns={name: c})
     ids = df["device_id"].unique().tolist() if "device_id" in df else []
     R.add("device_id", "device_id", ids == [dev.get("device_id")], ids[:3], dev.get("device_id"))
 

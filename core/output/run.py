@@ -136,7 +136,20 @@ def device_table(world, view, seed):
         df[c] = df[c].astype(float).round(d)
         if d == 0:
             df[c] = df[c].astype(int)
+    for c, (name, sc, off) in dev.output_transforms().items():      # the vendor's names and units
+        if (sc, off) != (1.0, 0.0):
+            d = max(_decimals(abs(off)), _decimals(_res_of(c, by_col, streams) * sc)) if c in fmt else None
+            x = df[c].astype(float) * sc + off
+            df[c] = x.round(d) if d is not None else x
+            if d == 0:
+                df[c] = df[c].astype(int)
+    df = df.rename(columns={c: name for c, (name, _, _) in dev.output_transforms().items()})
     return df[keep].reset_index(drop=True), {"t_log": t_log, "keep": keep, "draws": draws}
+
+
+def _res_of(c, by_col, streams):
+    st = by_col.get(c) or streams.get(c)
+    return st.model.resolution
 
 
 def _labels_frame(world, labels):
@@ -162,7 +175,9 @@ def manifest(prepared, view, seed, scenario_name, extra) -> dict:
                                      for q, m in ms.items()}})
     return {"device": {"name": dev.name, "slug": dev.slug, "version": dev.version, "path": os.path.relpath(dev.path, ROOT)
                        if dev.path else "", "description": dev.description, "features": dev.features,
-                       "logic": dev.logic, "mount": vars(view.mount), "columns": dev.columns(),
+                       "logic": dev.logic, "mount": vars(view.mount), "columns": dev.output_columns(),
+                       "internal_columns": dev.columns(), "output_format": dev.output_format,
+                       "output_transforms": dev.output_transforms(),
                        "device_id": dev.device_id()},
             "parts": parts, "world": w.describe(),
             "scenario": {"name": scenario_name, "title": prepared.scenario.get("title", ""),

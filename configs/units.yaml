@@ -26,6 +26,9 @@ aliases:
   "amp": "A"
   "VWC%": "%VWC"
   "% VWC": "%VWC"
+  "degF": "°F"
+  "F": "°F"
+  "kelvin": "K"
 factors:
   "Pa": ["hPa", 0.01]
   "kPa": ["hPa", 10.0]
@@ -59,5 +62,10 @@ hours:
   "month": 730.0
   "year": 8760.0
   "yr": 8760.0
+# units with an offset, for output only (output_format): canonical = (value + offset) × scale.
+# Parameters of parts (accuracy, noise, ...) are differences and never use these.
+affine:
+  "°F": {to: "°C", scale: 0.5555555555555556, offset: -32}
+  "K": {to: "°C", scale: 1.0, offset: -273.15}
 # units that also accept a bare "%"
 percent_units: ["%RH", "%vol", "%LEL", "%VWC"]
