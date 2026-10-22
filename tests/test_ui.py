@@ -31,7 +31,7 @@ class TestUi(unittest.TestCase):
     def test_build_a_device(self):
         at = AppTest.from_file(APP, default_timeout=300).run()
         at.sidebar.radio[0].set_value("Build a device").run()
-        at.sidebar.multiselect[0].set_value(["bosch_bme280", "blackline_h2s_cell"]).run()
+        at.multiselect[0].set_value(["bosch_bme280", "blackline_h2s_cell"]).run()
         self.assertNotIn("Aquarium (aquarium)", at.sidebar.selectbox[0].options)     # no H2S there
         at.sidebar.text_input[0].set_value("Tank Monitor v1").run()
         at.sidebar.number_input[1].set_value(2).run()                                  # 2 h
@@ -48,7 +48,7 @@ class TestUi(unittest.TestCase):
     def test_no_world_for_these_parts(self):
         at = AppTest.from_file(APP, default_timeout=300).run()
         at.sidebar.radio[0].set_value("Build a device").run()
-        at.sidebar.multiselect[0].set_value(["generic_soil_moisture_probe", "generic_level_transmitter"]).run()
+        at.multiselect[0].set_value(["generic_soil_moisture_probe", "generic_level_transmitter"]).run()
         self.assertTrue(any("No world provides" in e.value for e in at.error))
 
 

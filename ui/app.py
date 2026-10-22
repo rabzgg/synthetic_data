@@ -25,6 +25,12 @@ from core.world import list_presets, load_preset  # noqa: E402
 
 TWEAKABLE = ("accuracy", "noise_sd", "t90_s", "resolution")
 st.set_page_config(page_title="Synthetic sensor data", layout="wide")
+# selected parts show their whole label instead of a cut-off chip
+st.markdown("""<style>
+[data-baseweb="tag"] {max-width: none !important; height: auto !important;}
+[data-baseweb="tag"] span {max-width: none !important; overflow: visible !important; text-overflow: clip !important;
+                           white-space: normal !important;}
+</style>""", unsafe_allow_html=True)
 st.title("Synthetic sensor data")
 st.caption("Every world is labelled realism: ASSUMPTION: built from datasheets and stated assumptions, "
            "not fitted to field recordings.")
@@ -70,6 +76,13 @@ def v(p):
     return p["value"] if isinstance(p, dict) and "value" in p else p
 
 
+def table(df, wide: dict = None):
+    """A table whose long text columns get a fixed width in pixels, so the table scrolls sideways
+    instead of cutting the text."""
+    cfg = {c: st.column_config.TextColumn(c, width=px) for c, px in (wide or {}).items() if c in df.columns}
+    st.dataframe(df, hide_index=True, width="stretch", column_config=cfg)
+
+
 def show_results(results):
     if all(r.get("passed") for r in results):
         st.success(f"Generated {len(results)} device file(s); every gate passed")
@@ -87,12 +100,12 @@ def show_results(results):
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("**Gate checks**")
-            st.dataframe(pd.DataFrame([{"": "✅" if c["passed"] else "❌", "check": c["name"], "column": c["column"],
-                                        "value": str(c["value"]), "threshold": str(c["threshold"])}
-                                       for c in g["checks"]]), hide_index=True, width="stretch")
+            table(pd.DataFrame([{"": "✅" if c["passed"] else "❌", "check": c["name"], "column": c["column"],
+                                 "value": str(c["value"]), "threshold": str(c["threshold"])} for c in g["checks"]]),
+                  {"column": 220, "value": 380, "threshold": 480})
         with c2:
             st.markdown("**What happened** (labels; scope expected = what the device should do)")
-            st.dataframe(pd.read_csv(r["labels"]), hide_index=True, width="stretch")
+            table(pd.read_csv(r["labels"]), {"event": 220, "detail": 320, "start_utc": 200, "end_utc": 200})
         st.markdown("**First rows of the CSV**")
         st.dataframe(pd.read_csv(r["csv"]).head(20), hide_index=True, width="stretch")
 
@@ -118,10 +131,11 @@ if mode == SCENARIO:
         st.session_state["took"] = time.time() - t0
 
 else:
-    st.sidebar.markdown("**1. Parts**")
-    parts = st.sidebar.multiselect("Parts (sensors from datasheets) → the columns they write", list_parts(),
-                                   format_func=part_label)
-    name = st.sidebar.text_input("2. Name your device", "My Device")
+    st.markdown("#### 1. Parts")
+    parts = st.multiselect("Parts (sensors from datasheets) → the columns they write", list_parts(),
+                           format_func=part_label)
+    st.sidebar.markdown("**2. Device**")
+    name = st.sidebar.text_input("Name your device", "My Device")
     interval = st.sidebar.number_input("Logging interval (s)", 1, 3600, 60)
     entries, logic = [], []
     for slug in parts:
@@ -133,7 +147,7 @@ else:
                 rows = [{"parameter": k, "value": str(v(x)), "unit": x.get("unit"), "source": x.get("source"),
                          "kind": x.get("kind", "")} for k, x in params.items()]
                 st.markdown(f"`{q}`")
-                st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+                table(pd.DataFrame(rows), {"value": 160, "source": 900})
                 for k in TWEAKABLE:
                     if k in params and isinstance(v(params[k]), (int, float)):
                         new = st.number_input(f"{q} · {k} ({params[k]['unit']})", value=float(v(params[k])),
@@ -150,7 +164,7 @@ else:
                                   "level": {"value": level, "unit": CATALOG[q].unit, "source": "ASSUMPTION: set in the UI"}})
             entries.append(dict({"part": slug}, **({"overrides": ov} if ov else {})))
     if not parts:
-        st.info("Pick at least one part in the sidebar.")
+        st.info("Pick at least one part above.")
         st.stop()
     st.sidebar.markdown("**3. World and run**")
     needed = {q for slug in parts for q in Part.load(slug).quantities()}
@@ -196,8 +210,8 @@ else:
             chosen.append({r["kind"]: entry})
         c3.caption(EVENTS[r["kind"]].description)
     with st.expander("Events this device cannot see, and why"):
-        st.dataframe(pd.DataFrame([{"event": r["name"], "why not": r["why"]} for r in rows if not r["ok"]]),
-                     hide_index=True, width="stretch")
+        table(pd.DataFrame([{"event": r["name"], "why not": r["why"]} for r in rows if not r["ok"]]),
+              {"event": 260, "why not": 1400})
     if st.button("Generate", type="primary"):
         scenario = {"name": "ui_run", "title": f"{dev.name} in {world_title(world)}", "realism": "ASSUMPTION",
                     "world": world, "duration": f"{int(hours)}h", "seed": int(seed),
