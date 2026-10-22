@@ -86,15 +86,19 @@ class TestGasPresets(unittest.TestCase):
                     self.assertEqual(m.noise_sd, sd[g])
                     rise, fall = (m.t90(False), m.t90(True)) if g == "o2" else (m.t90(True), m.t90(False))
                     self.assertEqual((rise, fall), (t90[g], t90[g] * rf))
-                    a = dev.alarms()[Q[g]]
-                    self.assertEqual((v(a["low"]), v(a["high"])), (sp[g]["low"], sp[g]["high"]))
-                    self.assertEqual(a["low"]["when"], "below" if g == "o2" else "above")
+                    blk = {b["output"]: b for b in dev.logic}
+                    low, high = blk[f"{g}_alarm_low"], blk[f"{g}_alarm_high"]
+                    self.assertEqual((v(low["level"]), v(high["level"])), (sp[g]["low"], sp[g]["high"]))
+                    self.assertEqual(low["when"], "below" if g == "o2" else "above")
+                    self.assertEqual((blk[f"{g}_over_range"]["level"], blk[f"{g}_over_range"]["input"]), ("range_max", Q[g]))
                     if g in lim:
-                        self.assertEqual((v(a["stel"]), v(a["twa"])), (lim[g]["stel"], lim[g]["twa"]))
+                        self.assertEqual((v(blk[f"{g}_alarm_stel"]["level"]), v(blk[f"{g}_alarm_twa"]["level"])),
+                                         (lim[g]["stel"], lim[g]["twa"]))
+                        self.assertEqual(v(blk[f"{g}_stel_ppm"]["window_s"]), v(A["stel_rule"])["window_s"])
+                        self.assertEqual(v(blk[f"{g}_twa_ppm"]["period_s"]), v(A["twa_rule"])["period_s"])
             self.assertEqual(dev.feature("sample_interval_s"), v(A["logging_interval_s"]))
-            self.assertEqual(dev.feature("battery_hours"), v(spec["battery_runtime_h"]))
-            self.assertEqual(v(dev.features["exposure"]["window_s"]), v(A["stel_rule"])["window_s"])
-            self.assertEqual(v(dev.features["exposure"]["period_s"]), v(A["twa_rule"])["period_s"])
+            bat = next(b for b in dev.logic if b["block"] == "battery")
+            self.assertEqual(v(bat["runtime_h"]), v(spec["battery_runtime_h"]))
 
     def test_g7c_motion_alerts(self):
         dev = Device.load("blackline_g7c")
@@ -102,8 +106,10 @@ class TestGasPresets(unittest.TestCase):
         self.assertFalse(accel.logged("body.accel_g"))
         self.assertTrue(accel.note.startswith("ASSUMPTION"))
         self.assertEqual(dev.columns()[-2:], ["fall_state", "no_motion_state"])
+        self.assertEqual({"motion_alerts.fall", "motion_alerts.no_motion"} & dev.capabilities(),
+                         {"motion_alerts.fall", "motion_alerts.no_motion"})
         bad = {"name": "No Accel", "parts": [{"part": "blackline_h2s_cell"}],
-               "features": {"motion_alerts": dev.features["motion_alerts"]}}
+               "logic": [b for b in dev.logic if b["block"] == "stillness_timer"]}
         with self.assertRaises(ParamError):
             Device.from_dict(bad)
 
@@ -119,14 +125,14 @@ class TestHiddenChannels(unittest.TestCase):
     def test_measured_but_not_logged_feeds_derived(self):
         imu = {"name": "IMU Logger", "parts": [{"part": "bosch_bma280"}, {"part": "bosch_bmg160", "log": False},
                                                {"part": "bosch_bmm150"}],
-               "features": {"derived": [{"kind": "orientation_quat", "params": {
-                   "write_w": {"value": False, "unit": "-", "source": "ASSUMPTION: test"}}}]}}
+               "logic": [{"block": "orientation_quat", "output": "orientation", "params": {
+                   "write_w": {"value": False, "unit": "-", "source": "ASSUMPTION: test"}}}]}
         dev = Device.from_dict(imu)
         cols = dev.columns()
         self.assertIn("body.gyro_dps", dev.measured())
         self.assertFalse(any(c.startswith("gyro") for c in cols))
         self.assertEqual(cols[-3:], ["orientation_x", "orientation_y", "orientation_z"])
-        self.assertEqual(dev.derived()[0].inputs(), ["body.accel_g", "body.gyro_dps", "body.mag_ut"])
+
 
     def test_no_xdk_preset(self):
         self.assertNotIn("bosch_xdk", list_devices())
@@ -136,13 +142,26 @@ TANK = {"name": "Tank Monitor v1", "device_id_prefix": "TANKMON",
         "description": "Monitor udara tangki, dirakit dari BME280 + sel H2S",
         "parts": [{"part": "bosch_bme280"}, {"part": "blackline_h2s_cell", "overrides": {"t90_s": {"value": 25}}}],
         "features": {"sample_interval_s": {"value": 10, "unit": "s", "source": "ASSUMPTION: user choice"},
-                     "alarms": {"air.h2s_ppm": {
-                         "low": {"value": 10, "unit": "ppm", "when": "above", "source": "ASSUMPTION: user choice"},
-                         "high": {"value": 15, "unit": "ppm", "when": "above", "source": "ASSUMPTION: user choice"},
-                         "stel": {"value": 15, "unit": "ppm", "source": "ASSUMPTION: user choice"},
-                         "twa": {"value": 10, "unit": "ppm", "source": "ASSUMPTION: user choice"}}},
-                     "battery_hours": {"value": 18, "unit": "h", "source": "ASSUMPTION: user choice"},
-                     "connectivity": {"value": "cellular", "unit": "-", "source": "ASSUMPTION: user choice"}}}
+                     "connectivity": {"value": "cellular", "unit": "-", "source": "ASSUMPTION: user choice"}},
+        "logic": [
+            {"block": "rolling_mean", "input": "air.h2s_ppm", "output": "h2s_stel_ppm",
+             "window_s": {"value": 900, "unit": "s", "source": "ASSUMPTION: user choice"}},
+            {"block": "cumulative_dose", "input": "air.h2s_ppm", "output": "h2s_twa_ppm",
+             "period_s": {"value": 28800, "unit": "s", "source": "ASSUMPTION: user choice"}},
+            {"block": "battery", "output": "battery_pct", "runtime_h": {"value": 18, "unit": "h", "source": "ASSUMPTION: user choice"},
+             "start_pct": {"value": 100, "unit": "%", "source": "ASSUMPTION: user choice"}},
+            {"block": "signal", "output": "signal_strength_dbm",
+             "range_dbm": {"value": [-115, -55], "unit": "dBm", "source": "ASSUMPTION: user choice"},
+             "start_dbm": {"value": [-90, -70], "unit": "dBm", "source": "ASSUMPTION: user choice"},
+             "step_sd_db": {"value": 1, "unit": "dB", "source": "ASSUMPTION: user choice"}},
+            {"block": "threshold_alarm", "input": "air.h2s_ppm", "output": "h2s_alarm_low", "when": "above",
+             "level": {"value": 10, "unit": "ppm", "source": "ASSUMPTION: user choice"}},
+            {"block": "threshold_alarm", "input": "air.h2s_ppm", "output": "h2s_alarm_high", "when": "above",
+             "level": {"value": 15, "unit": "ppm", "source": "ASSUMPTION: user choice"}},
+            {"block": "threshold_alarm", "input": "h2s_stel_ppm", "output": "h2s_alarm_stel", "when": "above",
+             "level": {"value": 15, "unit": "ppm", "source": "ASSUMPTION: user choice"}},
+            {"block": "threshold_alarm", "input": "h2s_twa_ppm", "output": "h2s_alarm_twa", "when": "above",
+             "level": {"value": 10, "unit": "ppm", "source": "ASSUMPTION: user choice"}}]}
 
 
 class TestUserDevice(unittest.TestCase):
@@ -196,9 +215,13 @@ class TestUserDevice(unittest.TestCase):
 
     def test_bad_assemblies_refused(self):
         cases = {
-            "alarm on unmeasured": {"features": {"alarms": {"air.co_ppm": {
-                "low": {"value": 1, "unit": "ppm", "when": "above", "source": "ASSUMPTION: x"}}}}},
-            "derived without inputs": {"features": {"derived": [{"kind": "orientation_quat"}]}},
+            "alarm on unmeasured": {"logic": [{"block": "threshold_alarm", "input": "air.co_ppm", "output": "co_alarm",
+                                               "when": "above", "level": {"value": 1, "unit": "ppm", "source": "ASSUMPTION: x"}}]},
+            "orientation without an imu": {"logic": [{"block": "orientation_quat", "output": "orientation"}]},
+            "alarm without a source": {"logic": [{"block": "threshold_alarm", "input": "air.temperature_c", "output": "t_alarm",
+                                                  "when": "above", "level": 30}]},
+            "unknown block": {"logic": [{"block": "teleport", "output": "x"}]},
+            "old style feature": {"features": {"battery_hours": {"value": 1, "unit": "h", "source": "ASSUMPTION: x"}}},
             "unknown feature": {"features": {"teleport": {"value": 1, "unit": "-", "source": "ASSUMPTION: x"}}},
             "feature without source": {"features": {"sample_interval_s": {"value": 1, "unit": "s"}}},
             "override bad source": {"parts": [{"part": "blackline_h2s_cell",

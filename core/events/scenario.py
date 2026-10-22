@@ -273,46 +273,10 @@ def _place(ev, spec, run, views, world, labels, notes):
                 labels[v.slug].append(Label(lb.start, lb.end, lb.event, lb.detail, "device", (v.slug,)))
 
 
-def _spans(segments, kinds):
-    """(start, end) of runs of consecutive motion segments whose kind is in kinds."""
-    out = []
-    for s in segments:
-        if s["kind"] in kinds:
-            if out and abs(out[-1][1] - s["start"]) < 1e-9:
-                out[-1] = (out[-1][0], s["end"])
-            else:
-                out.append((s["start"], s["end"]))
-    return out
-
-
 def expected_alerts(world, view: DeviceView) -> List[Label]:
-    """What a device with fall / no-motion detection should do, from the world's motion (ground truth).
-    no motion: pre-alarm after detect_s without any movement, alert after pre_alarm_s more, until the
-    body moves again. fall: pre-alarm from the impact for pre_alarm_s, then an alert if the wearer is
-    still on the ground (getting up within the pre-alarm counts as cancelling it)."""
-    dev, out = view.device, []
-    if view.mount.kind != "body":
-        return out
-    ma = dev.features.get("motion_alerts") or {}
-    segs = world.motion.segments
-    v = lambda x: x["value"] if isinstance(x, dict) else x
-    if has_feature(dev, "motion_alerts.no_motion"):
-        det, pre = v(ma["no_motion"]["detect_s"]), v(ma["no_motion"]["pre_alarm_s"])
-        for s, e in _spans(segs, ["motionless"]):
-            if e - s >= det:
-                out.append(Label(s + det, min(e, s + det + pre), "no_motion_pre_alarm", f"after {det:g} s without motion", "expected", (dev.slug,)))
-                if e > s + det + pre:
-                    out.append(Label(s + det + pre, e, "no_motion_alert", "", "expected", (dev.slug,)))
-    if has_feature(dev, "motion_alerts.fall"):
-        pre = v(ma["fall"]["pre_alarm_s"])
-        for s, e in _spans(segs, ["fall"]):
-            ups = [x["start"] for x in segs if x["start"] >= e and (x["kind"] in ("rise", "walk") or
-                                                                    (x["kind"] == "still" and x.get("posture") != "lying"))]
-            t_up = min(ups) if ups else world.duration_s
-            out.append(Label(e, min(t_up, e + pre), "fall_pre_alarm", "wearer can cancel by getting up", "expected", (dev.slug,)))
-            if t_up > e + pre:
-                out.append(Label(e + pre, t_up, "fall_alert", "", "expected", (dev.slug,)))
-    return out
+    """What the device's motion blocks should report, from the world's truth (core/logic/expected.py)."""
+    from core.logic.expected import expected_labels
+    return expected_labels(world, view)
 
 
 def compatibility(devices=None, mount: str = "body", at_s: float = 1800.0, duration_s: float = 7200.0) -> list:

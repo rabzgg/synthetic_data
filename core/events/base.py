@@ -70,20 +70,8 @@ class DeviceView:
 
 
 def has_feature(device, feature: str) -> bool:
-    f = device.features
-    if feature == "bump_test":
-        return bool(device.feature("bump_test"))
-    if feature == "connectivity":
-        return bool(f.get("connectivity"))
-    if feature == "battery":
-        return bool(f.get("battery_hours"))
-    if feature.startswith("states."):
-        st = (f.get("states") or {}).get(feature.split(".", 1)[1])
-        return bool(st and st.get("value"))
-    if feature.startswith("motion_alerts."):
-        ma = (f.get("motion_alerts") or {}).get(feature.split(".", 1)[1])
-        return bool(ma and ma.get("value"))
-    raise KeyError(feature)
+    """bump_test, connectivity, battery, states.<s>, motion_alerts.<fall | no_motion>: from the device's logic."""
+    return feature in device.capabilities()
 
 
 def resolve(spec, rng, ctx: dict, default: dict):

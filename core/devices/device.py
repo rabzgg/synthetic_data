@@ -5,20 +5,22 @@ device.py — block [C]: a device the user assembles from parts, names and saves
     name: "Tank Monitor v1"            # free name from the user; the slug is made from it
     device_id_prefix: TANKMON          # device_id column = <prefix>-0001 (default: slug in capitals)
     description: "..."
-    created: 2026-10-15
-    version: 1
     parts:
       - part: bosch_bme280
       - part: blackline_h2s_cell
         overrides: {t90_s: {value: 25}}      # no source given -> "ASSUMPTION: user tweak"
         log: true                            # false, or a list of quantities, to measure without writing
         as: cell                             # column suffix when two parts measure the same quantity
-    features:                                # all optional, each value {value, unit, source}
-      sample_interval_s, alarms, exposure, over_range, derived, bump_test, states, battery_hours,
-      connectivity, gateway
+    features:
+      sample_interval_s: {value, unit, source}   # logging interval (default 1 s, ASSUMPTION)
+      connectivity: {value, unit, source}        # how it reports; optional
+    logic:                                       # generic blocks (core/logic/blocks.py), in column order
+      - {block: threshold_alarm, input: air.h2s_ppm, level: {...}, when: above, output: h2s_alarm_low}
 
-The CSV columns follow from the parts and features (columns()); nothing is typed twice.
-Saving under a name that exists gives version + 1 in a new file; an older file is never overwritten.
+The CSV columns follow from the parts and the logic: timestamp, device_id, the outputs of blocks
+with position: first, the logged readings, then the other block outputs in order. Nothing is typed
+twice. Saving under a name that exists gives version + 1 in a new file; an older file is never
+overwritten.
 """
 import datetime as _dt
 import glob
@@ -29,7 +31,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from core.derived import DERIVED, Stel, Twa
+from core.logic import MOTION_BLOCKS, build as build_block, outputs as block_outputs
 from core.quantities import CATALOG
 from core.quantities.measurement import ParamError, check_source
 
@@ -38,25 +40,8 @@ from .parts import PARTS_DIR, Part
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DEVICES_DIR = os.path.join(ROOT, "configs", "devices")
 
-# feature -> what it means; the column rules are in Device.columns()
-FEATURES = {
-    "sample_interval_s": "logging interval",
-    "alarms": "per quantity: low / high {value, unit, when: above|below, source}, stel / twa limits; latching",
-    "exposure": "window_s (STEL) and period_s (TWA) for the exposure channels",
-    "over_range": "quantities with an over-range flag column and when it is set",
-    "derived": "derived channels: list of {kind, params, ...}",
-    "bump_test": "the device runs bump tests (device_mode column)",
-    "states": "device states with their own columns: sos, pump",
-    "battery_hours": "battery runtime (battery_pct column)",
-    "connectivity": "how it reports (signal_strength_dbm column)",
-    "gateway": "reports through a gateway (gateway id and link columns)",
-    "motion_alerts": "fall and no-motion detection from the accelerometer: fall_state and no_motion_state columns "
-                     "(ok / pre_alarm / alert), written last",
-}
-MOTION_ALERTS = {"fall": ("pre_alarm_s",), "no_motion": ("detect_s", "pre_alarm_s")}
-STATE_COLUMNS = {"sos": ["sos_state"], "pump": ["pump_state", "pump_alarm"]}
-GATEWAY_COLUMNS = {"bridge": ["bridge_id", "bridge_link"]}
-ALARM_LEVELS = ("low", "high", "stel", "twa")
+FEATURES = {"sample_interval_s": "logging interval", "connectivity": "how the device reports"}
+DEFAULT_INTERVAL = {"value": 1, "unit": "s", "source": "ASSUMPTION: default logging interval of one second"}
 
 
 def v_(p):
@@ -95,13 +80,14 @@ class Device:
     preset: bool = False
     datasheet: str = ""
     notes: List[str] = field(default_factory=list)
+    logic: list = field(default_factory=list)          # block specs as written
     path: str = ""
 
     # loading
     @classmethod
     def from_dict(cls, d: dict, parts_dir: str = PARTS_DIR, path: str = "") -> "Device":
         unknown = set(d) - {"name", "slug", "device_id_prefix", "description", "created", "version", "preset",
-                            "datasheet", "parts", "features", "notes"}
+                            "datasheet", "parts", "features", "notes", "logic"}
         if unknown:
             raise ParamError(f"device: unknown key(s) {sorted(unknown)}")
         name = d["name"]
@@ -121,7 +107,8 @@ class Device:
             uses.append(use)
         dev = cls(name, slug, int(d.get("version", 1)), uses, d.get("features") or {},
                   d.get("device_id_prefix") or slug.upper(), d.get("description", ""), str(d.get("created", "")),
-                  bool(d.get("preset", False)), d.get("datasheet", ""), list(d.get("notes") or []), path)
+                  bool(d.get("preset", False)), d.get("datasheet", ""), list(d.get("notes") or []),
+                  list(d.get("logic") or []), path)
         dev.validate()
         return dev
 
@@ -164,64 +151,48 @@ class Device:
                 out.append((u, q, cols))
         return out
 
-    # features
+    # features and logic
     def feature(self, key, default=None):
         f = self.features.get(key, default)
         return f["value"] if isinstance(f, dict) and "value" in f else f
 
-    def alarms(self) -> Dict[str, dict]:
-        return {q: a for q, a in (self.features.get("alarms") or {}).items() if q in CATALOG}
+    @property
+    def sample_interval_s(self) -> float:
+        return float(v_(self.features.get("sample_interval_s", DEFAULT_INTERVAL)))
 
-    def derived(self) -> list:
-        """Derived channels: STEL / TWA for every alarm that has those limits, then features.derived."""
-        exp = self.features.get("exposure") or {}
-        out = []
-        res = {q: m for _, q, m in self.models()}
-        for q, a in self.alarms().items():
-            m = res[q]
-            qz = (m.resolution, float(m.bounds[0]), float(m.bounds[1]))
-            if "stel" in a:
-                out.append(Stel(q, {"window_s": exp["window_s"]} if "window_s" in exp else None, qz))
-            if "twa" in a:
-                out.append(Twa(q, {"period_s": exp["period_s"]} if "period_s" in exp else None, qz))
-        for spec in self.features.get("derived") or []:
-            spec = dict(spec)
-            out.append(DERIVED[spec.pop("kind")](**spec))
-        return out
+    def blocks(self) -> list:
+        return [build_block(spec, self.name) for spec in self.logic]
 
-    def stem(self, qid) -> str:
-        return CATALOG[qid].column.split("_")[0]
+    def capabilities(self) -> set:
+        """What device events can use: bump_test, connectivity, battery, states.<s>, motion_alerts.*."""
+        caps = set()
+        for b in self.blocks():
+            if b.kind == "event_mode":
+                caps.add(b.spec["event"])
+            elif b.kind == "state_flag":
+                caps.add(f"states.{b.spec['state']}")
+            elif b.kind == "battery":
+                caps.add("battery")
+            elif b.kind == "signal":
+                caps.add("connectivity")
+            elif b.kind == "stillness_timer":
+                caps.add("motion_alerts.no_motion")
+            elif b.kind == "spike_then_still":
+                caps.add("motion_alerts.fall")
+        if self.features.get("connectivity"):
+            caps.add("connectivity")
+        return caps
 
     def columns(self) -> List[str]:
-        """CSV columns, in this order: timestamp, device_id, gateway, readings, derived channels,
-        device_mode, states, battery, signal, then per alarmed quantity its alarm flags and over-range,
-        then the motion alert states (added later, so the gas columns keep their old order)."""
-        f = self.features
+        """CSV columns: timestamp, device_id, outputs of position-first blocks, logged readings, then
+        the other block outputs in their order."""
+        blocks = self.blocks()
         cols = ["timestamp", "device_id"]
-        if f.get("gateway"):
-            cols += GATEWAY_COLUMNS[f["gateway"]["kind"]]
+        cols += [c for b in blocks if b.position == "first" for c in block_outputs(b)]
         for _, _, c in self.reading_columns():
             cols += c
-        for d in self.derived():
-            cols += d.columns()
-        if self.feature("bump_test"):
-            cols.append("device_mode")
-        for s, v in (f.get("states") or {}).items():
-            if v.get("value"):
-                cols += STATE_COLUMNS[s]
-        if f.get("battery_hours"):
-            cols.append("battery_pct")
-        if f.get("connectivity"):
-            cols.append("signal_strength_dbm")
-        over = set((f.get("over_range") or {}).get("quantities", []))
-        tail = [f"{k}_state" for k in MOTION_ALERTS if v_(f.get("motion_alerts", {}).get(k))]
-        flagged = list(self.alarms()) + [q for q in self.measured() if q in over and q not in self.alarms()]
-        for q in flagged:
-            a = self.alarms().get(q, {})
-            cols += [f"{self.stem(q)}_alarm_{lv}" for lv in ALARM_LEVELS if lv in a]
-            if q in over:
-                cols.append(f"{self.stem(q)}_over_range")
-        return cols + tail
+        cols += [c for b in blocks if b.position != "first" for c in block_outputs(b)]
+        return cols
 
     def device_id(self, n: int = 1) -> str:
         return f"{self.device_id_prefix}-{n:04d}"
@@ -231,55 +202,28 @@ class Device:
         name, meas = self.name, self.measured()
         unknown = set(self.features) - set(FEATURES)
         if unknown:
-            raise ParamError(f"device {name!r}: unknown feature(s) {sorted(unknown)}; known: {list(FEATURES)}")
-        for k in ("sample_interval_s", "battery_hours", "connectivity", "bump_test"):
-            if k in self.features:
-                check_source(f"{name}.{k}", self.features[k])
-        alarms = self.features.get("alarms") or {}
-        for q, a in alarms.items():
-            if q == "latching":
-                check_source(f"{name}.alarms.latching", a)
-                continue
-            if q not in meas:
-                raise ParamError(f"device {name!r}: alarm on {q}, which no part measures")
-            if CATALOG[q].vector:
-                raise ParamError(f"device {name!r}: alarms on vector quantities are not supported ({q})")
-            for lv, spec in a.items():
-                if lv not in ALARM_LEVELS:
-                    raise ParamError(f"device {name!r}: unknown alarm level {lv!r} for {q}")
-                check_source(f"{name}.alarms.{q}.{lv}", spec)
-                if lv in ("low", "high") and spec.get("when") not in ("above", "below"):
-                    raise ParamError(f"device {name!r}: alarm {q}.{lv} needs when: above|below")
-        for k, v in (self.features.get("exposure") or {}).items():
-            check_source(f"{name}.exposure.{k}", v)
-        over = self.features.get("over_range")
-        if over:
-            check_source(f"{name}.over_range", {k: over.get(k) for k in ("value", "unit", "source")})
-            for q in over.get("quantities", []):
-                if q not in meas:
-                    raise ParamError(f"device {name!r}: over_range on {q}, which no part measures")
-        for s, v in (self.features.get("states") or {}).items():
-            if s not in STATE_COLUMNS:
-                raise ParamError(f"device {name!r}: unknown state {s!r}; known: {list(STATE_COLUMNS)}")
-            check_source(f"{name}.states.{s}", v)
-        ma = self.features.get("motion_alerts") or {}
-        for k, spec in ma.items():
-            if k not in MOTION_ALERTS:
-                raise ParamError(f"device {name!r}: unknown motion alert {k!r}; known: {list(MOTION_ALERTS)}")
-            check_source(f"{name}.motion_alerts.{k}", spec)
-            for p in MOTION_ALERTS[k]:
-                if p not in spec:
-                    raise ParamError(f"device {name!r}: motion_alerts.{k} needs {p}")
-                check_source(f"{name}.motion_alerts.{k}.{p}", spec[p])
-        if ma and "body.accel_g" not in meas:
-            raise ParamError(f"device {name!r}: motion alerts need an accelerometer (body.accel_g)")
-        gw = self.features.get("gateway")
-        if gw and gw.get("kind") not in GATEWAY_COLUMNS:
-            raise ParamError(f"device {name!r}: unknown gateway kind {gw.get('kind')!r}")
-        for d in self.derived():
-            missing = set(d.inputs()) - set(meas)
-            if missing:
-                raise ParamError(f"device {name!r}: derived channel {d.kind} needs {sorted(missing)}, not measured")
+            raise ParamError(f"device {name!r}: unknown feature(s) {sorted(unknown)}; known: {list(FEATURES)} "
+                             "(alarms, exposure, states, battery and motion detection are logic blocks)")
+        for k, f in self.features.items():
+            check_source(f"{name}.{k}", f)
+        known = set(meas)
+        for b in self.blocks():
+            inp = b.input
+            if b.kind == "orientation_quat":
+                from core.derived import OrientationQuat
+                need = OrientationQuat(b.spec.get("params")).inputs()
+                if not set(need) <= set(meas):
+                    raise ParamError(f"device {name!r}: orientation_quat needs {need}, not all measured")
+            elif inp is not None and inp not in known:
+                raise ParamError(f"device {name!r}: {b.kind} {b.output} reads {inp!r}, which is neither a quantity the "
+                                 "device measures nor an earlier block's output")
+            elif inp is None and b.kind in ("rolling_mean", "cumulative_dose", "rate_of_change", "threshold_alarm",
+                                            "stillness_timer", "spike_then_still"):
+                raise ParamError(f"device {name!r}: {b.kind} {b.output} needs an input")
+            if b.kind in MOTION_BLOCKS and (inp not in CATALOG or not CATALOG[inp].vector):
+                raise ParamError(f"device {name!r}: {b.kind} needs an accelerometer quantity as input")
+            for c in block_outputs(b):
+                known.add(c)
         cols = self.columns()
         dup = {c for c in cols if cols.count(c) > 1}
         if dup:
@@ -310,6 +254,8 @@ class Device:
             d["notes"] = self.notes
         if self.features:
             d["features"] = self.features
+        if self.logic:
+            d["logic"] = self.logic
         return d
 
 

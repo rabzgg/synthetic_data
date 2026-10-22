@@ -275,8 +275,9 @@ The wearer lies on the ground and still moves clearly, e.g. right after a fall.
 
 Each run writes, per device, the events it saw (scope `world` or `device`) and what the device should do in response (scope `expected`):
 
-- **No motion** (device feature `motion_alerts.no_motion`): after `detect_s` without any movement a `no_motion_pre_alarm` to the wearer for `pre_alarm_s`, then a `no_motion_alert`, until the body moves again.
-- **Fall** (feature `motion_alerts.fall`): a `fall_pre_alarm` from the moment the wearer lies at rest, for `pre_alarm_s`; getting up within it cancels it, otherwise a `fall_alert` until the wearer gets up.
+- **No motion** (logic block `stillness_timer`, column e.g. `no_motion_state`): after `detect_s` without movement (measured over `window_s`) a `no_motion_pre_alarm` for `pre_alarm_s`, then a `no_motion_alert`, until the body moves again.
+- **Fall** (logic block `spike_then_still`, e.g. `fall_state`): an impact of at least `spike_g` followed by a tilt of at least `tilt_deg` gives a `fall_pre_alarm` for `pre_alarm_s`; getting up within it cancels it, otherwise a `fall_alert` until upright again.
+- The expected labels come from running the device's own blocks on the world's truth (no sensor errors); the gate compares the device's column with them.
 - **Collapse**: `collapse:gas_release` → `collapse:fall` → `collapse:stir` (moves a little, `no_motion_after_s`) → `collapse:no_motion` (`no_motion_s`) → `collapse:rescue`; the gaps are parameters.
 
 ## Which device sees which event

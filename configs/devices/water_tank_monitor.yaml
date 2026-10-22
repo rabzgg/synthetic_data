@@ -1,7 +1,7 @@
 # A tank monitor: level transmitter plus a current clamp on the fill pump.
 name: Water Tank Monitor
 device_id_prefix: TANKLVL
-description: "Level of a water tank and the current of its fill pump, logged every minute."
+description: "Level of a water tank and the current of its fill pump, logged every minute, with a low-level alarm."
 created: "2026-10-22"
 version: 1
 preset: true
@@ -11,3 +11,15 @@ parts:
 features:
   sample_interval_s: {value: 60, unit: s, source: "ASSUMPTION: one reading a minute"}
   connectivity: {value: cellular, unit: "-", source: "ASSUMPTION: remote tank with a cellular logger"}
+logic:
+  - block: signal
+    output: signal_strength_dbm
+    range_dbm: {value: [-115, -55], unit: dBm, source: "ASSUMPTION: as the gas detectors (configs/gas/assumptions.json signal_strength)"}
+    start_dbm: {value: [-90, -70], unit: dBm, source: "ASSUMPTION: as the gas detectors"}
+    step_sd_db: {value: 1.0, unit: dB, source: "ASSUMPTION: as the gas detectors"}
+  - block: threshold_alarm
+    input: water.level_pct
+    output: level_alarm_low
+    level: {value: 20, unit: "%", source: "ASSUMPTION: refill alarm at 20 %"}
+    when: below
+    hysteresis: {value: 5, unit: "%", source: "ASSUMPTION: clears at 25 %"}

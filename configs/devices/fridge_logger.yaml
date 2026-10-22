@@ -1,7 +1,7 @@
 # A fridge monitor: a temperature probe inside the fridge and a current clamp on the fridge's mains lead.
 name: Fridge Logger
 device_id_prefix: FRIDGELOG
-description: "Temperature inside a fridge (DS18B20 probe) and the fridge's current (clamp), logged every minute."
+description: "Temperature inside a fridge (DS18B20 probe) and the fridge's current (clamp), logged every minute, with a high-temperature alarm."
 created: "2026-10-22"
 version: 1
 preset: true
@@ -11,3 +11,15 @@ parts:
 features:
   sample_interval_s: {value: 60, unit: s, source: "ASSUMPTION: one reading a minute, usual for cold-chain loggers"}
   connectivity: {value: wifi, unit: "-", source: "ASSUMPTION: Wi-Fi logger"}
+logic:
+  - block: signal
+    output: signal_strength_dbm
+    range_dbm: {value: [-115, -55], unit: dBm, source: "ASSUMPTION: as the gas detectors (configs/gas/assumptions.json signal_strength)"}
+    start_dbm: {value: [-90, -70], unit: dBm, source: "ASSUMPTION: as the gas detectors"}
+    step_sd_db: {value: 1.0, unit: dB, source: "ASSUMPTION: as the gas detectors"}
+  - block: threshold_alarm
+    input: air.temperature_c
+    output: temperature_alarm_high
+    level: {value: 8, unit: "°C", source: "ASSUMPTION: the 2-8 °C cold-chain band"}
+    when: above
+    hysteresis: {value: 0.5, unit: "°C", source: "ASSUMPTION: clears half a degree below the limit"}

@@ -1,7 +1,7 @@
 # A soil moisture probe in a field, logging every 15 minutes on a battery.
 name: Soil Moisture Probe
 device_id_prefix: SOILPROBE
-description: "Volumetric water content of the soil at root depth, logged every 15 min."
+description: "Volumetric water content of the soil at root depth, logged every 15 min, with a dry-soil alarm."
 created: "2026-10-22"
 version: 1
 preset: true
@@ -9,5 +9,19 @@ parts:
   - part: generic_soil_moisture_probe
 features:
   sample_interval_s: {value: 900, unit: s, source: "ASSUMPTION: agricultural loggers report every 15 min"}
-  battery_hours: {value: 8760, unit: h, source: "ASSUMPTION: about a year on its battery"}
   connectivity: {value: lorawan, unit: "-", source: "ASSUMPTION: LoRaWAN field sensor"}
+logic:
+  - block: battery
+    output: battery_pct
+    runtime_h: {value: 8760, unit: h, source: "ASSUMPTION: about a year on its battery"}
+    start_pct: {value: 100, unit: "%", source: "ASSUMPTION: fresh battery"}
+  - block: signal
+    output: signal_strength_dbm
+    range_dbm: {value: [-115, -55], unit: dBm, source: "ASSUMPTION: as the gas detectors (configs/gas/assumptions.json signal_strength)"}
+    start_dbm: {value: [-90, -70], unit: dBm, source: "ASSUMPTION: as the gas detectors"}
+    step_sd_db: {value: 1.0, unit: dB, source: "ASSUMPTION: as the gas detectors"}
+  - block: threshold_alarm
+    input: soil.moisture_pct
+    output: dry_alarm
+    level: {value: 20, unit: "%VWC", source: "ASSUMPTION: irrigate below 20 %VWC for this loam"}
+    when: below

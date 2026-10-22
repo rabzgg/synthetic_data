@@ -315,9 +315,10 @@ class World:
                 if d <= 0:
                     continue
                 posture = sg.get("posture", "upright")
+                before = self.motion.at(max(t - 1e-6, 0.0)).get("posture", "upright")    # as it was just before
                 if posture == "current":
-                    posture = self.motion.at(t).get("posture", "upright")
-                if sg.get("needs") and self.motion.at(t).get("posture", "upright") != sg["needs"]:
+                    posture = before
+                if sg.get("needs") and before != sg["needs"]:
                     raise ValueError(f"at {t:.0f} s the body is not {sg['needs']} (motion {sg['kind']})")
                 self.motion.insert(t, t + d, sg["kind"], posture=posture)
                 t += d

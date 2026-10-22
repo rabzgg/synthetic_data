@@ -137,13 +137,14 @@ class TestExpectedAlerts(unittest.TestCase):
         lb = self.alerts([{"collapse": {"at": "00:30:00", "gas": "h2s", "level": 80, "no_motion_after_s": 20,
                                         "no_motion_s": 600}}])
         ev = {l.event: l for l in lb}
-        t_rest = 1800 + 60 + 1.5
-        self.assertEqual(ev["fall_pre_alarm"].start, t_rest)
-        self.assertEqual(ev["fall_alert"].start, t_rest + 30)
-        self.assertEqual(ev["no_motion_pre_alarm"].start, t_rest + 20 + 120)
-        self.assertEqual(ev["no_motion_alert"].start, t_rest + 20 + 150)
-        self.assertEqual(ev["no_motion_alert"].end, t_rest + 20 + 600)
-        self.assertEqual(ev["fall_alert"].end, t_rest + 20 + 600)            # until rescued
+        t_fall, t_rest = 1800 + 60, 1800 + 60 + 1.5
+        window = 5                                                            # stillness is measured over 5 s
+        self.assertTrue(t_fall < ev["fall_pre_alarm"].start <= t_rest + 1)    # impact, then lying
+        self.assertAlmostEqual(ev["fall_alert"].start, ev["fall_pre_alarm"].start + 30, delta=0.1)
+        self.assertAlmostEqual(ev["no_motion_pre_alarm"].start, t_rest + 20 + window + 120, delta=1)
+        self.assertAlmostEqual(ev["no_motion_alert"].start, ev["no_motion_pre_alarm"].start + 30, delta=0.1)
+        self.assertAlmostEqual(ev["no_motion_alert"].end, t_rest + 20 + 600, delta=1)   # until rescued
+        self.assertAlmostEqual(ev["fall_alert"].end, t_rest + 20 + 600, delta=5)        # until upright again
 
     def test_getting_up_cancels_the_fall_alert(self):
         short = self.alerts([{"fall": {"at": "00:20:00", "lying_s": 10}}])

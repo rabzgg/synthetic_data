@@ -26,7 +26,8 @@ class TestFridge(unittest.TestCase):
         self.assertLess(T[20 * 3600], 8)                                 # cools again after the restart
         self.assertTrue(any(lb.event == "compressor_failure" for lb in p.labels["fridge_logger"]))
         self.assertEqual(Device.load("fridge_logger").columns(),
-                         ["timestamp", "device_id", "temperature_c", "current_a", "signal_strength_dbm"])
+                         ["timestamp", "device_id", "temperature_c", "current_a", "signal_strength_dbm",
+                          "temperature_alarm_high"])
 
 
 class TestPump(unittest.TestCase):
