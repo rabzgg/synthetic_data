@@ -1,0 +1,9 @@
+kind: lie
+name: Lie on the ground
+building_block: true
+description: "The wearer lies on the ground, alive and moving slightly."
+params:
+  duration_s: {value: 30, unit: s, source: "ASSUMPTION: half a minute"}
+effects:
+  - target: motion
+    segments: [{kind: still, posture: lying, duration: $duration_s}]

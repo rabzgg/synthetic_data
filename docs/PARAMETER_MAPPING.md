@@ -17,10 +17,15 @@ How a datasheet becomes a simulated reading: the **quantity catalog** says what 
 | `air.lel_pct` | Combustible gas | %LEL | `lel_pct_lel` | 0 … ∞ | Percent of the lower explosive limit; above 100 %LEL the air is explosive (no upper bound). |
 | `air.voc_ppm` | Volatile organic compounds | ppm | `voc_ppm` | 0 … 1e+06 |  |
 | `air.co2_ppm` | Carbon dioxide | ppm | `co2_ppm` | 0 … 1e+06 |  |
-| `light.lux` | Illuminance | lx | `light_lux` | 0 … ∞ |  |
 | `body.accel_g` | Acceleration | g | `accel_x_g, accel_y_g, accel_z_g` | −∞ … ∞ | Specific force in the sensor frame: a sensor at rest reads 1 g against gravity. |
 | `body.gyro_dps` | Angular rate | °/s | `gyro_x_dps, gyro_y_dps, gyro_z_dps` | −∞ … ∞ |  |
 | `body.mag_ut` | Magnetic field | µT | `mag_x_ut, mag_y_ut, mag_z_ut` | −∞ … ∞ |  |
+| `electrical.current_a` | Electric current | A | `current_a` | 0 … ∞ | RMS current drawn by a load; not signed. |
+| `light.lux` | Illuminance | lx | `light_lux` | 0 … ∞ |  |
+| `machine.vibration_mm_s` | Vibration velocity | mm/s | `vibration_mm_s` | 0 … ∞ | RMS vibration velocity, as in ISO 10816 / 20816 machine condition monitoring. |
+| `soil.moisture_pct` | Soil moisture | %VWC | `soil_moisture_pct_vwc` | 0 … 100 | Volumetric water content; a saturated mineral soil holds roughly 40-50 %VWC. |
+| `water.temperature_c` | Water temperature | °C | `water_temperature_c` | -2 … 100 | Liquid water at about 1 atm (salt water freezes a little below 0 °C). |
+| `water.ph` | pH | pH | `water_ph` | 0 … 14 |  |
 
 ## Model parameters
 

@@ -1,0 +1,5 @@
+domain: water
+quantities:
+  - {id: water.temperature_c, name: Water temperature, unit: "°C", column: water_temperature_c, lower: -2, upper: 100,
+     note: "Liquid water at about 1 atm (salt water freezes a little below 0 °C)."}
+  - {id: water.ph, name: pH, unit: pH, column: water_ph, lower: 0, upper: 14}

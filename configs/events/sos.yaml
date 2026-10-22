@@ -1,0 +1,8 @@
+kind: sos
+name: SOS
+description: "The wearer presses the SOS button; the SOS state is on for a while."
+params:
+  duration_s: {value: 120, unit: s, source: "ASSUMPTION: two minutes (configs/gas/assumptions.json sos: 60-300 s)"}
+requires: [states.sos]
+effects:
+  - {target: device.state, state: sos}

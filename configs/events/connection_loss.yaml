@@ -1,0 +1,9 @@
+kind: connection_loss
+name: Connection loss
+description: "The device loses its connection: it keeps measuring, but no rows reach the log until it is back."
+params:
+  duration_s: {value: 120, unit: s, source: "ASSUMPTION: two minutes without a connection"}
+label: "{duration_s} s without rows"
+requires: [connectivity]
+effects:
+  - {target: device.gap}

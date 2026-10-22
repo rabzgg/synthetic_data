@@ -50,6 +50,16 @@ FIXTURES = {
                        "noise_sd": P(0.1, "dps")}, [0.0, 0.0, 0.0]),
     "body.mag_ut": ({"range": P([-1300, 1300], "µT"), "resolution": P(0.3, "µT"), "accuracy": P(2, "µT"),
                      "noise_sd": P(0.5, "µT")}, [20.0, -5.0, 40.0]),
+    "water.temperature_c": ({"range": P([0, 50], "°C"), "resolution": P(0.0625, "°C"), "accuracy": P(0.5, "°C"),
+                             "noise_sd": P(0.1, "°C")}, 25.0),
+    "water.ph": ({"range": P([0, 14], "pH"), "resolution": P(0.01, "pH"), "accuracy": P(0.1, "pH"),
+                  "noise_sd": P(0.02, "pH")}, 7.2),
+    "electrical.current_a": ({"range": P([0, 20], "A"), "resolution": P(10, "mA"), "accuracy_pct_reading": P(2, "%"),
+                              "noise_sd": P(0.02, "A")}, 5.0),
+    "machine.vibration_mm_s": ({"range": P([0, 25], "mm/s"), "resolution": P(0.01, "mm/s"), "accuracy": P(0.1, "mm/s"),
+                                "noise_sd": P(0.05, "mm/s")}, 2.5),
+    "soil.moisture_pct": ({"range": P([0, 60], "%VWC"), "resolution": P(0.1, "%"), "accuracy": P(3, "%VWC"),
+                           "noise_sd": P(0.2, "%VWC")}, 25.0),
 }
 N = 20000
 
@@ -70,6 +80,8 @@ class TestCatalog(unittest.TestCase):
         need = {"air.temperature_c", "air.humidity_rh", "air.pressure_hpa", "air.o2_pct", "air.co_ppm", "air.h2s_ppm",
                 "air.lel_pct", "air.voc_ppm", "air.co2_ppm", "light.lux", "body.accel_g", "body.gyro_dps", "body.mag_ut"}
         self.assertTrue(need <= set(CATALOG))
+        self.assertTrue({"water.temperature_c", "water.ph", "electrical.current_a", "machine.vibration_mm_s",
+                         "soil.moisture_pct"} <= set(CATALOG))
         self.assertEqual(CATALOG["body.accel_g"].columns(), ["accel_x_g", "accel_y_g", "accel_z_g"])
         self.assertEqual(CATALOG["air.humidity_rh"].upper, 100.0)
 

@@ -1,0 +1,22 @@
+kind: door_open
+name: Door open
+description: "A door to the outside stays open: the air inside mixes towards the outside temperature, humidity and CO2, and light comes in."
+params:
+  duration_s: {value: 120, unit: s, source: "ASSUMPTION: door held open for two minutes"}
+  outside_temperature_c: {value: 5, unit: "°C", source: "ASSUMPTION: a winter day"}
+  outside_rh_pct: {value: 80, unit: "%RH", source: "ASSUMPTION: a winter day"}
+  outside_co2_ppm: {value: 420, unit: ppm, source: "ASSUMPTION: outdoor background"}
+  light_add_lux: {value: 1500, unit: lx, source: "ASSUMPTION: daylight through the open door"}
+  exchange_tau_s: {value: 120, unit: s, source: "ASSUMPTION: time constant of air exchange near the door"}
+  recovery_tau_s: {value: 900, unit: s, source: "ASSUMPTION: time constant of getting back after the door closes"}
+label: "outside {outside_temperature_c} °C"
+effects:
+  - {target: air.temperature_c, op: approach, value: $outside_temperature_c, tau_s: $exchange_tau_s, recovery_tau_s: $recovery_tau_s}
+  - target: air.vapour_pressure_hpa
+    op: approach
+    value: {vapour_from_rh: {rh_pct: $outside_rh_pct, temperature_c: $outside_temperature_c}}
+    tau_s: $exchange_tau_s
+    recovery_tau_s: $recovery_tau_s
+    optional: true
+  - {target: air.co2_ppm, op: approach, value: $outside_co2_ppm, tau_s: $exchange_tau_s, recovery_tau_s: $recovery_tau_s, optional: true}
+  - {target: light.lux, op: add, shape: {pulse: {duration_s: $duration_s, level: $light_add_lux}}, optional: true}

@@ -1,0 +1,9 @@
+# Motion of the body that carries the device. Vector quantities (axes: [x, y, z]) are given by the
+# world in the world frame; the measurement model turns them into sensor axes. They come from the
+# world's motion (core/world/motion.py).
+domain: body
+quantities:
+  - {id: body.accel_g, name: Acceleration, unit: g, column: "accel_{axis}_g", lower: null, upper: null, axes: [x, y, z],
+     note: "Specific force in the sensor frame: a sensor at rest reads 1 g against gravity."}
+  - {id: body.gyro_dps, name: Angular rate, unit: "°/s", column: "gyro_{axis}_dps", lower: null, upper: null, axes: [x, y, z]}
+  - {id: body.mag_ut, name: Magnetic field, unit: µT, column: "mag_{axis}_ut", lower: null, upper: null, axes: [x, y, z]}

@@ -21,39 +21,33 @@ def plot(preset, hours, seed, out_dir):
     matplotlib.use("Agg")
     import matplotlib.dates as mdates
     import matplotlib.pyplot as plt
+    from core.quantities import CATALOG
     w = World(preset, hours * 3600, seed)
     ta = np.arange(0, hours * 3600 + 1, w.air_dt)
     tb = np.arange(0, hours * 3600, w.body_dt)
     xa, xb = w.timestamps(ta).astype("datetime64[ms]").astype(object), w.timestamps(tb).astype("datetime64[ms]").astype(object)
-    fig, ax = plt.subplots(6, 1, figsize=(13, 15), sharex=True)
-
-    def twin(a, x, y1, l1, c1, y2, l2, c2):
-        a.plot(x, y1, color=c1, lw=1)
-        a.set_ylabel(l1, color=c1)
-        b = a.twinx()
-        b.plot(x, y2, color=c2, lw=1)
-        b.set_ylabel(l2, color=c2)
-        a.ticklabel_format(axis="y", useOffset=False)
-        b.ticklabel_format(axis="y", useOffset=False)
-    twin(ax[0], xa, w.at("air.temperature_c", ta), "Temperature (°C)", "tab:red",
-         w.at("air.humidity_rh", ta), "Relative humidity (%RH)", "tab:blue")
-    twin(ax[1], xa, w.at("air.pressure_hpa", ta), "Pressure (hPa)", "tab:purple",
-         w.at("altitude_m", ta), "Device altitude (m)", "tab:gray")
-    twin(ax[2], xa, w.at("air.co2_ppm", ta), "CO₂ (ppm)", "tab:brown", w.at("air.o2_pct", ta), "O₂ (%vol)", "tab:cyan")
-    ax[3].plot(xa, w.at("light.lux", ta), color="goldenrod", lw=1)
-    ax[3].set_ylabel("Light (lx)")
-    f = w.at("body.accel_g", tb)
-    g = w.at("body.gyro_dps", tb)
-    for k, (c, lab) in enumerate(zip(("tab:red", "tab:green", "tab:blue"), "xyz")):
-        ax[4].plot(xb, f[:, k], color=c, lw=0.4, label=lab)
-        ax[5].plot(xb, g[:, k], color=c, lw=0.4, label=lab)
-    ax[4].set_ylabel("Specific force,\nworld frame (g)")
-    ax[5].set_ylabel("Angular rate,\nworld frame (°/s)")
-    ax[4].legend(loc="upper right", ncol=3, fontsize=8)
-    walking = w.state_at(tb) == "walk"
-    for a in ax:
-        a.fill_between(xb, 0, 1, where=walking, color="tab:green", alpha=0.12, lw=0, transform=a.get_xaxis_transform())
+    scalars = [q for q in w.quantities() if not CATALOG[q].vector]
+    moving = not w.motion_state.constant
+    panels = scalars + (["body.accel_g", "body.gyro_dps"] if moving else [])
+    fig, ax = plt.subplots(len(panels), 1, figsize=(13, 2.0 * len(panels) + 1.2), sharex=True, squeeze=False)
+    ax = ax[:, 0]
+    for a, q in zip(ax, panels):
+        c = CATALOG[q]
+        if c.vector:
+            f = w.at(q, tb)
+            for k, (col, lab) in enumerate(zip(("tab:red", "tab:green", "tab:blue"), "xyz")):
+                a.plot(xb, f[:, k], color=col, lw=0.4, label=lab)
+            a.legend(loc="upper right", ncol=3, fontsize=8)
+            a.set_ylabel(f"{c.name},\nworld frame ({c.unit})")
+        else:
+            a.plot(xa, w.at(q, ta), color="tab:blue", lw=1)
+            a.set_ylabel(f"{c.name}\n({c.unit})")
+            a.ticklabel_format(axis="y", useOffset=False)
         a.grid(alpha=0.3)
+    walking = w.state_at(tb) == "walk" if moving else np.zeros(len(tb), bool)
+    if walking.any():
+        for a in ax:
+            a.fill_between(xb, 0, 1, where=walking, color="tab:green", alpha=0.12, lw=0, transform=a.get_xaxis_transform())
     ax[-1].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     ax[-1].set_xlabel("Time (UTC)" + ("   ·   green: walking" if walking.any() else ""))
     d = w.describe()
@@ -62,7 +56,7 @@ def plot(preset, hours, seed, out_dir):
     fig.tight_layout(rect=(0, 0, 1, 0.97))
     os.makedirs(out_dir, exist_ok=True)
     p = os.path.join(out_dir, f"world_{preset}_{hours:g}h.png")
-    fig.savefig(p, dpi=90)
+    fig.savefig(p, dpi=80)
     plt.close(fig)
     print(os.path.relpath(p, ROOT))
     return p

@@ -1,0 +1,55 @@
+# World preset: a pump room; the pump runs on the shift schedule.
+name: pump_room
+title: "Pump room"
+realism: ASSUMPTION
+description: "A pump that runs during the day shift (06:00-22:00): vibration and current follow the schedule, the room warms while it runs. No real recording behind it."
+grid:
+  air_dt_s: {value: 1, unit: s, source: "ASSUMPTION: air changes over seconds; the fastest gas sensor t90 is 15 s"}
+  body_dt_s: {value: 0.04, unit: s, source: "ASSUMPTION: 25 Hz resolves steps (about 2 Hz) and a fall impact (about 0.1 s)"}
+time:
+  start_utc: {value: "2026-01-05T06:00:00Z", unit: "ISO 8601", source: "ASSUMPTION: same shift start as configs/gas/assumptions.json"}
+  utc_offset_h: {value: 0, unit: h, source: "ASSUMPTION: local time = UTC"}
+earth_field_ut: {value: [19.5, 0.0, -44.5], unit: µT, source: "ASSUMPTION: mid-latitude field in world axes (x north, z up), about 49 µT, inclination about 66°"}
+signals:
+  running:
+    smooth:
+      of: {schedule: {segments: {value: [[6, 22, 1]], unit: "h, h, -", source: "ASSUMPTION: pump runs during the two day shifts"}, default: {value: 0, unit: "-", source: "ASSUMPTION: off at night"}}}
+      window_s: {value: 20, unit: s, source: "ASSUMPTION: run-up and run-down of the motor"}
+drivers:
+  machine.vibration_mm_s:
+    sum:
+      - constant: {value: 0.1, unit: mm/s, source: "ASSUMPTION: background from other machines"}
+      - product:
+          - {ref: running}
+          - random_walk: {mean: {value: 2.2, unit: mm/s, source: "ASSUMPTION: a healthy pump, ISO 10816 zone A/B"}, sd: {value: 0.2, unit: mm/s, source: "ASSUMPTION: load variation"}, tau_s: {value: 120, unit: s, source: "ASSUMPTION"}}
+  electrical.current_a:
+    product:
+      - {ref: running}
+      - random_walk: {mean: {value: 14, unit: A, source: "ASSUMPTION: 7.5 kW pump motor at 400 V"}, sd: {value: 0.4, unit: A, source: "ASSUMPTION: load variation"}, tau_s: {value: 300, unit: s, source: "ASSUMPTION"}}
+  air.temperature_c:
+    sum:
+      - random_walk: {mean: {value: 18, unit: "°C", source: "ASSUMPTION: unheated plant room"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION"}, tau_s: {value: 7200, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 600, unit: s, source: "ASSUMPTION"}}
+      - product:
+          - constant: {value: 6, unit: "°C", source: "ASSUMPTION: motor heat warms the room"}
+          - lowpass: {of: {ref: running}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION: the room warms over an hour"}, start: {value: 0, unit: "-", source: "ASSUMPTION: the world starts as the pump starts, after the night"}}
+  air.vapour_pressure_hpa:
+    vapour_from_rh: {rh_pct: {value: 55, unit: "%RH", source: "ASSUMPTION: plant room"}, temperature_c: {value: 20, unit: "°C", source: "ASSUMPTION: mean temperature"}}
+  air.sea_level_pressure_hpa:
+    random_walk: {mean: {value: 1013.25, unit: hPa, source: "ASSUMPTION: standard atmosphere"}, sd: {value: 8, unit: hPa, source: "ASSUMPTION: weather systems"}, tau_s: {value: 172800, unit: s, source: "ASSUMPTION: weather changes over days"}, smooth_s: {value: 43200, unit: s, source: "ASSUMPTION: weather pressure changes smoothly, a few hPa over half a day"}}
+  floor_altitude_m: {constant: {value: 0, unit: m, source: "ASSUMPTION: ground floor"}}
+motion:
+  model: still
+  device_height_m: {value: 1.0, unit: m, source: "ASSUMPTION: on the pump housing"}
+  lying_height_m: {value: 0.15, unit: m, source: "ASSUMPTION: not used without a fall"}
+  heading_deg: {value: 0, unit: "°", source: "ASSUMPTION: device faces magnetic north"}
+  impact_s: {value: 0.08, unit: s, source: "ASSUMPTION: duration of the impact of a fall"}
+  step_hz: {value: 1.8, unit: Hz, source: "ASSUMPTION: not used without walking"}
+  speed_m_s: {value: 0, unit: m/s, source: "ASSUMPTION: not used without walking"}
+  surge_m_s: {value: 0, unit: m/s, source: "ASSUMPTION: not used without walking"}
+  bob_m: {value: 0, unit: m, source: "ASSUMPTION: not used without walking"}
+  sway_deg: {value: 0, unit: "°", source: "ASSUMPTION: not used without walking"}
+  turn_rate_sd_dps: {value: 0, unit: "°/s", source: "ASSUMPTION: not used without walking"}
+  turn_tau_s: {value: 3, unit: s, source: "ASSUMPTION: not used without walking"}
+  fidget_deg: {value: 0, unit: "°", source: "ASSUMPTION: the device is not on a person"}
+  fidget_tau_s: {value: 2, unit: s, source: "ASSUMPTION: not used"}
+  stir_deg: {value: 0, unit: "°", source: "ASSUMPTION: the device is not on a person"}

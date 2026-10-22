@@ -7,7 +7,11 @@ parameters, and core/quantities/measurement.py turns the world value into a read
 
 Physical bounds are hard limits of nature (RH cannot exceed 100 %, a concentration cannot be
 negative). A sensor's own range is a datasheet parameter, not a property of the quantity.
+
+The catalog is data: configs/quantities/*.yaml. A new quantity is a new entry there; no code.
 """
+import glob
+import os
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
@@ -24,6 +28,7 @@ class Quantity:
     upper: Optional[float]
     axes: Tuple[str, ...] = ()    # () = scalar
     note: str = ""
+    alias: Optional[str] = None   # short name, e.g. h2s
 
     @property
     def vector(self) -> bool:
@@ -33,25 +38,45 @@ class Quantity:
         return [self.column.format(axis=a) for a in self.axes] if self.axes else [self.column]
 
 
-_Q = [
-    Quantity("air.temperature_c", "Air temperature", "°C", "temperature_c", -273.15, None),
-    Quantity("air.humidity_rh", "Relative humidity", "%RH", "humidity_rh", 0.0, 100.0,
-             note="Relative to saturation at the current air temperature."),
-    Quantity("air.pressure_hpa", "Air pressure", "hPa", "pressure_hpa", 0.0, None),
-    Quantity("air.o2_pct", "Oxygen", "%vol", "o2_pct_vol", 0.0, 100.0),
-    Quantity("air.co_ppm", "Carbon monoxide", "ppm", "co_ppm", 0.0, 1e6),
-    Quantity("air.h2s_ppm", "Hydrogen sulfide", "ppm", "h2s_ppm", 0.0, 1e6),
-    Quantity("air.lel_pct", "Combustible gas", "%LEL", "lel_pct_lel", 0.0, None,
-             note="Percent of the lower explosive limit; above 100 %LEL the air is explosive (no upper bound)."),
-    Quantity("air.voc_ppm", "Volatile organic compounds", "ppm", "voc_ppm", 0.0, 1e6),
-    Quantity("air.co2_ppm", "Carbon dioxide", "ppm", "co2_ppm", 0.0, 1e6),
-    Quantity("light.lux", "Illuminance", "lx", "light_lux", 0.0, None),
-    Quantity("body.accel_g", "Acceleration", "g", "accel_{axis}_g", None, None, AXES,
-             note="Specific force in the sensor frame: a sensor at rest reads 1 g against gravity."),
-    Quantity("body.gyro_dps", "Angular rate", "°/s", "gyro_{axis}_dps", None, None, AXES),
-    Quantity("body.mag_ut", "Magnetic field", "µT", "mag_{axis}_ut", None, None, AXES),
-]
-CATALOG = {q.id: q for q in _Q}
+QUANTITIES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                              "configs", "quantities")
+
+
+def load_catalog(directory: str = QUANTITIES_DIR) -> dict:
+    """Every configs/quantities/*.yaml, in file and list order. Ids and aliases must be unique."""
+    import yaml
+    out, aliases = {}, {}
+    for f in sorted(glob.glob(os.path.join(directory, "*.yaml"))):
+        with open(f) as fh:
+            d = yaml.safe_load(fh) or {}
+        for e in d.get("quantities") or []:
+            unknown = set(e) - {"id", "name", "unit", "column", "lower", "upper", "axes", "alias", "note"}
+            if unknown:
+                raise ValueError(f"{os.path.basename(f)}: {e.get('id')}: unknown field(s) {sorted(unknown)}")
+            if e["id"] in out:
+                raise ValueError(f"{os.path.basename(f)}: quantity {e['id']} defined twice")
+            num = lambda x: None if x is None else float(x)
+            q = Quantity(e["id"], e["name"], e["unit"], e["column"], num(e.get("lower")), num(e.get("upper")),
+                         tuple(e.get("axes") or ()), e.get("note", ""), e.get("alias"))
+            if q.alias:
+                if q.alias in aliases or q.alias in out:
+                    raise ValueError(f"alias {q.alias!r} used twice")
+                aliases[q.alias] = q.id
+            out[q.id] = q
+    return out
+
+
+CATALOG = load_catalog()
+ALIASES = {q.alias: q.id for q in CATALOG.values() if q.alias}
+
+
+def resolve(name: str) -> str:
+    """Quantity id from an id or a short alias (h2s -> air.h2s_ppm)."""
+    if name in CATALOG:
+        return name
+    if name in ALIASES:
+        return ALIASES[name]
+    raise KeyError(f"unknown quantity {name!r}; known: {', '.join(list(CATALOG) + list(ALIASES))}")
 
 
 def get(quantity_id: str) -> Quantity:

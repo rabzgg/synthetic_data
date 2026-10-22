@@ -1,18 +1,23 @@
 """
 world.py — block [D]: one timeline of physical truth that every sensor in a run reads.
 
-A world is built from a preset (configs/worlds/<name>.yaml) in two steps:
-    1. drivers   independent inputs: air temperature, water vapour pressure, sea-level pressure,
-                 floor altitude, gas levels, light, and the motion plan of the body
-    2. derive()  everything related to them: relative humidity, oxygen, air pressure, and the
-                 body tracks (orientation, angular rate, specific force, magnetic field, height)
-Events (phase 4) change drivers or the motion plan and call derive() again, so the relations hold
-after every change.
-
+A world is a preset file (configs/worlds/<name>.yaml) made of
+    signals    named helper signals (e.g. a compressor that is on or off), not quantities
+    drivers    one spec per quantity id (configs/quantities/) or relation input (below)
+    motion     how the body moves (core/world/motion.py); optional, default: at rest
+Signals and drivers are specs built from the primitives in core/world/primitives.py; a spec can
+refer to other nodes with {ref: name}. Evaluation runs in two steps:
+    1. nodes     every signal and driver, in reference order; events' effects are applied to a node
+                 right after it is computed, so everything that refers to it follows
+    2. derive()  the relations between quantities (core/world/physics.py), when their inputs exist:
+                   air.vapour_pressure_hpa + air.temperature_c -> air.humidity_rh
+                   clean_air section + gas drivers           -> air.o2_pct
+                   air.sea_level_pressure_hpa + altitude     -> air.pressure_hpa
+                   motion                                    -> body.* and the device height
+                 every other driver is a quantity as it is; all are kept within physical bounds
 Slow quantities live on the air grid (air_dt_s), the body on its own finer grid (body_dt_s). A track
 that does not change is stored as one sample. World.at(name, t) reads any track at any times.
 """
-import datetime as _dt
 import os
 import zlib
 from dataclasses import dataclass
@@ -24,16 +29,27 @@ from core.quantities import CATALOG
 from core.quantities import rotation as rot
 from core.quantities.measurement import check_source
 
-from . import drivers as D
 from . import physics as P
+from . import primitives as PR
 from .motion import MotionPlan, kinematics
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORLDS_DIR = os.path.join(ROOT, "configs", "worlds")
 GASES = ("air.co_ppm", "air.h2s_ppm", "air.lel_pct", "air.voc_ppm", "air.co2_ppm")
-DRIVERS = ("air.temperature_c", "air.vapour_pressure_hpa", "air.sea_level_pressure_hpa", "floor_altitude_m",
-           "light.lux") + GASES
+RELATION_INPUTS = ("air.vapour_pressure_hpa", "air.sea_level_pressure_hpa", "floor_altitude_m")
 REALISM = ("ASSUMPTION", "recorded")
+TOP_KEYS = {"name", "title", "realism", "description", "grid", "time", "clean_air", "earth_field_ut", "signals",
+            "drivers", "motion"}
+_A = lambda v, u, why: {"value": v, "unit": u, "source": f"ASSUMPTION: {why}"}
+DEFAULT_MOTION = {"model": "still", "device_height_m": _A(1.0, "m", "default: a device at rest 1 m above the floor"),
+                  "lying_height_m": _A(0.15, "m", "default"), "heading_deg": _A(0, "°", "default: facing north"),
+                  "impact_s": _A(0.08, "s", "default"), "step_hz": _A(1.8, "Hz", "default"),
+                  "speed_m_s": _A(0, "m/s", "default"), "surge_m_s": _A(0, "m/s", "default"),
+                  "bob_m": _A(0, "m", "default"), "sway_deg": _A(0, "°", "default"),
+                  "turn_rate_sd_dps": _A(0, "°/s", "default"), "turn_tau_s": _A(3, "s", "default"),
+                  "fidget_deg": _A(0, "°", "default: not on a person"), "fidget_tau_s": _A(2, "s", "default"),
+                  "stir_deg": _A(0, "°", "default")}
+DEFAULT_EARTH_FIELD = _A([19.5, 0.0, -44.5], "µT", "mid-latitude field in world axes (x north, z up), about 49 µT")
 
 
 def v(p):
@@ -96,7 +112,7 @@ class WorldView:
             return np.tile([np.cos(h), 0.0, 0.0, np.sin(h)], (n, 1))
         if name in ("body.height_m", "altitude_m"):
             return np.full(n, m.height_m)
-        if name == "air.pressure_hpa":
+        if name == "air.pressure_hpa" and "air.sea_level_pressure_hpa" in w.tracks:
             return P.pressure_at(w.at("air.sea_level_pressure_hpa", t), m.height_m)
         return w.at(name, t)
 
@@ -119,24 +135,42 @@ def list_presets(worlds_dir: str = WORLDS_DIR) -> list:
 
 
 def check_preset(d: dict, name: str = ""):
-    """Every number in a preset carries {value, unit, source}; the realism label is set."""
+    """Every number in a preset carries {value, unit, source}; the realism label is set; drivers are
+    known quantities or relation inputs, without two ways to the same quantity."""
+    unknown = set(d) - TOP_KEYS
+    if unknown:
+        raise ValueError(f"world {name}: unknown key(s) {sorted(unknown)}")
     if d.get("realism") not in REALISM:
         raise ValueError(f"world {name}: realism must be one of {REALISM}")
-    missing = set(DRIVERS) - set(d.get("drivers", {}))
-    if missing:
-        raise ValueError(f"world {name}: drivers missing: {sorted(missing)}")
+    drv = d.get("drivers") or {}
+    for k in drv:
+        if k not in CATALOG and k not in RELATION_INPUTS:
+            raise ValueError(f"world {name}: driver {k!r} is neither a quantity (configs/quantities) nor one of "
+                             f"{RELATION_INPUTS}")
+        if k in (d.get("signals") or {}):
+            raise ValueError(f"world {name}: {k!r} is both a signal and a driver")
+    for a, b in (("air.vapour_pressure_hpa", "air.humidity_rh"), ("air.sea_level_pressure_hpa", "air.pressure_hpa")):
+        if a in drv and b in drv:
+            raise ValueError(f"world {name}: give {a} or {b}, not both ({b} follows from {a})")
+    if "clean_air" in d and "air.o2_pct" in drv:
+        raise ValueError(f"world {name}: air.o2_pct follows from clean_air and the gases; do not give it as a driver")
+    if "air.vapour_pressure_hpa" in drv and "air.temperature_c" not in drv:
+        raise ValueError(f"world {name}: humidity from vapour needs air.temperature_c")
 
     def walk(x, path):
         if isinstance(x, dict):
-            if "value" in x and not isinstance(x["value"], dict):
+            if "value" in x and not isinstance(x["value"], dict) and not any(k in x for k in PR.PRIMITIVES):
                 check_source(path, x)
             else:
                 for k, y in x.items():
-                    if k not in ("model", "description", "title", "realism", "name"):
+                    if k not in ("model", "description", "title", "realism", "name", "ref"):
                         walk(y, f"{path}.{k}")
-        elif isinstance(x, (int, float, list)) and not isinstance(x, bool):
+        elif isinstance(x, list):
+            for i, y in enumerate(x):
+                walk(y, f"{path}[{i}]")
+        elif isinstance(x, (int, float)) and not isinstance(x, bool):
             raise ValueError(f"world {name}: {path} = {x!r} has no source; write {{value, unit, source}}")
-    for k in ("grid", "time", "clean_air", "earth_field_ut", "drivers", "motion"):
+    for k in ("grid", "time", "clean_air", "earth_field_ut", "signals", "drivers", "motion"):
         walk(d.get(k, {}), k)
 
 
@@ -152,77 +186,172 @@ class World:
         self.start = np.datetime64(str(start).replace("Z", ""), "s")
         self.air_dt = float(v(self.preset["grid"]["air_dt_s"]))
         self.body_dt = float(v(self.preset["grid"]["body_dt_s"]))
-        self.drivers, self.tracks = {}, {}
-        self._build()
-
-    def rng(self, stream: str):
-        """Independent random stream per driver, so adding one does not change the others."""
-        return np.random.default_rng([self.seed, zlib.crc32(f"{self.name}/{stream}".encode())])
-
-    # step 1: drivers
-    def _build(self):
-        m = self.preset["motion"]
+        self.motion_params = self.preset.get("motion") or DEFAULT_MOTION
+        self.effects, self.motion_effects = [], []
+        self.drivers, self.signals, self.tracks = {}, {}, {}
+        self._body_key = None
+        m = self.motion_params
         if m["model"] == "walk_still":
-            self.motion = MotionPlan.walk_still(self.duration_s, self.rng("motion"), v(m["walk_bout_s"]),
-                                                v(m["still_bout_s"]))
+            self.base_motion = MotionPlan.walk_still(self.duration_s, self.rng("motion"), v(m["walk_bout_s"]),
+                                                     v(m["still_bout_s"]))
         elif m["model"] == "still":
-            self.motion = MotionPlan(self.duration_s)
+            self.base_motion = MotionPlan(self.duration_s)
         else:
             raise ValueError(f"world {self.name}: unknown motion model {m['model']!r}")
         n = int(round(self.duration_s / self.air_dt)) + 1
-        t = np.arange(n) * self.air_dt
-        utc_h = (t / 3600.0 + (self.start - self.start.astype("datetime64[D]")) / np.timedelta64(1, "h"))
-        local = (utc_h + v(self.preset["time"]["utc_offset_h"])) % 24
-        doy = (self.start.astype("datetime64[D]") - self.start.astype("datetime64[Y]")).astype(int) + 1 + utc_h // 24
-        ctx = {"t": t, "dt": self.air_dt, "hour": local, "doy": doy, "walks": self.motion.walks()}
-        for name in DRIVERS:
-            self.drivers[name] = D.make(name, self.preset["drivers"][name], dict(ctx, rng=self.rng(name)))
-        self.derive()
+        self.t = np.arange(n) * self.air_dt
+        utc_h = (self.t / 3600.0 + (self.start - self.start.astype("datetime64[D]")) / np.timedelta64(1, "h"))
+        self.hour = (utc_h + v(self.preset["time"]["utc_offset_h"])) % 24
+        self.doy = (self.start.astype("datetime64[D]") - self.start.astype("datetime64[Y]")).astype(int) + 1 + utc_h // 24
+        self.evaluate()
+
+    def rng(self, stream: str):
+        """Independent random stream per node, so adding one does not change the others."""
+        return np.random.default_rng([self.seed, zlib.crc32(f"{self.name}/{stream}".encode())])
+
+    def context(self, t=None, rng=None, names=None, node=None):
+        return PR.Context(self.t if t is None else t, self.air_dt, self.hour, self.doy, rng, self.base_motion.walks(),
+                          node, names)
+
+    def nodes(self) -> list:
+        return list(self.preset.get("signals") or {}) + list(self.preset.get("drivers") or {})
+
+    # events
+    def add_effect(self, effect: dict):
+        """effect: {target, op (add | multiply | set | approach), shape or value, at, end, names, tau_s,
+        recovery_tau_s, rng_stream}. Applied to the target node each time the world is evaluated."""
+        if effect["target"] not in self.nodes():
+            raise KeyError(effect["target"])
+        self.effects.append(effect)
+
+    def add_motion(self, at: float, segments: list):
+        """segments: [{kind, duration, posture}] one after the other from `at`; posture current = as at `at`."""
+        self.motion_effects.append((float(at), segments))
+
+    def _apply(self, name, x):
+        for e in self.effects:
+            if e["target"] != name:
+                continue
+            at, end, names = e["at"], e["end"], e.get("names", {})
+            c = self.context(self.t - at, self.rng(e.get("rng_stream", f"effect{at}")), names, self._node)
+            op = e["op"]
+            if op == "add":
+                x = x + PR.evaluate(e["shape"], c)
+            elif op == "multiply":
+                x = x * PR.evaluate(e["shape"], c)
+            elif op == "set":
+                on = (self.t >= at) & (self.t < end)
+                x = np.where(on, PR.evaluate(e["value"], c), x)
+            elif op == "approach":
+                target = PR.evaluate(e["value"], c)
+                tau, tau_r = PR.value(e["tau_s"], names), PR.value(e["recovery_tau_s"], names)
+                during = (self.t >= at) & (self.t < end)
+                d = np.zeros_like(x)
+                d[during] = (target[during] - x[during]) * (1 - np.exp(-(self.t[during] - at) / tau))
+                i = min(np.searchsorted(self.t, end), len(self.t) - 1)
+                d_end = (target[i] - x[i]) * (1 - np.exp(-(end - at) / tau))
+                after = self.t >= end
+                d[after] = d_end * np.exp(-(self.t[after] - end) / tau_r)
+                x = x + d
+            else:
+                raise ValueError(f"unknown effect op {op!r}; known: add, multiply, set, approach")
+        return x
+
+    def _node(self, name):
+        if name in self._cache:
+            return self._cache[name]
+        specs = {**(self.preset.get("signals") or {}), **(self.preset.get("drivers") or {})}
+        if name not in specs:
+            raise PR.SpecError(f"world {self.name}: no signal or driver {name!r}")
+        if name in self._busy:
+            raise PR.SpecError(f"world {self.name}: {name!r} refers to itself")
+        self._busy.add(name)
+        x = PR.evaluate(specs[name], self.context(rng=self.rng(name), node=self._node))
+        self._busy.discard(name)
+        self._cache[name] = self._apply(name, x)
+        return self._cache[name]
+
+    def evaluate(self):
+        """Step 1 (nodes, with event effects) and step 2 (derive)."""
+        self._cache, self._busy = {}, set()
+        for name in self.nodes():
+            self._node(name)
+        self.signals = {k: self._cache[k] for k in (self.preset.get("signals") or {})}
+        self.drivers = {k: self._cache[k].copy() for k in (self.preset.get("drivers") or {})}
+        self.motion = MotionPlan(self.duration_s, [dict(s) for s in self.base_motion.segments])
+        for at, segs in self.motion_effects:
+            t = at
+            for sg in segs:
+                d = float(sg["duration"])
+                if d <= 0:
+                    continue
+                posture = sg.get("posture", "upright")
+                if posture == "current":
+                    posture = self.motion.at(t).get("posture", "upright")
+                if sg.get("needs") and self.motion.at(t).get("posture", "upright") != sg["needs"]:
+                    raise ValueError(f"at {t:.0f} s the body is not {sg['needs']} (motion {sg['kind']})")
+                self.motion.insert(t, t + d, sg["kind"], posture=posture)
+                t += d
+        return self.derive()
 
     # step 2: relations
     def derive(self):
-        d, ca, dt = self.drivers, self.preset["clean_air"], self.air_dt
-        T = d["air.temperature_c"]
-        e = np.minimum(d["air.vapour_pressure_hpa"], P.saturation_vapour_pressure(T))   # no supersaturation
-        tr = {"air.temperature_c": T, "air.vapour_pressure_hpa": e, "air.humidity_rh": P.relative_humidity(T, e),
-              "air.sea_level_pressure_hpa": d["air.sea_level_pressure_hpa"], "floor_altitude_m": d["floor_altitude_m"],
-              "light.lux": np.maximum(d["light.lux"], 0.0)}
-        clean = {"air.co2_ppm": v(ca["co2_ppm"])}
-        for g in GASES:
-            tr[g] = np.maximum(d[g], 0.0)
-        frac = P.foreign_fraction({g: tr[g] for g in GASES}, clean, self.lel_gas_vol_pct)
-        tr["air.o2_pct"] = P.oxygen(v(ca["o2_pct"]), frac)
-        self.tracks = {k: Track(dt, np.asarray(x, float)) for k, x in tr.items()}
-        # body
-        k = kinematics(self.motion, self.body_dt, self.preset["motion"], self.rng("kinematics"))
-        q = k["orientation"]
-        b = np.asarray(v(self.preset["earth_field_ut"]), float)
-        self.tracks["body.orientation"] = Track(self.body_dt, q)
+        d, dt = self.drivers, self.air_dt
+        tr = {}
+        for k, x in d.items():
+            if k in CATALOG or k in RELATION_INPUTS:
+                tr[k] = np.asarray(x, float)
+        if "air.vapour_pressure_hpa" in d:
+            T = tr["air.temperature_c"]
+            e = np.minimum(tr["air.vapour_pressure_hpa"], P.saturation_vapour_pressure(T))   # no supersaturation
+            tr["air.vapour_pressure_hpa"] = e
+            tr["air.humidity_rh"] = P.relative_humidity(T, e)
+        if "clean_air" in self.preset:
+            ca = self.preset["clean_air"]
+            clean = {"air.co2_ppm": v(ca["co2_ppm"])} if "co2_ppm" in ca else {}
+            gases = {g: np.maximum(tr[g], 0.0) for g in GASES if g in tr}
+            frac = P.foreign_fraction(gases, clean, self.lel_gas_vol_pct) if gases else np.zeros(len(self.t))
+            tr["air.o2_pct"] = P.oxygen(v(ca["o2_pct"]), frac) * np.ones(len(self.t))
+        for k in list(tr):                              # physical bounds
+            q = CATALOG.get(k)
+            if q is not None and not q.vector:
+                tr[k] = np.clip(tr[k], -np.inf if q.lower is None else q.lower, np.inf if q.upper is None else q.upper)
+        self.tracks = {k: Track(dt, x) for k, x in tr.items()}
+        self._derive_body()
+        if "air.sea_level_pressure_hpa" in tr:
+            h = self.tracks["body.height_m"]
+            if not h.constant:
+                w = max(1, int(round(dt / self.body_dt)))
+                padded = np.pad(h.values, (w // 2, w - 1 - w // 2), mode="edge")
+                h = Track(self.body_dt, np.convolve(padded, np.ones(w) / w, mode="valid"))
+            floor = tr.get("floor_altitude_m", np.zeros(len(self.t)))
+            alt = floor + h.at(self.t)
+            self.tracks["altitude_m"] = Track(dt, alt)
+            self.tracks["air.pressure_hpa"] = Track(dt, P.pressure_at(tr["air.sea_level_pressure_hpa"], alt))
+        return self
+
+    def _derive_body(self):
+        key = repr(self.motion.segments)
+        if key != self._body_key:
+            self._kin = kinematics(self.motion, self.body_dt, self.motion_params, self.rng("kinematics"))
+            self._body_key = key
+        k = self._kin
+        b = np.asarray(v(self.preset.get("earth_field_ut", DEFAULT_EARTH_FIELD)), float)
+        self.tracks["body.orientation"] = Track(self.body_dt, k["orientation"])
         self.tracks["body.gyro_dps"] = Track(self.body_dt, k["gyro"])
         self.tracks["body.accel_g"] = Track(self.body_dt, k["force"])
         self.tracks["body.mag_ut"] = Track(self.body_dt, b[None, :])          # world frame: the Earth's field
         self.tracks["body.height_m"] = Track(self.body_dt, k["height"])
         self.motion_state = Track(self.body_dt, k["state"])
-        # pressure at the device: floor altitude plus the device height above the floor, averaged over
-        # one air step (the step bob is far faster than any pressure change the air grid holds)
-        h = self.tracks["body.height_m"]
-        if not h.constant:
-            w = max(1, int(round(dt / self.body_dt)))
-            padded = np.pad(h.values, (w // 2, w - 1 - w // 2), mode="edge")
-            h = Track(self.body_dt, np.convolve(padded, np.ones(w) / w, mode="valid"))
-        alt = self.tracks["floor_altitude_m"].values + h.at(self.tracks["floor_altitude_m"].times())
-        self.tracks["altitude_m"] = Track(dt, alt)
-        self.tracks["air.pressure_hpa"] = Track(dt, P.pressure_at(tr["air.sea_level_pressure_hpa"], alt))
-        return self
 
     @property
     def combustible_gas(self) -> str:
-        return v(self.preset["clean_air"]["combustible_gas"])
+        return v(self.preset.get("clean_air", {}).get("combustible_gas", {"value": "methane"}))
 
     @property
     def lel_gas_vol_pct(self) -> float:
         """%vol of the combustible gas at 100 %LEL: given in the preset, or from the table in physics.py."""
-        ca = self.preset["clean_air"]
+        ca = self.preset.get("clean_air", {})
         if "lel_vol_pct" in ca:
             return float(v(ca["lel_vol_pct"]))
         g = self.combustible_gas
@@ -257,7 +386,9 @@ class World:
         return self.start + (np.asarray(t, float) * 1000).astype("timedelta64[ms]")
 
     def describe(self) -> dict:
-        return {"name": self.name, "title": self.preset.get("title", self.name), "realism": self.realism,
-                "description": self.preset.get("description", ""), "start_utc": str(self.start) + "Z",
-                "combustible_gas": self.combustible_gas, "lel_vol_pct": self.lel_gas_vol_pct,
-                "duration_s": self.duration_s, "seed": self.seed}
+        d = {"name": self.name, "title": self.preset.get("title", self.name), "realism": self.realism,
+             "description": self.preset.get("description", ""), "start_utc": str(self.start) + "Z",
+             "duration_s": self.duration_s, "seed": self.seed, "quantities": self.quantities()}
+        if "clean_air" in self.preset:
+            d.update(combustible_gas=self.combustible_gas, lel_vol_pct=self.lel_gas_vol_pct)
+        return d

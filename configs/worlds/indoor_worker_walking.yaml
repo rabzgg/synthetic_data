@@ -15,16 +15,24 @@ clean_air:
   combustible_gas: {value: methane, unit: "-", source: "ASSUMPTION: methane, the usual LEL calibration gas; 100 %LEL = 5.0 %vol (table in core/world/physics.py; propane 2.1, hydrogen 4.0)"}
 earth_field_ut: {value: [19.5, 0.0, -44.5], unit: µT, source: "ASSUMPTION: mid-latitude field in world axes (x north, z up), about 49 µT, inclination about 66°"}
 drivers:
-  air.temperature_c: {model: ou, mean: {value: 21, unit: "°C", source: "ASSUMPTION: heated room"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION: heating cycles"}, tau_s: {value: 1800, unit: s, source: "ASSUMPTION: changes over half an hour"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}
-  air.vapour_pressure_hpa: {model: from_rh, rh_pct: {value: 40, unit: "%RH", source: "ASSUMPTION: heated room in winter"}, at_temperature_c: {value: 21, unit: "°C", source: "ASSUMPTION: the room mean"}, noise: {sd: {value: 0.2, unit: hPa, source: "ASSUMPTION: people and ventilation"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION: slow"}}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}
-  air.sea_level_pressure_hpa: {model: ou, mean: {value: 1013.25, unit: hPa, source: "ASSUMPTION: standard atmosphere"}, sd: {value: 8, unit: hPa, source: "ASSUMPTION: weather systems"}, tau_s: {value: 172800, unit: s, source: "ASSUMPTION: weather changes over days"}, smooth_s: {value: 43200, unit: s, source: "ASSUMPTION: weather pressure changes smoothly, a few hPa over half a day"}}
-  floor_altitude_m: {model: floors, floor_height_m: {value: 3.5, unit: m, source: "ASSUMPTION: storey height"}, floors: {value: 2, unit: "-", source: "ASSUMPTION: ground floor plus two"}, change_probability: {value: 0.15, unit: "-", source: "ASSUMPTION: some walks take the stairs"}, stairs_s: {value: 20, unit: s, source: "ASSUMPTION: one flight of stairs"}}
-  light.lux: {model: room_levels, levels: {value: [150, 300, 500, 750], unit: lx, source: "ASSUMPTION: corridor to workshop lighting levels (EN 12464-1 order of magnitude)"}, noise: {sd: {value: 5, unit: lx, source: "ASSUMPTION: shadows"}, tau_s: {value: 30, unit: s, source: "ASSUMPTION"}}}
-  air.co2_ppm: {model: ou, mean: {value: 700, unit: ppm, source: "ASSUMPTION: occupied, ventilated room"}, sd: {value: 120, unit: ppm, source: "ASSUMPTION: occupancy changes"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}
-  air.co_ppm: {model: constant, value: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
-  air.h2s_ppm: {model: constant, value: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
-  air.lel_pct: {model: constant, value: {value: 0, unit: "%LEL", source: "ASSUMPTION: clean air"}}
-  air.voc_ppm: {model: constant, value: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.temperature_c: {random_walk: {mean: {value: 21, unit: "°C", source: "ASSUMPTION: heated room"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION: heating cycles"}, tau_s: {value: 1800, unit: s, source: "ASSUMPTION: changes over half an hour"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}}
+  air.vapour_pressure_hpa:
+    sum:
+      - vapour_from_rh: {rh_pct: {value: 40, unit: "%RH", source: "ASSUMPTION: heated room in winter"}, temperature_c: {value: 21, unit: "°C", source: "ASSUMPTION: the mean temperature"}}
+      - {random_walk: {mean: {value: 0, unit: hPa, source: "ASSUMPTION: varies around the mean"}, sd: {value: 0.2, unit: hPa, source: "ASSUMPTION: people, ventilation, air masses"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION: slow"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: changes smoothly"}}}
+  air.sea_level_pressure_hpa:
+    random_walk: {mean: {value: 1013.25, unit: hPa, source: "ASSUMPTION: standard atmosphere"}, sd: {value: 8, unit: hPa, source: "ASSUMPTION: weather systems"}, tau_s: {value: 172800, unit: s, source: "ASSUMPTION: weather changes over days"}, smooth_s: {value: 43200, unit: s, source: "ASSUMPTION: weather pressure changes smoothly, a few hPa over half a day"}}
+  floor_altitude_m:
+    floors_on_walk: {floor_height_m: {value: 3.5, unit: m, source: "ASSUMPTION: storey height"}, floors: {value: 2, unit: "-", source: "ASSUMPTION: ground floor plus two"}, change_probability: {value: 0.15, unit: "-", source: "ASSUMPTION: some walks take the stairs"}, stairs_s: {value: 20, unit: s, source: "ASSUMPTION: one flight of stairs"}}
+  light.lux:
+    sum:
+      - levels_on_walk: {levels: {value: [150, 300, 500, 750], unit: lx, source: "ASSUMPTION: corridor to workshop lighting levels (EN 12464-1 order of magnitude)"}}
+      - {random_walk: {mean: {value: 0, unit: "lx", source: "ASSUMPTION: noise around the level"}, sd: {value: 5, unit: "lx", source: "ASSUMPTION: shadows"}, tau_s: {value: 30, unit: s, source: "ASSUMPTION"}}}
+  air.co2_ppm: {random_walk: {mean: {value: 700, unit: "ppm", source: "ASSUMPTION: occupied, ventilated room"}, sd: {value: 120, unit: "ppm", source: "ASSUMPTION: occupancy changes"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}}
+  air.co_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.h2s_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.lel_pct: {constant: {value: 0, unit: "%LEL", source: "ASSUMPTION: clean air"}}
+  air.voc_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
 motion:
   model: walk_still
   walk_bout_s: {value: [30, 300], unit: s, source: "ASSUMPTION: walks between work spots"}

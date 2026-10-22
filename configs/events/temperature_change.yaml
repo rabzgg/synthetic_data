@@ -1,0 +1,13 @@
+kind: temperature_change
+name: Temperature change
+description: "The air warms or cools by a set amount and stays there for a while; RH follows."
+params:
+  delta_c: {value: 5, unit: "°C", source: "ASSUMPTION: a noticeable change"}
+  ramp_s: {value: 600, unit: s, source: "ASSUMPTION: air changes temperature over ten minutes"}
+  duration_s: {value: 3600, unit: s, source: "ASSUMPTION: one hour at the new temperature"}
+duration: "$duration_s + 2 * $ramp_s"
+label: "{delta_c} °C"
+effects:
+  - target: air.temperature_c
+    op: add
+    shape: {pulse: {duration_s: $duration_s, ramp_s: $ramp_s, level: $delta_c}}

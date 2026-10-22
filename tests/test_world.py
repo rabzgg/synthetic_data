@@ -24,21 +24,22 @@ HOUR = 3600.0
 
 class TestPresets(unittest.TestCase):
     def test_presets_load_with_sources(self):
-        self.assertEqual(set(list_presets()), {"indoor_worker_walking", "outdoor_day", "static_shelf"})
+        self.assertTrue({"indoor_worker_walking", "outdoor_day", "static_shelf", "fridge", "aquarium",
+                         "pump_room"} <= set(list_presets()))
         for p in list_presets():
             d = load_preset(p)
             self.assertEqual(d["realism"], "ASSUMPTION")
 
     def test_number_without_source_refused(self):
         d = copy.deepcopy(load_preset("static_shelf"))
-        d["drivers"]["air.temperature_c"]["mean"] = 20
+        d["drivers"]["air.temperature_c"]["random_walk"]["mean"] = 20
         with self.assertRaises(ValueError):
             check_preset(d, "x")
 
     def test_every_catalog_quantity_within_bounds(self):
         for p in list_presets():
             w = World(p, 2 * HOUR, 1)
-            self.assertEqual(set(w.quantities()), set(CATALOG), p)
+            self.assertTrue({"air.temperature_c", "body.accel_g"} <= set(w.quantities()), p)
             for q in w.quantities():
                 lo, hi = CATALOG[q].lower, CATALOG[q].upper
                 x = w.tracks[q].values
@@ -188,6 +189,7 @@ class TestFall(unittest.TestCase):
         self.w = World("static_shelf", 120, 1)
         m = dict(self.w.preset["motion"], device_height_m={"value": 1.3, "unit": "m", "source": "ASSUMPTION: test"})
         self.w.preset["motion"] = m
+        self.w.motion_params = m
         self.w.motion = MotionPlan(120)
         self.w.motion.insert(60, 61.5, "fall")
         self.w.motion.insert(61.5, 120, "still", posture="lying")

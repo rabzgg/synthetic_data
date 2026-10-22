@@ -84,10 +84,10 @@ class TestWorldEvents(unittest.TestCase):
     def test_world_event_needs_a_device_that_sees_it(self):
         with self.assertRaises(ScenarioError) as e:
             prepare(sc([{"gas_release": {"at": "00:10:00", "gas": "voc", "level": 50}}]))
-        self.assertIn("O2 drop", str(e.exception))
+        self.assertIn("below the sensor resolution", str(e.exception))
         with self.assertRaises(ScenarioError) as e:
             prepare(sc([{"fall": {"at": "00:10:00"}}], devices=[{"device": "blackline_g7c", "mount": "fixed"}]))
-        self.assertIn("worn on the body", str(e.exception))
+        self.assertIn("the device is fixed", str(e.exception))
 
 
 class TestDeviceEvents(unittest.TestCase):
@@ -199,7 +199,7 @@ class TestCompatibility(unittest.TestCase):
         self.assertTrue(rows["fall"]["bme280_sensor_board"][0])     # worn, a fall shows in its pressure
         fixed = dict(compatibility(mount="fixed"))
         self.assertFalse(fixed["fall"]["bme280_sensor_board"][0])
-        self.assertTrue(fixed["collapse"]["msa_altair_io4"][0])     # the gas part still reaches it
+        self.assertTrue(fixed["collapse (h2s)"]["msa_altair_io4"][0])     # the gas part still reaches it
 
     def test_doc_is_generated(self):
         with open(DOC) as fh:

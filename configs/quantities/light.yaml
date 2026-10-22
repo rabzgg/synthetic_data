@@ -1,0 +1,3 @@
+domain: light
+quantities:
+  - {id: light.lux, name: Illuminance, unit: lx, column: light_lux, lower: 0, upper: null}

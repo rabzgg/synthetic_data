@@ -1,0 +1,4 @@
+domain: electrical
+quantities:
+  - {id: electrical.current_a, name: Electric current, unit: A, column: current_a, lower: 0, upper: null,
+     note: "RMS current drawn by a load; not signed."}

@@ -145,7 +145,7 @@ def kinematics(plan: MotionPlan, dt: float, params: dict, rng) -> dict:
             fidget[m] = np.radians(p.get("fidget_deg", 0.0))
         elif kind == "stir":
             fidget[m] = np.radians(p.get("stir_deg", 0.0))
-    from .drivers import ou, smooth
+    from .primitives import _ou as ou, _smooth as smooth
     fidget = smooth(fidget, max(1, int(round(1.0 / dt))))            # no jumps in amplitude
     tau_f = p.get("fidget_tau_s", 2.0)
     wob_p = ou(n, dt, 0.0, 1.0, tau_f, rng, x0=0.0) * fidget

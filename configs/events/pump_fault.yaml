@@ -1,0 +1,8 @@
+kind: pump_fault
+name: Pump fault
+description: "The sampling pump stops: the pump alarm is on; the gas readings are not changed."
+params:
+  duration_s: {value: 300, unit: s, source: "ASSUMPTION: five minutes (configs/gas/assumptions.json pump_fault: 120-600 s)"}
+requires: [states.pump]
+effects:
+  - {target: device.state, state: pump}

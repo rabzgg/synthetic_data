@@ -1,5 +1,7 @@
 """
-events — block [E]: events that change the world or a device, and scenarios that place them.
+events — block [E]: events that change the world or a device (configs/events/*.yaml, applied by
+library.py), and scenarios that place them (scenario.py).
 """
-from .base import DeviceView, Event, Label, ScenarioError, parse_time
-from .scenario import EVENTS, Prepared, compatibility, expected_alerts, list_scenarios, load_scenario, prepare
+from .base import DeviceView, Label, ScenarioError, parse_time
+from .library import EVENTS, EventDef, Instance, load_events
+from .scenario import Prepared, compatibility, expected_alerts, list_scenarios, load_scenario, prepare
