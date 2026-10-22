@@ -1,0 +1,11 @@
+# A vibration sensor on a pump housing, logging RMS vibration velocity every 10 s.
+name: Pump Vibration Sensor
+device_id_prefix: PUMPVIB
+description: "RMS vibration velocity of a pump, from a transmitter on the bearing housing, logged every 10 s."
+created: "2026-10-22"
+version: 1
+preset: true
+parts:
+  - part: generic_vibration_transmitter
+features:
+  sample_interval_s: {value: 10, unit: s, source: "ASSUMPTION: condition monitoring every 10 s"}

@@ -1,0 +1,14 @@
+kind: irrigation
+name: Irrigation
+description: "The field is watered: soil moisture rises while the water is applied, then drains back down over a day or so."
+probe_world: field_day
+params:
+  duration_s: {value: 1800, unit: s, source: "ASSUMPTION: half an hour of watering"}
+  added_pct: {value: 12, unit: "%VWC", source: "ASSUMPTION: about 25 mm of water into the top 20 cm"}
+  rise_tau_s: {value: 600, unit: s, source: "ASSUMPTION: water reaches the probe depth within minutes"}
+  drain_tau_s: {value: 86400, unit: s, source: "ASSUMPTION: drainage and uptake over about a day"}
+label: "+{added_pct} %VWC"
+effects:
+  - target: soil.moisture_pct
+    op: add
+    shape: {exp_rise_decay: {start_s: 0, level: $added_pct, rise_tau_s: $rise_tau_s, hold_s: $duration_s, decay_tau_s: $drain_tau_s}}

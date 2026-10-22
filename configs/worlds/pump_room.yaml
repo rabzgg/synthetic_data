@@ -15,13 +15,15 @@ signals:
     smooth:
       of: {schedule: {segments: {value: [[6, 22, 1]], unit: "h, h, -", source: "ASSUMPTION: pump runs during the two day shifts"}, default: {value: 0, unit: "-", source: "ASSUMPTION: off at night"}}}
       window_s: {value: 20, unit: s, source: "ASSUMPTION: run-up and run-down of the motor"}
+  pump_vibration:
+    product:
+      - {ref: running}
+      - random_walk: {mean: {value: 2.2, unit: mm/s, source: "ASSUMPTION: a healthy pump, ISO 10816 zone A/B"}, sd: {value: 0.2, unit: mm/s, source: "ASSUMPTION: load variation"}, tau_s: {value: 120, unit: s, source: "ASSUMPTION"}}
 drivers:
   machine.vibration_mm_s:
     sum:
       - constant: {value: 0.1, unit: mm/s, source: "ASSUMPTION: background from other machines"}
-      - product:
-          - {ref: running}
-          - random_walk: {mean: {value: 2.2, unit: mm/s, source: "ASSUMPTION: a healthy pump, ISO 10816 zone A/B"}, sd: {value: 0.2, unit: mm/s, source: "ASSUMPTION: load variation"}, tau_s: {value: 120, unit: s, source: "ASSUMPTION"}}
+      - {ref: pump_vibration}
   electrical.current_a:
     product:
       - {ref: running}

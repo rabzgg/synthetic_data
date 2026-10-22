@@ -1,0 +1,56 @@
+# World preset: a field outdoors: the outdoor day plus the soil, which dries slowly.
+name: field_day
+title: "Field, one day"
+realism: ASSUMPTION
+description: "A field outdoors: daily temperature and light as in outdoor_day; the soil holds about 28 %VWC and dries slowly in the sun. No real recording behind it."
+grid:
+  air_dt_s: {value: 1, unit: s, source: "ASSUMPTION: air changes over seconds; the fastest gas sensor t90 is 15 s"}
+  body_dt_s: {value: 0.04, unit: s, source: "ASSUMPTION: 25 Hz resolves steps (about 2 Hz) and a fall impact (about 0.1 s)"}
+time:
+  start_utc: {value: "2026-06-15T06:00:00Z", unit: "ISO 8601", source: "ASSUMPTION: a June morning"}
+  utc_offset_h: {value: 0, unit: h, source: "ASSUMPTION: local time = UTC"}
+clean_air:
+  o2_pct: {value: 20.9, unit: "%vol", source: "ASSUMPTION: normal air, as clean_air_baseline in configs/gas/assumptions.json"}
+  co2_ppm: {value: 420, unit: ppm, source: "ASSUMPTION: outdoor background CO2, about 420 ppm"}
+  combustible_gas: {value: methane, unit: "-", source: "ASSUMPTION: methane, the usual LEL calibration gas; 100 %LEL = 5.0 %vol (table in core/world/physics.py; propane 2.1, hydrogen 4.0)"}
+earth_field_ut: {value: [19.5, 0.0, -44.5], unit: µT, source: "ASSUMPTION: mid-latitude field in world axes (x north, z up), about 49 µT, inclination about 66°"}
+drivers:
+  air.temperature_c:
+    sum:
+      - daily_cycle: {mean: {value: 16, unit: "°C", source: "ASSUMPTION: mild summer day"}, amplitude: {value: 6, unit: "°C", source: "ASSUMPTION: day-night swing of 12 °C"}, peak_hour: {value: 15, unit: h, source: "ASSUMPTION: warmest in mid-afternoon"}}
+      - {random_walk: {mean: {value: 0, unit: "°C", source: "ASSUMPTION: around the daily cycle"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION: wind and sun"}, tau_s: {value: 1200, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: outdoor air changes smoothly over minutes"}}}
+  air.vapour_pressure_hpa:
+    sum:
+      - vapour_from_rh: {rh_pct: {value: 70, unit: "%RH", source: "ASSUMPTION: summer air at the mean temperature"}, temperature_c: {value: 16, unit: "°C", source: "ASSUMPTION: the mean temperature"}}
+      - {random_walk: {mean: {value: 0, unit: hPa, source: "ASSUMPTION: varies around the mean"}, sd: {value: 0.5, unit: hPa, source: "ASSUMPTION: people, ventilation, air masses"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION: slow"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: changes smoothly"}}}
+  air.sea_level_pressure_hpa:
+    random_walk: {mean: {value: 1013.25, unit: hPa, source: "ASSUMPTION: standard atmosphere"}, sd: {value: 8, unit: hPa, source: "ASSUMPTION: weather systems"}, tau_s: {value: 172800, unit: s, source: "ASSUMPTION: weather changes over days"}, smooth_s: {value: 43200, unit: s, source: "ASSUMPTION: weather pressure changes smoothly, a few hPa over half a day"}}
+  soil.moisture_pct:
+    sum:
+      - constant: {value: 28, unit: "%VWC", source: "ASSUMPTION: a loam a few days after rain"}
+      - ramp: {start_s: {value: 0, unit: s, source: "ASSUMPTION: from the start"}, duration_s: {value: 259200, unit: s, source: "ASSUMPTION: over three days"}, from: {value: 0, unit: "%VWC", source: "ASSUMPTION"}, to: {value: -6, unit: "%VWC", source: "ASSUMPTION: evaporation and plant uptake, about 2 %VWC a day"}}
+      - random_walk: {mean: {value: 0, unit: "%VWC", source: "ASSUMPTION: around the trend"}, sd: {value: 0.2, unit: "%VWC", source: "ASSUMPTION: small variation"}, tau_s: {value: 7200, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 1800, unit: s, source: "ASSUMPTION: soil water changes slowly"}}
+  floor_altitude_m: {constant: {value: 0, unit: m, source: "ASSUMPTION: at sea level"}}
+  light.lux:
+    solar: {latitude_deg: {value: 52, unit: "°", source: "ASSUMPTION: north-west Europe"}, clear_sky: {value: 110000, unit: lx, source: "ASSUMPTION: direct sun at zenith, order of magnitude"}, cloud_mean: {value: 0.7, unit: "-", source: "ASSUMPTION: partly cloudy"}, cloud_sd: {value: 0.2, unit: "-", source: "ASSUMPTION"}, cloud_tau_s: {value: 600, unit: s, source: "ASSUMPTION: clouds pass in minutes"}}
+  air.co2_ppm: {random_walk: {mean: {value: 420, unit: "ppm", source: "ASSUMPTION: outdoor background"}, sd: {value: 10, unit: "ppm", source: "ASSUMPTION: small variation"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}}
+  air.co_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.h2s_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+  air.lel_pct: {constant: {value: 0, unit: "%LEL", source: "ASSUMPTION: clean air"}}
+  air.voc_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
+motion:
+  model: still
+  device_height_m: {value: 1.5, unit: m, source: "ASSUMPTION: on a post"}
+  lying_height_m: {value: 0.15, unit: m, source: "ASSUMPTION: not used without a fall"}
+  heading_deg: {value: 0, unit: "°", source: "ASSUMPTION: device faces magnetic north"}
+  impact_s: {value: 0.08, unit: s, source: "ASSUMPTION: duration of the impact of a fall"}
+  step_hz: {value: 1.8, unit: Hz, source: "ASSUMPTION: not used without walking"}
+  speed_m_s: {value: 0, unit: m/s, source: "ASSUMPTION: not used without walking"}
+  surge_m_s: {value: 0, unit: m/s, source: "ASSUMPTION: not used without walking"}
+  bob_m: {value: 0, unit: m, source: "ASSUMPTION: not used without walking"}
+  sway_deg: {value: 0, unit: "°", source: "ASSUMPTION: not used without walking"}
+  turn_rate_sd_dps: {value: 0, unit: "°/s", source: "ASSUMPTION: not used without walking"}
+  turn_tau_s: {value: 3, unit: s, source: "ASSUMPTION: not used without walking"}
+  fidget_deg: {value: 0, unit: "°", source: "ASSUMPTION: the device is not on a person"}
+  fidget_tau_s: {value: 2, unit: s, source: "ASSUMPTION: not used"}
+  stir_deg: {value: 0, unit: "°", source: "ASSUMPTION: the device is not on a person"}

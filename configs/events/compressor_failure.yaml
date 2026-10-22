@@ -1,0 +1,9 @@
+kind: compressor_failure
+name: Compressor failure
+description: "The fridge's compressor stops: no current is drawn for it and the inside warms towards the room temperature."
+probe_world: fridge
+params:
+  duration_s: {value: 21600, unit: s, source: "ASSUMPTION: six hours until someone notices"}
+label: "compressor off for {duration_s} s"
+effects:
+  - {target: compressor, op: set, value: 0}

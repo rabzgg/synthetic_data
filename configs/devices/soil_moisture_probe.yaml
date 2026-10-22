@@ -1,0 +1,13 @@
+# A soil moisture probe in a field, logging every 15 minutes on a battery.
+name: Soil Moisture Probe
+device_id_prefix: SOILPROBE
+description: "Volumetric water content of the soil at root depth, logged every 15 min."
+created: "2026-10-22"
+version: 1
+preset: true
+parts:
+  - part: generic_soil_moisture_probe
+features:
+  sample_interval_s: {value: 900, unit: s, source: "ASSUMPTION: agricultural loggers report every 15 min"}
+  battery_hours: {value: 8760, unit: h, source: "ASSUMPTION: about a year on its battery"}
+  connectivity: {value: lorawan, unit: "-", source: "ASSUMPTION: LoRaWAN field sensor"}

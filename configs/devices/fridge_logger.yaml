@@ -1,0 +1,13 @@
+# A fridge monitor: a temperature probe inside the fridge and a current clamp on the fridge's mains lead.
+name: Fridge Logger
+device_id_prefix: FRIDGELOG
+description: "Temperature inside a fridge (DS18B20 probe) and the fridge's current (clamp), logged every minute."
+created: "2026-10-22"
+version: 1
+preset: true
+parts:
+  - part: maxim_ds18b20
+  - part: generic_current_clamp_5a
+features:
+  sample_interval_s: {value: 60, unit: s, source: "ASSUMPTION: one reading a minute, usual for cold-chain loggers"}
+  connectivity: {value: wifi, unit: "-", source: "ASSUMPTION: Wi-Fi logger"}

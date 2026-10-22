@@ -1,0 +1,14 @@
+# Maxim (Analog Devices) DS18B20: 1-Wire digital thermometer, often used in fridge and freezer loggers.
+# [USER TO VERIFY] Values as commonly stated on the DS18B20 data sheet's first page; page numbers not
+# checked against a copy of the data sheet while writing this file.
+name: Maxim DS18B20
+datasheet: "DS18B20 Programmable Resolution 1-Wire Digital Thermometer data sheet (revision not recorded) [USER TO VERIFY]"
+measures:
+  - quantity: air.temperature_c
+    params:
+      range: {value: [-55, 125], unit: "°C", source: "datasheet DS18B20 (page not recorded) [USER TO VERIFY]: measures -55 °C to +125 °C"}
+      resolution: {value: 0.0625, unit: "°C", source: "datasheet DS18B20 (page not recorded) [USER TO VERIFY]: 12-bit resolution"}
+      t90_s: {value: 120, unit: s, source: "ASSUMPTION: TO-92 probe in still air inside a fridge; no response time on the data sheet"}
+    from_datasheet:
+      - {rule: accuracy, value: 0.5, unit: "°C", kind: max, source: "datasheet DS18B20 (page not recorded) [USER TO VERIFY]: ±0.5 °C from -10 °C to +85 °C"}
+      - {rule: noise_rms, value: 0.03, unit: "°C", source: "ASSUMPTION: about half a step of the 12-bit output; no noise figure on the data sheet"}
