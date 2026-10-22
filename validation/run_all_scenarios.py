@@ -16,7 +16,7 @@ from core.output import run
 
 SCENARIOS = ["gas_normal_shift", "gas_stel_alarm", "gas_twa_alarm", "gas_over_range", "gas_voc_exposure",
              "gas_pump_fault", "worker_collapse", "fridge_compressor_failure", "pump_bearing_wear", "field_irrigation",
-             "water_tank_leak"]
+             "water_tank_leak", "server_room_ac_failure"]
 DOC = os.path.join(ROOT, "docs", "GATE_RESULTS.md")
 
 

@@ -6,6 +6,18 @@ An event changes the world (its drivers or the body's motion; the world then der
 
 ## Events
 
+### `ac_failure`: AC failure
+
+The air conditioner stops: the room warms towards where the racks' heat would take it, until the AC runs again.
+
+- Changes: the world; reaches every device that measures what it affects.
+- Affects: `ac`
+- After the event: `revert` (goes back)
+
+| parameter | default | unit | source |
+|---|---|---|---|
+| `duration_s` | 2700 | s | ASSUMPTION: 45 minutes until it is restarted |
+
 ### `battery_drain`: Battery drain
 
 The battery drains faster than normal for a while, e.g. from a weak signal or a faulty cell.
@@ -286,35 +298,36 @@ Device presets with default event parameters. Gas releases at the default level 
 
 ### Worn on the body
 
-| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `soil_moisture_probe` | `water_tank_monitor` |
-|---|---|---|---|---|---|---|---|---|---|---|
-| battery_drain | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | ✓ | – (1) |
-| bearing_wear | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) | – (2) |
-| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) | – (3) |
-| collapse (lel) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| collapse (co) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| collapse (h2s) | ✓ | ✓ | ✓ | ✓ | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| collapse (voc) | ✓ | – (4) | – (4) | ✓ | – (2) | – (4) | ✓ | – (2) | – (2) | – (2) |
-| collapse (co2) | ✓ | – (4) | – (4) | ✓ | – (2) | – (4) | – (4) | – (2) | – (2) | – (2) |
-| compressor_failure | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | ✓ |
-| connection_loss | ✓ | ✓ | ✓ | – (5) | ✓ | ✓ | ✓ | – (5) | ✓ | ✓ |
-| door_open | – (6) | – (6) | – (6) | ✓ | ✓ | – (6) | – (6) | – (2) | – (2) | – (2) |
-| fall | ✓ | – (2) | – (2) | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) |
-| gas_release (lel) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| gas_release (co) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| gas_release (h2s) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| gas_release (voc) | – (4) | – (4) | – (4) | – (2) | – (2) | – (4) | ✓ | – (2) | – (2) | – (2) |
-| gas_release (co2) | – (4) | – (4) | – (4) | – (2) | – (2) | – (4) | – (4) | – (2) | – (2) | – (2) |
-| irrigation | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) |
-| leak | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ |
-| no_motion | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) |
-| pump_fault | – (7) | – (7) | – (7) | – (7) | – (7) | – (7) | ✓ | – (7) | – (7) | – (7) |
-| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| sos | – (8) | – (8) | ✓ | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) |
-| temperature_change | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) |
+| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `rack_monitor` | `soil_moisture_probe` | `water_tank_monitor` |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ac_failure | – (1) | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | ✓ | – (1) | ✓ |
+| battery_drain | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | ✓ | – (2) |
+| bearing_wear | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | ✓ | – (1) | – (1) | – (1) |
+| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) | – (3) | – (3) |
+| collapse (lel) | ✓ | ✓ | ✓ | ✓ | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| collapse (co) | ✓ | ✓ | ✓ | ✓ | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| collapse (h2s) | ✓ | ✓ | ✓ | ✓ | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| collapse (voc) | ✓ | – (4) | – (4) | ✓ | – (1) | – (4) | ✓ | – (1) | – (1) | – (1) | – (1) |
+| collapse (co2) | ✓ | – (4) | – (4) | ✓ | – (1) | – (4) | – (4) | – (1) | – (1) | – (1) | – (1) |
+| compressor_failure | – (1) | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | ✓ | – (1) | ✓ |
+| connection_loss | ✓ | ✓ | ✓ | – (5) | ✓ | ✓ | ✓ | – (5) | – (5) | ✓ | ✓ |
+| door_open | – (6) | – (6) | – (6) | ✓ | ✓ | – (6) | – (6) | – (1) | ✓ | – (1) | – (1) |
+| fall | ✓ | – (1) | – (1) | ✓ | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) |
+| gas_release (lel) | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (co) | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (h2s) | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (voc) | – (4) | – (4) | – (4) | – (1) | – (1) | – (4) | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (co2) | – (4) | – (4) | – (4) | – (1) | – (1) | – (4) | – (4) | – (1) | – (1) | – (1) | – (1) |
+| irrigation | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | ✓ | – (1) |
+| leak | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | ✓ |
+| no_motion | ✓ | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) |
+| pump_fault | – (7) | – (7) | – (7) | – (7) | – (7) | – (7) | ✓ | – (7) | – (7) | – (7) | – (7) |
+| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| sos | – (8) | – (8) | ✓ | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) | – (8) |
+| temperature_change | – (1) | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | ✓ | – (1) | – (1) |
 
-(1) it needs the device feature battery  
-(2) it changes nothing this device measures  
+(1) it changes nothing this device measures  
+(2) it needs the device feature battery  
 (3) it needs the device feature bump_test  
 (4) the largest change it causes (air.o2_pct: 0.000418) is below the sensor resolution (0.1)  
 (5) it needs the device feature connectivity  
@@ -324,35 +337,36 @@ Device presets with default event parameters. Gas releases at the default level 
 
 ### Fixed (wall, shelf, post)
 
-| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `soil_moisture_probe` | `water_tank_monitor` |
-|---|---|---|---|---|---|---|---|---|---|---|
-| battery_drain | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | ✓ | – (1) |
-| bearing_wear | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) | – (2) |
-| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) | – (3) |
-| collapse (lel) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) |
-| collapse (co) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) |
-| collapse (h2s) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) |
-| collapse (voc) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | ✓ | – (4) | – (4) | – (4) |
-| collapse (co2) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | – (5) | – (4) | – (4) | – (4) |
-| compressor_failure | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | ✓ |
-| connection_loss | ✓ | ✓ | ✓ | – (6) | ✓ | ✓ | ✓ | – (6) | ✓ | ✓ |
-| door_open | – (7) | – (7) | – (7) | ✓ | ✓ | – (7) | – (7) | – (2) | – (2) | – (2) |
-| fall | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
-| gas_release (lel) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| gas_release (co) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| gas_release (h2s) | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) |
-| gas_release (voc) | – (8) | – (8) | – (8) | – (2) | – (2) | – (8) | ✓ | – (2) | – (2) | – (2) |
-| gas_release (co2) | – (8) | – (8) | – (8) | – (2) | – (2) | – (8) | – (8) | – (2) | – (2) | – (2) |
-| irrigation | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ | – (2) |
-| leak | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | – (2) | ✓ |
-| no_motion | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
-| pump_fault | – (9) | – (9) | – (9) | – (9) | – (9) | – (9) | ✓ | – (9) | – (9) | – (9) |
-| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| sos | – (10) | – (10) | ✓ | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) |
-| temperature_change | – (2) | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | – (2) | – (2) | – (2) |
+| event | `blackline_g7c` | `blackline_g7x_bridge` | `blackline_g8` | `bme280_sensor_board` | `fridge_logger` | `msa_altair_io4` | `msa_altair_io6` | `pump_vibration_sensor` | `rack_monitor` | `soil_moisture_probe` | `water_tank_monitor` |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ac_failure | – (1) | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | ✓ | – (1) | ✓ |
+| battery_drain | ✓ | ✓ | ✓ | – (2) | – (2) | ✓ | ✓ | – (2) | – (2) | ✓ | – (2) |
+| bearing_wear | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | ✓ | – (1) | – (1) | – (1) |
+| bump_test | ✓ | ✓ | ✓ | – (3) | – (3) | ✓ | ✓ | – (3) | – (3) | – (3) | – (3) |
+| collapse (lel) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) | – (4) |
+| collapse (co) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) | – (4) |
+| collapse (h2s) | ✓ | ✓ | ✓ | – (4) | – (4) | ✓ | ✓ | – (4) | – (4) | – (4) | – (4) |
+| collapse (voc) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | ✓ | – (4) | – (4) | – (4) | – (4) |
+| collapse (co2) | – (5) | – (5) | – (5) | – (4) | – (4) | – (5) | – (5) | – (4) | – (4) | – (4) | – (4) |
+| compressor_failure | – (1) | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | ✓ | – (1) | ✓ |
+| connection_loss | ✓ | ✓ | ✓ | – (6) | ✓ | ✓ | ✓ | – (6) | – (6) | ✓ | ✓ |
+| door_open | – (7) | – (7) | – (7) | ✓ | ✓ | – (7) | – (7) | – (1) | ✓ | – (1) | – (1) |
+| fall | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
+| gas_release (lel) | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (co) | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (h2s) | ✓ | ✓ | ✓ | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (voc) | – (8) | – (8) | – (8) | – (1) | – (1) | – (8) | ✓ | – (1) | – (1) | – (1) | – (1) |
+| gas_release (co2) | – (8) | – (8) | – (8) | – (1) | – (1) | – (8) | – (8) | – (1) | – (1) | – (1) | – (1) |
+| irrigation | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | ✓ | – (1) |
+| leak | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | – (1) | ✓ |
+| no_motion | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) | – (4) |
+| pump_fault | – (9) | – (9) | – (9) | – (9) | – (9) | – (9) | ✓ | – (9) | – (9) | – (9) | – (9) |
+| sensor_fault (any measured quantity) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| sos | – (10) | – (10) | ✓ | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) | – (10) |
+| temperature_change | – (1) | – (1) | – (1) | ✓ | ✓ | – (1) | – (1) | – (1) | ✓ | – (1) | – (1) |
 
-(1) it needs the device feature battery  
-(2) it changes nothing this device measures  
+(1) it changes nothing this device measures  
+(2) it needs the device feature battery  
 (3) it needs the device feature bump_test  
 (4) it changes nothing this device measures; the device is fixed, the event moves the body  
 (5) the largest change it causes (air.o2_pct: 0.000418) is below the sensor resolution (0.1); the device is fixed, the event moves the body  
@@ -375,5 +389,6 @@ Device presets with default event parameters. Gas releases at the default level 
 | `gas_twa_alarm` | Test: TWA alarm (CO) | `indoor_worker_walking` | `blackline_g7c` (body) | bump_test, gas_release, gas_release, connection_loss, sos |
 | `gas_voc_exposure` | Test: VOC exposure | `indoor_worker_walking` | `msa_altair_io6` (body) | bump_test, gas_release, gas_release, connection_loss, sos |
 | `pump_bearing_wear` | Pump bearing wear | `pump_room` | `pump_vibration_sensor` (fixed) | bearing_wear |
+| `server_room_ac_failure` | Server room AC failure | `server_room` | `rack_monitor` (fixed) | ac_failure |
 | `water_tank_leak` | Water tank leak | `water_tank` | `water_tank_monitor` (fixed) | leak |
 | `worker_collapse` | Worker collapse in H2S | `indoor_worker_walking` | `blackline_g7c` (body), `bme280_sensor_board` (fixed) | bump_test, collapse, connection_loss |

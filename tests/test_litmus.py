@@ -53,6 +53,28 @@ class TestField(unittest.TestCase):
         self.assertLess(m[a + 1800 + 86400], m[a + 1800] - 5)            # draining
 
 
+class TestServerRoom(unittest.TestCase):
+    def test_rate_alarm_only_when_the_ac_fails(self):
+        import shutil
+        import tempfile
+        import pandas as pd
+        from core.output import run
+        d = tempfile.mkdtemp()
+        try:
+            r = run("server_room_ac_failure", seed=44, out_dir=d)[0]
+            self.assertTrue(r["passed"])
+            df = pd.read_csv(r["csv"])
+        finally:
+            shutil.rmtree(d)
+        t = (pd.to_datetime(df.timestamp.str.replace("Z", "")) - pd.Timestamp("2026-01-05T06:00")).dt.total_seconds()
+        fail = (t >= 4 * 3600) & (t < 4 * 3600 + 2700)
+        normal = (t >= 600) & (t < 4 * 3600)
+        self.assertLess(df.temperature_rate_c_per_min[normal].abs().max(), 0.1)        # AC cycling stays quiet
+        self.assertEqual(df.temperature_rising_fast[~fail].sum(), 0)                    # never outside the failure
+        first = t[df.temperature_rising_fast == 1].min() - 4 * 3600
+        self.assertLess(first, 600)                                                     # within 10 min of the AC stopping
+
+
 class TestRefusals(unittest.TestCase):
     def test_event_needs_its_world_and_a_device(self):
         base = {"name": "x", "duration": "2h", "seed": 1}

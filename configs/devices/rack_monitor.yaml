@@ -1,0 +1,28 @@
+# A rack monitor: a temperature probe in the cold aisle, with a rate-of-rise alarm and a high-temperature alarm.
+name: Rack Monitor
+device_id_prefix: RACKMON
+description: "Air temperature at a server rack (DS18B20 probe), logged every 30 s, with an alarm when the temperature rises fast and one when it is too high."
+created: "2026-10-23"
+version: 1
+preset: true
+parts:
+  - part: maxim_ds18b20
+features:
+  sample_interval_s: {value: 30, unit: s, source: "ASSUMPTION: rack monitoring every 30 s"}
+logic:
+  - block: rate_of_change
+    input: air.temperature_c
+    output: temperature_rate_c_per_min
+    window_s: {value: 300, unit: s, source: "ASSUMPTION: change over 5 min; two full AC cycles, so the normal ripple cancels"}
+    per: min
+  - block: threshold_alarm
+    input: temperature_rate_c_per_min
+    output: temperature_rising_fast
+    level: {value: 0.25, unit: "°C/min", source: "ASSUMPTION: 1.25 °C in 5 min is not normal cycling"}
+    when: above
+  - block: threshold_alarm
+    input: air.temperature_c
+    output: temperature_alarm_high
+    level: {value: 27, unit: "°C", source: "ASSUMPTION: upper end of the ASHRAE recommended inlet range"}
+    when: above
+    hysteresis: {value: 1, unit: "°C", source: "ASSUMPTION"}

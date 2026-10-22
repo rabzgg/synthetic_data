@@ -1,0 +1,9 @@
+kind: ac_failure
+name: AC failure
+description: "The air conditioner stops: the room warms towards where the racks' heat would take it, until the AC runs again."
+probe_world: server_room
+params:
+  duration_s: {value: 2700, unit: s, source: "ASSUMPTION: 45 minutes until it is restarted"}
+label: "AC off for {duration_s} s"
+effects:
+  - {target: ac, op: set, value: 0, after: revert}
