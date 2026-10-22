@@ -36,7 +36,7 @@ import yaml
 
 from core.logic import MOTION_BLOCKS, build as build_block, outputs as block_outputs
 from core.quantities import CATALOG
-from core.quantities.measurement import ParamError, check_source
+from core.quantities.measurement import PARAMETERS, ParamError, check_source
 
 from .parts import PARTS_DIR, Part
 
@@ -66,9 +66,56 @@ class PartUse:
     log: object = True                       # True, False or a list of quantity ids
     alias: Optional[str] = None
     note: str = ""
+    rate: dict = field(default_factory=dict)  # {quantity: {"odr_hz": {...}}}: the ODR that follows the sample rate
 
     def logged(self, qid) -> bool:
         return self.log is True or (isinstance(self.log, list) and qid in self.log)
+
+    def user_overrides(self) -> dict:
+        """The overrides keyed by quantity."""
+        if self.overrides and set(self.overrides) <= set(PARAMETERS) and len(self.part.measures) == 1:
+            return {self.part.quantities()[0]: self.overrides}
+        return self.overrides or {}
+
+    def effective_overrides(self) -> dict:
+        """The device's overrides on top of the ODR that follows its sample rate."""
+        out = {q: dict(ov) for q, ov in self.user_overrides().items()}
+        for q, r in self.rate.items():
+            out[q] = dict(r, **out.get(q, {}))
+        return out
+
+    def params(self) -> Dict[str, dict]:
+        return self.part.params(self.effective_overrides())
+
+    def models(self):
+        return self.part.models(self.effective_overrides())
+
+    def follow_sample_rate(self, interval_s: float):
+        """Sensors whose ODR can be set (odr_choices_hz from a datasheet, odr_range_hz for a generic class)
+        run at the device's sample rate: the first setting at or above 1 / interval, or that rate clamped
+        to the range. Not when the device pins odr_hz or bandwidth_hz, nor for a quantity it does not log
+        (measured only for logic, e.g. a fall detector's accelerometer, which runs at its own rate)."""
+        from core.quantities.units import convert
+        want = 1.0 / interval_s
+        self.rate = {}
+        for q, p in self.part.measures.items():
+            pinned = {"odr_hz", "bandwidth_hz"} & set(self.user_overrides().get(q, {}))
+            if pinned or not self.logged(q) or "bandwidth_hz" in p:
+                continue
+            if "odr_choices_hz" in p:
+                c = p["odr_choices_hz"]
+                opts = sorted(float(x) for x in convert(c["value"], c["unit"], "Hz"))
+                odr = next((o for o in opts if o >= want * (1 - 1e-9)), opts[-1])
+                how = f"the first datasheet setting at or above it ({c['source']})"
+            elif "odr_range_hz" in p:
+                c = p["odr_range_hz"]
+                lo, hi = convert(c["value"], c["unit"], "Hz")
+                odr = min(max(want, lo), hi)
+                how = f"within the class range {lo:g} … {hi:g} Hz ({c['source']})"
+            else:
+                continue
+            self.rate[q] = {"odr_hz": {"value": round(odr, 9), "unit": "Hz", "source": f"ASSUMPTION: follows the "
+                                       f"sample rate {want:g} Hz (1 / {interval_s:g} s): {how}"}}
 
 
 @dataclass
@@ -110,6 +157,10 @@ class Device:
             if isinstance(use.log, list) and not set(use.log) <= set(p.quantities()):
                 raise ParamError(f"device {name!r}: log lists quantities {p.slug} does not measure")
             uses.append(use)
+        interval = float(v_((d.get("features") or {}).get("sample_interval_s", DEFAULT_INTERVAL)))
+        for use in uses:
+            use.follow_sample_rate(interval)
+            use.models()
         dev = cls(name, slug, int(d.get("version", 1)), uses, d.get("features") or {},
                   d.get("device_id_prefix") or slug.upper(), d.get("description", ""), str(d.get("created", "")),
                   bool(d.get("preset", False)), d.get("datasheet", ""), list(d.get("notes") or []),
@@ -163,7 +214,7 @@ class Device:
 
     def models(self):
         """[(part use, quantity, MeasurementModel)] in part order."""
-        return [(u, q, m) for u in self.parts for q, m in u.part.models(u.overrides).items()]
+        return [(u, q, m) for u in self.parts for q, m in u.models().items()]
 
     def reading_columns(self) -> List[tuple]:
         """[(part use, quantity, [columns])] for every logged reading."""
@@ -253,7 +304,7 @@ class Device:
 
     def reading_models(self) -> Dict[str, object]:
         """{column: MeasurementModel} for every logged reading column."""
-        return {c: u.part.models(u.overrides)[q] for u, q, cols in self.reading_columns() for c in cols}
+        return {c: u.models()[q] for u, q, cols in self.reading_columns() for c in cols}
 
     def generic_columns(self) -> List[str]:
         """Logged reading columns that come from a generic part (as written, after output_format)."""

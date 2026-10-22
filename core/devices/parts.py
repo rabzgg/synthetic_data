@@ -117,6 +117,7 @@ def apply_overrides(part: Part, overrides: dict) -> Dict[str, dict]:
             raise ParamError(f"part {part.slug} measures {len(part.measures)} quantities: key overrides by quantity")
         overrides = {part.quantities()[0]: overrides}
     out = {q: {k: dict(v) for k, v in p.items()} for q, p in part.measures.items()}
+    twins = {"noise_sd": "noise_density", "noise_density": "noise_sd"}     # one replaces the other
     for q, ov in overrides.items():
         if q not in out:
             raise ParamError(f"part {part.slug} does not measure {q}")
@@ -127,6 +128,8 @@ def apply_overrides(part: Part, overrides: dict) -> Dict[str, dict]:
             v.setdefault("unit", out[q].get(k, {}).get("unit") or _default_unit(q, k))
             v.setdefault("source", USER_TWEAK)
             out[q][k] = v
+            if k in twins and twins[k] not in ov:
+                out[q].pop(twins[k], None)
     return out
 
 

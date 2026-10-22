@@ -8,7 +8,7 @@ Three ways in:
   generic sensor or a named part; sampling, resolution and noise can be changed.
 - Build a device: from parts, named, with a world and the events it can see.
 - A scenario (marked in progress).
-Then generate: plots, gate, labels, a data profile and a ZIP. All logic lives in core/ and
+Then generate: plots, gate, labels, a data summary and a ZIP. All logic lives in core/ and
 validation/; this file only collects choices and shows results (docs/UI.md, docs/PRESALES.md).
 """
 import json
@@ -22,15 +22,14 @@ import streamlit as st
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-from core.devices import (Device, Part, columns_spec, generic_part, list_parts, parts_measuring,  # noqa: E402
-                          save_device)
+from core.devices import (Device, Part, PartUse, columns_spec, generic_part, list_parts,  # noqa: E402
+                          parts_measuring, save_device)
 from core.events import EVENTS, compatible_events, list_scenarios, load_scenario  # noqa: E402
-from core.output import plot_run, profile_range, run, zip_run  # noqa: E402
-from core.output.profile import NOTE as PROFILE_NOTE  # noqa: E402
+from core.output import plot_run, run, zip_run  # noqa: E402
 from core.quantities import CATALOG  # noqa: E402
 from core.world import list_presets, load_preset  # noqa: E402
 
-TWEAKABLE = ("accuracy", "noise_sd", "t90_s", "resolution")
+TWEAKABLE = ("accuracy", "noise_sd", "noise_density", "t90_s", "resolution", "odr_hz")
 st.set_page_config(page_title="Synthetic sensor data", layout="wide")
 # selected parts show their whole label instead of a cut-off chip
 st.markdown("""<style>
@@ -113,28 +112,17 @@ def table(df, wide: dict = None):
     st.dataframe(df, hide_index=True, width="stretch", column_config=cfg)
 
 
-def kb(n):
-    return f"{n / 1024:.1f}"
-
-
-def show_profile(path):
+def show_summary(path):
     with open(path) as fh:
         p = json.load(fh)
-    f = p["file"]
-    st.markdown(f"**Data profile** ({p['rows']} rows): whole CSV {kb(f['csv_bytes'])} kB → gzip "
-                f"{kb(f['csv_gzip_bytes'])} kB (ratio {f['csv_ratio']}); readings as raw counts in binary "
-                f"{kb(f['readings_bin_bytes'])} kB → gzip {kb(f['readings_bin_gzip_bytes'])} kB "
-                f"(ratio {f['readings_bin_ratio']})")
-    st.caption(PROFILE_NOTE + " Ratio = size before / size after gzip; higher shrinks more.")
+    st.markdown(f"**Data summary**: {p['rows']} rows at {p['sample_rate_hz']:g} Hz")
     rows = []
     for c, e in p["columns"].items():
-        rows.append({"column": c + (" (generic)" if e.get("generic") else ""), "bits/sample": e["bits"],
-                     "bits from": e["bits_from"], "noise / resolution": e.get("noise_over_resolution", ""),
-                     "repeats prev. row": f"{100 * e['repeat_fraction']:.1f} %",
-                     "CSV kB": kb(e["csv_bytes"]), "CSV gzip kB": kb(e["csv_gzip_bytes"]), "CSV ratio": e["csv_ratio"],
-                     "counts type": e.get("bin_type", ""), "counts kB": kb(e["bin_bytes"]) if "bin_bytes" in e else "",
-                     "counts gzip kB": kb(e["bin_gzip_bytes"]) if "bin_gzip_bytes" in e else "",
-                     "counts ratio": e.get("bin_ratio", "")})
+        rows.append({"column": c, "unit": e.get("unit", ""), "rows": e["rows"], "sample rate (Hz)": e["sample_rate_hz"],
+                     "bits/sample": e.get("bits", ""), "min": e.get("min", ""), "max": e.get("max", ""),
+                     "noise / resolution": e.get("noise_over_resolution", ""),
+                     "ODR (Hz)": e.get("odr_hz") or "", "bandwidth (Hz)": e.get("bandwidth_hz") or "",
+                     "generic": {True: "yes", False: "no"}.get(e.get("generic"), "")})
     table(pd.DataFrame(rows).astype(str), {"column": 240})
 
 
@@ -143,7 +131,7 @@ def show_results(results):
         st.success(f"Generated {len(results)} device file(s); every gate passed")
     else:
         st.error("At least one device failed its gate; see the table below")
-    st.download_button("Download ZIP (CSV, labels, manifest, gate, profile)", data=zip_run(results),
+    st.download_button("Download ZIP (CSV, labels, manifest, gate, summary)", data=zip_run(results),
                        file_name="synthetic_run.zip", mime="application/zip")
     for r in results:
         with open(r["gate"]) as fh:
@@ -151,8 +139,8 @@ def show_results(results):
         st.subheader(f"{r['device']}: gate {'PASSED' if g['passed'] else 'FAILED'}")
         with st.spinner("Plotting…"):
             st.pyplot(plot_run(r["csv"], r["labels"], r["manifest"]))
-        if r.get("profile"):
-            show_profile(r["profile"])
+        if r.get("summary"):
+            show_summary(r["summary"])
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("**Gate checks**")
@@ -164,31 +152,6 @@ def show_results(results):
             table(pd.read_csv(r["labels"]), {"event": 220, "detail": 320, "start_utc": 200, "end_utc": 200})
         st.markdown("**First rows of the CSV**")
         st.dataframe(pd.read_csv(r["csv"]).head(20), hide_index=True, width="stretch")
-
-
-def show_seed_range():
-    last = st.session_state.get("last")
-    if not last:
-        return
-    st.markdown("**Five seeds**: the same device and situation with seeds "
-                f"{last['seed']}…{last['seed'] + 4}, so the profile is a range, not one number.")
-    if st.button("Run 5 seeds", key="five_seeds"):
-        profs = {}
-        with st.spinner("Generating five seeds…"):
-            for s in range(last["seed"], last["seed"] + 5):
-                for r in run(last["scenario"], seed=s, out_dir=os.path.join(out_dir, f"seeds_{int(time.time())}_{s}"),
-                             gate=False):
-                    with open(r["profile"]) as fh:
-                        profs.setdefault(r["device"], []).append(json.load(fh))
-        st.session_state["seed_range"] = {d: profile_range(p) for d, p in profs.items()}
-    for d, rng in (st.session_state.get("seed_range") or {}).items():
-        span = lambda x: "" if not x else (f"{x[0]:g} … {x[1]:g}" if x[0] != x[1] else f"{x[0]:g}")
-        st.markdown(f"`{d}`, seeds {rng['seeds']}: whole CSV gzip ratio {span(rng['file']['csv_ratio'])}; readings as "
-                    f"raw counts {span(rng['file']['readings_bin_ratio'])}")
-        table(pd.DataFrame([{"column": c, "CSV ratio": span(e.get("csv_ratio")), "counts ratio": span(e.get("bin_ratio")),
-                             "repeats prev. row": span(e.get("repeat_fraction"))} for c, e in rng["columns"].items()]),
-              {"column": 240})
-        st.caption(PROFILE_NOTE)
 
 
 def run_and_generate(spec, worlds, default_mount="fixed", default_hours=8, step=3):
@@ -241,8 +204,6 @@ def run_and_generate(spec, worlds, default_mount="fixed", default_hours=8, step=
                 st.session_state["results"] = run(scenario, seed=int(seed),
                                                   out_dir=os.path.join(out_dir, f"{dev.slug}_{seed}_{int(t0)}"))
             st.session_state["took"] = time.time() - t0
-            st.session_state["last"] = {"scenario": scenario, "seed": int(seed)}
-            st.session_state.pop("seed_range", None)
         except Exception as e:
             st.session_state.pop("results", None)
             st.error(f"Generation failed: {e}")
@@ -278,8 +239,6 @@ if mode == SCENARIO:
         with st.spinner("Generating…"):
             st.session_state["results"] = run(sc, seed=int(seed), out_dir=os.path.join(out_dir, f"{sc}_{seed}"))
         st.session_state["took"] = time.time() - t0
-        st.session_state["last"] = {"scenario": sc, "seed": int(seed)}
-        st.session_state.pop("seed_range", None)
 
 elif mode == COLUMNS:
     st.markdown("#### 1. What does the client log?")
@@ -313,26 +272,34 @@ elif mode == COLUMNS:
                                  key=f"part/{q}", label_visibility="collapsed")
     st.markdown("#### 4. Sampling, resolution and noise")
     body = any(CATALOG[q].vector for q in picked)
-    interval = st.number_input("Sample interval (s)", min_value=0.04, max_value=3600.0, value=0.04 if body else 60.0,
+    interval = st.number_input("Sample interval (s)", min_value=0.001, max_value=3600.0, value=0.04 if body else 60.0,
                                step=0.01 if body else 1.0, format="%g", key="interval",
-                               help="0.04 s = 25 Hz, the finest step of the worlds' motion")
+                               help="0.04 s = 25 Hz. Sensors whose data rate can be set run at this rate, so their "
+                                    "bandwidth and noise follow it (unless the ODR is pinned below).")
     raw = st.checkbox("Write raw counts (integer register / ADC codes, round(reading / resolution))", key="raw")
     for q in picked:
         slug = generic_of(q) if choice[q] == "generic" else choice[q]
-        m = Part.load(slug).models()[q]
+        use = PartUse(Part.load(slug))
+        use.follow_sample_rate(float(interval))
+        m = use.models()[q]                                  # at this sample rate
         unit = CATALOG[q].unit
-        c0, c1, c2, c3 = st.columns([2, 2, 2, 4])
+        c0, c1, c2, c3, c4 = st.columns([2, 2, 2, 2, 4])
         c0.markdown(f"`{column_label(q)}`" + (" (generic)" if choice[q] == "generic" else ""))
-        res = c1.number_input(f"resolution ({unit})", value=float(m.resolution), format="%g", key=f"res/{q}/{slug}")
+        k = f"{q}/{slug}/{interval}"
+        res = c1.number_input(f"resolution ({unit})", value=float(m.resolution), format="%g", key=f"res/{k}")
         noise = c2.number_input(f"noise sd ({unit})", value=float(m.noise_sd), format="%g", min_value=0.0,
-                                key=f"noise/{q}/{slug}")
-        c3.caption(f"range {m.range} {unit} · t90 {m.t90_s:g} s · ODR {m.odr_hz or '—'} Hz · "
-                   f"error bound ±{float(m.error_bound(0)):g} {unit}" +
+                                key=f"noise/{k}")
+        odr = c3.number_input("ODR (Hz)", value=float(m.odr_hz or 0.0), format="%g", min_value=0.0, key=f"odr/{k}",
+                              help="Output data rate in use; change it to pin it")
+        c4.caption(f"range {m.range} {unit} · t90 {m.t90_s:g} s · bandwidth {m.bandwidth_hz or '—'} Hz" +
+                   (" · ODR follows the sample rate" if q in use.rate else " · fixed ODR") +
+                   f" · error bound ±{float(m.error_bound(0)):g} {unit}" +
                    (f" + {m.hard('accuracy_pct_reading'):g} % of reading" if m.accuracy_pct_reading else ""))
-        for k, new, old in (("resolution", res, m.resolution), ("noise_sd", noise, m.noise_sd)):
-            if abs(new - old) > 1e-12 * max(1.0, abs(old)):
-                ov.setdefault(q, {})[k] = {"value": new, "unit": unit}
-                c3.caption(f"changed: {k} {old:g} → {new:g} (ASSUMPTION: user tweak)")
+        for name_, new, old, u_ in (("resolution", res, m.resolution, unit), ("noise_sd", noise, m.noise_sd, unit),
+                                    ("odr_hz", odr, m.odr_hz or 0.0, "Hz")):
+            if abs(new - old) > 1e-9 * max(1.0, abs(old)):
+                ov.setdefault(q, {})[name_] = {"value": new, "unit": u_}
+                c4.caption(f"changed: {name_} {old:g} → {new:g} (ASSUMPTION: user tweak)")
     st.markdown("#### 5. Name, events, generate")
     st.sidebar.markdown("**Device**")
     name = st.sidebar.text_input("Name your device", "Client device", key="name")
@@ -392,4 +359,3 @@ else:
 if st.session_state.get("results"):
     st.caption(f"took {st.session_state.get('took', 0):.1f} s")
     show_results(st.session_state["results"])
-    show_seed_range()

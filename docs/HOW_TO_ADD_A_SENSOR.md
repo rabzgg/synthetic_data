@@ -32,6 +32,7 @@ Find, for each quantity the sensor measures, with the **page number**:
 | noise (RMS, peak-to-peak, density) | `noise_sd` | p-p ÷ 6.6; density × √bandwidth |
 | response time T90 / T63 / τ / T50, recovery time | `t90_s`, `t90_down_s` | the rules convert T63 and T50 |
 | bandwidth, ODR | `bandwidth_hz`, `odr_hz` | without a bandwidth: ODR / 2 (ASSUMPTION) |
+| selectable data rates | `odr_choices_hz` | a device that logs the quantity runs at the first one at or above its sample rate (see `docs/PRESALES.md`) |
 | hysteresis (±X or full width) | `hysteresis` | ±X → band 2X |
 | long-term stability / drift per year | `drift_per_hour` | via the unit `…/year` |
 | cross-sensitivity, temperature coefficient | `cross_sensitivity` | |
@@ -133,7 +134,8 @@ output_format:
 
 For pre-sales every quantity has one generic part (`docs/PRESALES.md`): a typical sensor of its class,
 every value an `ASSUMPTION` that says what it was anchored on. It adds two keys and needs `range`,
-`resolution`, `noise_sd`, `t90_s` and `odr_hz`:
+`resolution`, `noise_density` (so the noise follows the ODR), `t90_s` and `odr_hz`; a class whose rate
+can be set also gives `odr_range_hz`:
 
 ```yaml
 name: Generic CO2 sensor (NDIR)
@@ -152,4 +154,4 @@ python3 cli/generate.py --scenario worker_collapse --devices my_new_device:fixed
 ```
 
 Read `<device>_<scenario>_seed<n>_gate.json`: every check, its value and threshold. A failing check
-names the column. `_profile.json` holds the data profile. The manifest lists every parameter that went into the run with its source.
+names the column. `_summary.json` holds the data summary. The manifest lists every parameter that went into the run with its source.

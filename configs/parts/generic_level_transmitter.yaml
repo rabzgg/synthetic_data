@@ -9,7 +9,7 @@ measures:
     params:
       range: {value: [0, 100], unit: "%", source: "ASSUMPTION: scaled to the tank height"}
       resolution: {value: 0.1, unit: "%", source: "ASSUMPTION: output step"}
-      noise_sd: {value: 0.1, unit: "%", source: "ASSUMPTION: ripples on the surface"}
+      noise_density: {value: 0.14142135623731, unit: "%/√Hz", source: "ASSUMPTION: ripples on the surface; written as a density (0.1 % at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
       t90_s: {value: 5, unit: s, source: "ASSUMPTION: damping of the transmitter"}
       odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the logger samples the loop once a second"}
     from_datasheet:

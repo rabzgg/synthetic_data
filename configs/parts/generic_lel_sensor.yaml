@@ -9,7 +9,7 @@ measures:
     params:
       range: {value: [0, 100], unit: "%LEL", source: "ASSUMPTION: 0-100 %LEL, as the LEL sensors in this repo"}
       resolution: {value: 1, unit: "%LEL", source: "ASSUMPTION: 1 %LEL, as the LEL sensors in this repo"}
-      noise_sd: {value: 0.5, unit: "%LEL", source: "ASSUMPTION: not below the LEL sensors in this repo (0.3 %LEL)"}
+      noise_density: {value: 0.707106781186547, unit: "%LEL/√Hz", source: "ASSUMPTION: not below the LEL sensors in this repo (0.3 %LEL); written as a density (0.5 %LEL at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
       t90_s: {value: 20, unit: s, source: "ASSUMPTION: t90 20 s, as the LEL sensors in this repo"}
       t90_down_s: {value: 60, unit: s, source: "ASSUMPTION: falls three times slower than it rises, as the LEL sensors in this repo"}
       odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: portable detectors update once a second"}

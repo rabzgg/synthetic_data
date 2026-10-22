@@ -9,7 +9,7 @@ measures:
     params:
       range: {value: [0, 5], unit: A, source: "ASSUMPTION: 5 A clamp, enough for a household fridge"}
       resolution: {value: 10, unit: mA, source: "ASSUMPTION: logger ADC step on this range"}
-      noise_sd: {value: 5, unit: mA, source: "ASSUMPTION: mains pick-up"}
+      noise_density: {value: 7.07106781186547, unit: "mA/√Hz", source: "ASSUMPTION: mains pick-up; written as a density (5 mA at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
       t90_s: {value: 2, unit: s, source: "ASSUMPTION: the logger averages the RMS over about a second"}
       odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the logger reads the RMS once a second"}
     from_datasheet:

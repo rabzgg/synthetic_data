@@ -9,7 +9,7 @@ measures:
     params:
       range: {value: [0, 14], unit: pH, source: "ASSUMPTION: the full pH scale"}
       resolution: {value: 0.01, unit: pH, source: "ASSUMPTION: 0.01 pH output step"}
-      noise_sd: {value: 0.01, unit: pH, source: "ASSUMPTION: about one step"}
+      noise_density: {value: 0.0141421356237309, unit: "pH/√Hz", source: "ASSUMPTION: about one step; written as a density (0.01 pH at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
       t90_s: {value: 30, unit: s, source: "ASSUMPTION: a glass electrode settles within half a minute"}
       odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: one reading a second"}
     from_datasheet:

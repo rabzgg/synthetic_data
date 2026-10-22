@@ -9,7 +9,7 @@ measures:
     params:
       range: {value: [0, 25], unit: mm/s, source: "ASSUMPTION: 0-25 mm/s, the usual range for pumps and fans"}
       resolution: {value: 0.01, unit: mm/s, source: "ASSUMPTION: digital output step"}
-      noise_sd: {value: 0.02, unit: mm/s, source: "ASSUMPTION"}
+      noise_density: {value: 0.0282842712474619, unit: "mm/s/√Hz", source: "ASSUMPTION; written as a density (0.02 mm/s at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
       t90_s: {value: 5, unit: s, source: "ASSUMPTION: the RMS is averaged over a few seconds"}
       odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the RMS output is updated once a second"}
     from_datasheet:

@@ -72,6 +72,10 @@ PARAMETERS = {
     "bandwidth_hz": Param("Hz", None, "cutoff of the first-order low-pass on the signal; also sets noise_sd from "
                                       "noise_density"),
     "odr_hz": Param("Hz", None, "output data rate; when bandwidth_hz is not given, bandwidth = ODR / 2 (ASSUMPTION)"),
+    "odr_choices_hz": Param("Hz", None, "the ODR settings the sensor offers; a device sets the ODR to the first one at "
+                                        "or above its sample rate (1 / sample interval) unless odr_hz is pinned"),
+    "odr_range_hz": Param("Hz", None, "[low, high]: any ODR in between (a generic class); a device sets the ODR to its "
+                                      "sample rate, clamped to this range, unless odr_hz is pinned"),
     "t90_s": Param("s", 0.0, "time to reach 90 % of a step; 0 = instant"),
     "t90_up_s": Param("s", None, "t90 for a rising input (default t90_s)"),
     "t90_down_s": Param("s", None, "t90 for a falling input (default t90_s)"),
@@ -137,6 +141,8 @@ class MeasurementModel:
     noise_sd: float = 0.0
     bandwidth_hz: Optional[float] = None
     odr_hz: Optional[float] = None
+    odr_choices_hz: Optional[tuple] = None
+    odr_range_hz: Optional[tuple] = None
     t90_s: float = 0.0
     t90_up_s: Optional[float] = None
     t90_down_s: Optional[float] = None
@@ -171,6 +177,11 @@ class MeasurementModel:
         for k in ("bandwidth_hz", "odr_hz"):
             if getattr(self, k) is not None and getattr(self, k) <= 0:
                 raise ParamError(f"{qid}: {k} must be > 0")
+        if self.odr_choices_hz is not None and (not len(self.odr_choices_hz) or min(self.odr_choices_hz) <= 0):
+            raise ParamError(f"{qid}: odr_choices_hz must be a list of rates > 0")
+        if self.odr_range_hz is not None and not (len(self.odr_range_hz) == 2 and 0 < self.odr_range_hz[0]
+                                                  <= self.odr_range_hz[1]):
+            raise ParamError(f"{qid}: odr_range_hz must be [low, high] with 0 < low <= high")
         if not self.quantity.vector:
             for k, p in PARAMETERS.items():
                 if p.vector_only and getattr(self, k) not in (None, 0.0):
@@ -221,6 +232,9 @@ class MeasurementModel:
             kw["noise_sd"] = kw.pop("noise_density") * float(np.sqrt(kw["bandwidth_hz"]))
             sources["noise_sd"] = f"{sources['noise_density']}; noise_density × √bandwidth_hz ({sources['bandwidth_hz']})"
         kw["range"] = tuple(tuple(r) if isinstance(r, (list, tuple)) else r for r in kw["range"])
+        for k in ("odr_choices_hz", "odr_range_hz"):
+            if kw.get(k) is not None:
+                kw[k] = tuple(sorted(float(x) for x in kw[k]))
         if kw.get("mounting_orientation") is not None:
             kw["mounting_orientation"] = tuple(kw["mounting_orientation"])
         return cls(quantity=q, sources=sources, kinds=kinds, **kw)

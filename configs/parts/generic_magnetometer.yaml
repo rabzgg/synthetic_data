@@ -9,9 +9,10 @@ measures:
     params:
       range: {value: [-1200, 1200], unit: "µT", source: "ASSUMPTION: ±1200 µT on every axis; within the BMM150 in this repo"}
       resolution: {value: 0.3, unit: "µT", source: "ASSUMPTION: 0.3 µT, as the BMM150 in this repo"}
-      noise_sd: {value: 0.8, unit: "µT", source: "ASSUMPTION: not below the BMM150 in this repo (0.6 µT)"}
+      noise_density: {value: 0.357770876399966, unit: "µT/√Hz", source: "ASSUMPTION: not below the BMM150 in this repo (0.6 µT); written as a density (0.8 µT at ODR 10 Hz, bandwidth 5 Hz) so the noise follows the ODR"}
       t90_s: {value: 0, unit: s, source: "ASSUMPTION: no lag beyond the low-pass set by the ODR (bandwidth = ODR / 2)"}
-      odr_hz: {value: 10, unit: Hz, source: "ASSUMPTION: 10 Hz, as the BMM150 in this repo"}
+      odr_hz: {value: 10, unit: Hz, source: "ASSUMPTION: default when no device sets it; 10 Hz, as the BMM150 in this repo"}
+      odr_range_hz: {value: [2, 30], unit: Hz, source: "ASSUMPTION: consumer magnetometers offer about 2 to 30 Hz in normal mode"}
     from_datasheet:
       - {rule: accuracy_typical, value: 40, unit: "µT", source: "ASSUMPTION: offset 40 µT typical (1σ) without hard-iron calibration, as the BMM150 in this repo"}
       - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "ASSUMPTION: gain error ±5 %, as the BMM150 in this repo"}

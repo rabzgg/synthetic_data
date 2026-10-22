@@ -1,6 +1,6 @@
 """
-Pre-sales path: one generic part per quantity, a device from the columns a client logs, raw counts
-and the data profile.
+Pre-sales path: one generic part per quantity, a device from the columns a client logs, raw counts,
+the data summary, and the noise that follows the sample rate.
 """
 import json
 import os
@@ -14,11 +14,11 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from core.devices import Part, columns_spec, device_from_columns, generic_parts, parts_measuring  # noqa: E402
-from core.output import profile_range, run  # noqa: E402
+from core.output import run  # noqa: E402
 from core.quantities import CATALOG  # noqa: E402
 from core.quantities.measurement import ParamError  # noqa: E402
 
-REQUIRED = ("range", "resolution", "noise_sd", "t90_s", "odr_hz")
+REQUIRED = ("range", "resolution", "noise_density", "t90_s", "odr_hz")
 
 
 class TestGenericParts(unittest.TestCase):
@@ -123,28 +123,58 @@ class TestRawCounts(unittest.TestCase):
             self.assertEqual(man["device"]["generic_columns"], ["accel_x_g_counts", "accel_y_g_counts", "accel_z_g_counts"])
 
 
-class TestProfile(unittest.TestCase):
-    def test_profile_and_range(self):
+class TestSummary(unittest.TestCase):
+    def test_summary_file(self):
         dev = device_from_columns({"air.temperature_c": "generic", "air.co2_ppm": "generic"}, name="Room",
                                   sample_interval_s=10)
-        profs = []
         with tempfile.TemporaryDirectory() as tmp:
-            for seed in (1, 2):
-                r = run({"name": "t", "world": "static_shelf", "duration": "2h", "seed": seed, "events": [],
-                         "devices": [{"device": dev, "mount": "fixed"}]}, out_dir=tmp)[0]
-                profs.append(json.load(open(r["profile"])))
-        p = profs[0]
-        self.assertIn("NOT the Bitteiler algorithm", p["note"])
+            r = run({"name": "t", "world": "static_shelf", "duration": "2h", "seed": 1, "events": [],
+                     "devices": [{"device": dev, "mount": "fixed"}]}, out_dir=tmp)[0]
+            self.assertTrue(r["summary"].endswith("_summary.json"))
+            p = json.load(open(r["summary"]))
+            d = pd.read_csv(r["csv"])
+        self.assertEqual(p["rows"], len(d))
         t = p["columns"]["temperature_c"]
+        self.assertEqual(set(t), {"rows", "sample_rate_hz", "min", "max", "kind", "quantity", "unit", "part", "generic",
+                                  "bits", "noise_over_resolution", "odr_hz", "bandwidth_hz"})
+        self.assertEqual(t["sample_rate_hz"], 0.1)
         self.assertEqual(t["bits"], 11)                                      # 125 °C / 0.1 + 1 codes
         self.assertAlmostEqual(t["noise_over_resolution"], 0.5)
-        self.assertTrue(0 <= t["repeat_fraction"] <= 1)
-        self.assertGreater(t["csv_ratio"], 1)
-        self.assertEqual(t["bin_type"], "int16")
-        rng = profile_range(profs)
-        self.assertEqual(rng["seeds"], [1, 2])
-        lo, hi = rng["columns"]["co2_ppm"]["csv_ratio"]
-        self.assertLessEqual(lo, hi)
+        self.assertEqual((t["min"], t["max"]), (d["temperature_c"].min(), d["temperature_c"].max()))
+        self.assertTrue(t["generic"])
+        self.assertEqual(t["odr_hz"], 1.0)                                   # 0.1 Hz clamped to the class's 1 Hz
+
+
+class TestNoiseFollowsTheSampleRate(unittest.TestCase):
+    def shelf(self, part, interval):
+        dev = device_from_columns({"body.accel_g": part}, name="Shelf accel", sample_interval_s=interval)
+        with tempfile.TemporaryDirectory() as tmp:
+            r = run({"name": "shelf", "world": "static_shelf", "duration": "10min", "seed": 7, "events": [],
+                     "devices": [{"device": dev, "mount": "fixed"}]}, out_dir=tmp)[0]
+            self.assertTrue(r["passed"])
+            d = pd.read_csv(r["csv"])
+            man = json.load(open(r["manifest"]))
+        rms = float(np.mean([d[c].std() for c in ("accel_x_g", "accel_y_g", "accel_z_g")]))
+        return dev.reading_models()["accel_x_g"], rms, man["parts"][0]["quantities"]["body.accel_g"]["rate"]
+
+    def test_generic_accelerometer_100_vs_25_hz(self):
+        m100, rms100, rate100 = self.shelf("generic", 0.01)
+        m25, rms25, rate25 = self.shelf("generic", 0.04)
+        self.assertEqual((m100.odr_hz, m100.bandwidth_hz, m25.odr_hz, m25.bandwidth_hz), (100, 50, 25, 12.5))
+        self.assertAlmostEqual(m100.noise_sd / m25.noise_sd, 2.0)
+        self.assertAlmostEqual(rms100 / rms25, 2.0, delta=0.3)              # 15 %; quantisation (3.9 mg) included
+        self.assertIn("follows the sample rate 25 Hz", rate25["odr_source"])
+        self.assertIn("bandwidth = ODR / 2", rate25["bandwidth_source"])
+
+    def test_datasheet_settings_and_pins(self):
+        dev = device_from_columns({"body.accel_g": "bosch_bma280"}, name="A", sample_interval_s=0.04)
+        self.assertEqual(dev.reading_models()["accel_x_g"].odr_hz, 31.25)       # the first setting >= 25 Hz
+        pinned = device_from_columns({"body.accel_g": "generic"}, name="B", sample_interval_s=0.04,
+                                     overrides={"body.accel_g": {"odr_hz": {"value": 100, "unit": "Hz"}}})
+        self.assertEqual(pinned.reading_models()["accel_x_g"].odr_hz, 100)
+        from core.devices import Device
+        g7c = Device.load("blackline_g7c")                                     # log: false keeps its own rate
+        self.assertEqual([m.odr_hz for u, q, m in g7c.models() if q == "body.accel_g"], [2000])
 
 
 if __name__ == "__main__":

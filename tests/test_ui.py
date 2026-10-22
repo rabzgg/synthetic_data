@@ -1,7 +1,7 @@
 """
 The Streamlit UI (ui/app.py) runs every way in: columns (pre-sales, the default), a device built from
 parts and named by the user, and a scenario; each offers only the worlds and events it can use and
-ends with files that pass the gate, with a data profile. Skipped when streamlit is not installed.
+ends with files that pass the gate, with a data summary. Skipped when streamlit is not installed.
 """
 import os
 import sys
@@ -57,9 +57,9 @@ class TestUi(unittest.TestCase):
         at.button(key="generate").click().run()
         self.assertEqual(at.exception, [])
         self.assertIn("client_device: gate PASSED", [h.value for h in at.subheader])
-        self.assertTrue(any(m.value.startswith("**Data profile**") for m in at.markdown))
-        self.assertTrue(any("NOT the Bitteiler algorithm" in c.value for c in at.caption))
-        self.assertTrue(os.path.exists(at.session_state["results"][0]["profile"]))
+        self.assertTrue(any(m.value.startswith("**Data summary**") for m in at.markdown))
+        path = at.session_state["results"][0]["summary"]
+        self.assertTrue(path.endswith("_summary.json") and os.path.exists(path))
 
     def test_columns_temperature_via_bme280_as_raw_counts(self):
         at = AppTest.from_file(APP, default_timeout=600).run()

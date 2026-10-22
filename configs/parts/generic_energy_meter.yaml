@@ -9,7 +9,7 @@ measures:
     params:
       range: {value: [0, 999999], unit: kWh, source: "ASSUMPTION: a six-digit register"}
       resolution: {value: 0.01, unit: kWh, source: "ASSUMPTION: 10 Wh per count"}
-      noise_sd: {value: 0, unit: kWh, source: "ASSUMPTION: a counter has no noise; its error is the accuracy class"}
+      noise_density: {value: 0, unit: "kWh/√Hz", source: "ASSUMPTION: a counter has no noise; its error is the accuracy class; written as a density (0 kWh at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
       t90_s: {value: 0, unit: s, source: "ASSUMPTION: a counter has no lag"}
       odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the register can be read once a second"}
     from_datasheet:

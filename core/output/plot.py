@@ -44,9 +44,9 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     t = pd.to_datetime(df["timestamp"].str.replace("Z", ""))
     vals, alarms, states = _panels(df)
     n = len(vals) + bool(alarms) + bool(states)
-    ratios = [1] * len(vals) + ([max(1, len(alarms) / 4)] if alarms else []) + ([max(1, len(states) / 2)] if states else [])
-    fig, axes = plt.subplots(max(n, 1), 1, figsize=(13, 1.7 * sum(ratios or [1]) + 1.6), sharex=True, squeeze=False,
-                             gridspec_kw={"height_ratios": ratios or [1]})
+    heights = [1] * len(vals) + ([max(1, len(alarms) / 4)] if alarms else []) + ([max(1, len(states) / 2)] if states else [])
+    fig, axes = plt.subplots(max(n, 1), 1, figsize=(13, 1.7 * sum(heights or [1]) + 1.6), sharex=True, squeeze=False,
+                             gridspec_kw={"height_ratios": heights or [1]})
     axes = axes[:, 0]
     at = lambda s: start + pd.to_timedelta(s, unit="s")
     seen = lab[lab.scope.isin(["world", "device"]) & ~lab.event.str.contains(":")]
@@ -111,14 +111,14 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
 
 
 def zip_run(results) -> bytes:
-    """ZIP of every device's CSV, labels, manifest, gate and profile (results of core.output.run)."""
+    """ZIP of every device's CSV, labels, manifest, gate and summary (results of core.output.run)."""
     import io
     import os
     import zipfile
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for r in results:
-            for k in ("csv", "labels", "manifest", "gate", "profile"):
+            for k in ("csv", "labels", "manifest", "gate", "summary"):
                 if r.get(k):
                     z.write(r[k], os.path.basename(r[k]))
     return buf.getvalue()

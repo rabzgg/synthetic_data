@@ -16,8 +16,9 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 2. Pick the situation: only worlds that provide every chosen column.
 3. Per column: "Generic (default): <class>" or a part from a datasheet that measures it; a part's
    other quantities are not logged ("also measures X (not logged)").
-4. Sample interval, and per column resolution and noise (a change is marked "ASSUMPTION: user
-   tweak"); optionally raw counts (integer register / ADC codes).
+4. Sample interval, and per column resolution, noise and ODR (a change is marked "ASSUMPTION: user
+   tweak"; a sensor whose rate can be set follows the sample interval, so its noise does too);
+   optionally raw counts (integer register / ADC codes).
 5. Name, mount, duration, seed, the events it can see, Generate, Save.
 
 **Build a device.**
@@ -39,11 +40,10 @@ layout and options are still being finished, so the page is marked in progress.
 ## Results
 
 Per device: the gate verdict and every check, a figure (one panel per column, events shaded, gaps
-yellow, expected device responses hatched, generic columns marked "(generic)"), the **data profile**
-(bits per sample, noise / resolution, repeated rows, gzip ratios of the CSV and of the raw counts; a
-rough benchmark, not the Bitteiler algorithm), the labels, the first rows of the CSV, and one ZIP
-with the CSV, labels, manifest, gate and profile of every device. "Run 5 seeds" repeats the run with
-five seeds and shows each ratio as min … max.
+yellow, expected device responses hatched, generic columns marked "(generic)"), the **data summary**
+(per column: rows, sample rate, bits per sample, min, max, noise / resolution, ODR and bandwidth,
+generic or not), the labels, the first rows of the CSV, and one ZIP with the CSV, labels, manifest,
+gate and summary of every device.
 
 ## Not in the UI (do it in the files)
 

@@ -12,8 +12,8 @@ Per device, in the output folder:
                                              with its source, logic, world (with the defaults it used),
                                              scenario, events placed, seed, generator version
     <slug>_<scenario>_seed<n>_gate.json      the gate (validation/auto_gate.py)
-    <slug>_<scenario>_seed<n>_profile.json   data profile per column: bits, noise / resolution, repeats,
-                                             gzip ratios (core/output/profile.py)
+    <slug>_<scenario>_seed<n>_summary.json   data summary per column: rows, sample rate, bits, min, max,
+                                             noise / resolution, generic or not (core/output/summary.py)
 """
 import json
 import os
@@ -28,7 +28,7 @@ from core.events.scenario import hms
 from core.logic import Context, Stream, build, outputs
 from core.quantities import CATALOG
 
-from .profile import profile
+from .summary import summary
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -65,6 +65,9 @@ def measure_device(world, view, seed: int):
                              f"the world provides {', '.join(w.quantities())}")
         vec = CATALOG[q].vector
         dt = w.body_dt if vec else w.air_dt
+        if q in u.rate and m.odr_hz:                       # a sensor set to run at the sample rate makes a new value
+            dt = min(dt, 1.0 / m.odr_hz)                  # every 1 / ODR, finer than the world's grid if need be
+            # (the truth is interpolated); a fixed-rate sensor logged faster than it updates repeats its value
         t = np.arange(0, w.duration_s + 1e-9, dt)
         x = wv.at(q, t)
         for oq, s, e, mode, val in view.overrides:
@@ -176,13 +179,13 @@ def reading_columns(dev) -> dict:
     bits, raw = dev.column_bits(), set(dev.raw_count_columns())
     out = {}
     for u, q, cols in dev.reading_columns():
-        m = u.part.models(u.overrides)[q]
+        m = u.models()[q]
         for c in cols:
             n = names[c]
             out[n] = {"column": c, "quantity": q, "unit": CATALOG[q].unit, "part": u.part.slug,
                       "generic": bool(u.part.generic_for), "resolution": m.resolution, "noise_sd": m.noise_sd,
                       "range": [float(np.min(m.bounds[0])), float(np.max(m.bounds[1]))], "bits": bits[n],
-                      "raw_counts": n in raw}
+                      "raw_counts": n in raw, "odr_hz": m.odr_hz, "bandwidth_hz": m.bandwidth_hz}
     return out
 
 
@@ -190,13 +193,15 @@ def manifest(prepared, view, seed, scenario_name, extra) -> dict:
     dev, w = view.device, prepared.world
     parts = []
     for u in dev.parts:
-        ms = u.part.models(u.overrides)
+        ms, params = u.models(), u.params()
         parts.append({"part": u.part.slug, "name": u.part.name, "datasheet": u.part.datasheet, "logged": u.log,
                       "generic": bool(u.part.generic_for), "class": u.part.cls,
                       "alias": u.alias, "note": u.note, "notes": u.part.notes,
-                      "quantities": {q: {"parameters": u.part.params(u.overrides)[q], "kinds": m.kinds,
-                                         "derived_sources": {k: s for k, s in m.sources.items()
-                                                             if k not in u.part.params(u.overrides)[q]}}
+                      "quantities": {q: {"parameters": params[q], "kinds": m.kinds,
+                                         "derived_sources": {k: s for k, s in m.sources.items() if k not in params[q]},
+                                         "rate": {"odr_hz": m.odr_hz, "odr_source": m.sources.get("odr_hz"),
+                                                  "bandwidth_hz": m.bandwidth_hz,
+                                                  "bandwidth_source": m.sources.get("bandwidth_hz")}}
                                      for q, m in ms.items()}})
     return {"device": {"name": dev.name, "slug": dev.slug, "version": dev.version, "path": os.path.relpath(dev.path, ROOT)
                        if dev.path else "", "description": dev.description, "features": dev.features,
@@ -234,15 +239,14 @@ def run(scenario, seed: int = None, out_dir: str = "out", devices=None, duration
         man = manifest(p, view, seed, name, extra)
         man["files"] = {k: os.path.basename(base + s) for k, s in
                         (("csv", ".csv"), ("labels", "_labels.csv"), ("manifest", "_manifest.json"), ("gate", "_gate.json"),
-                         ("profile", "_profile.json"))}
+                         ("summary", "_summary.json"))}
         with open(base + "_manifest.json", "w") as fh:
             json.dump(man, fh, indent=1, default=_json)
         rec = {"device": view.slug, "csv": base + ".csv", "labels": base + "_labels.csv",
                "manifest": base + "_manifest.json"}
-        prof = profile(base + ".csv", base + "_manifest.json")
-        with open(base + "_profile.json", "w") as fh:
-            json.dump(prof, fh, indent=1, default=_json)
-        rec["profile"] = base + "_profile.json"
+        with open(base + "_summary.json", "w") as fh:
+            json.dump(summary(base + ".csv", base + "_manifest.json"), fh, indent=1, default=_json)
+        rec["summary"] = base + "_summary.json"
         if gate:
             g = check_device(base + ".csv", base + "_labels.csv", base + "_manifest.json")
             with open(base + "_gate.json", "w") as fh:
