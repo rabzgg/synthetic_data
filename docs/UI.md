@@ -11,8 +11,6 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 
 ## Two ways in
 
-**A scenario.** Pick one of `configs/scenarios/`, a seed, and generate.
-
 **Build a device.**
 1. Pick parts (sensors from datasheets). Each part shows every parameter with its unit, source and
    kind; accuracy, noise, t90 and resolution can be changed (a change is marked "ASSUMPTION: user
@@ -24,6 +22,9 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 4. The events this device can see in that world are listed with one sentence each; the others are
    listed with the reason. Tick events and set their start.
 5. Generate.
+
+**A scenario (in progress).** Pick one of `configs/scenarios/`, a seed, and generate. It works; its
+layout and options are still being finished, so the page is marked in progress.
 
 ## Results
 

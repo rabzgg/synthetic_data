@@ -3,8 +3,8 @@ Streamlit UI for the sensor-agnostic generator. Run from the repository root:
 
     streamlit run ui/app.py --server.address 127.0.0.1
 
-Two ways in: pick a scenario, or build a device from parts, name it, pick a world and the events it
-can see. Then generate: plots, gate, labels and a ZIP. All logic lives in core/ and validation/; this
+Two ways in: build a device from parts, name it, pick a world and the events it can see (the
+default), or pick a scenario (marked in progress). Then generate: plots, gate, labels and a ZIP. All logic lives in core/ and validation/; this
 file only collects choices and shows results.
 """
 import os
@@ -87,10 +87,12 @@ def show_results(results):
         st.dataframe(pd.read_csv(r["csv"]).head(20), hide_index=True, width="stretch")
 
 
-mode = st.sidebar.radio("Start from", ["A scenario", "Build a device"])
+BUILD, SCENARIO = "Build a device", "A scenario (in progress)"
+mode = st.sidebar.radio("Start from", [BUILD, SCENARIO])
 out_dir = st.session_state.setdefault("out_dir", tempfile.mkdtemp(prefix="synthetic_ui_"))
 
-if mode == "A scenario":
+if mode == SCENARIO:
+    st.info("In progress: the scenario page works, but its layout and options are still being finished.")
     names = list_scenarios()
     sc = st.sidebar.selectbox("Scenario", names, format_func=lambda n: f"{scenario_info(n).get('title', n)}  ({n})")
     info = scenario_info(sc)

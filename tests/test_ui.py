@@ -21,6 +21,8 @@ APP = os.path.join(ROOT, "ui", "app.py")
 class TestUi(unittest.TestCase):
     def test_scenario(self):
         at = AppTest.from_file(APP, default_timeout=300).run()
+        self.assertEqual(at.sidebar.radio[0].value, "Build a device")                  # the default
+        at.sidebar.radio[0].set_value("A scenario (in progress)").run()
         at.sidebar.selectbox[0].set_value("fridge_compressor_failure").run()
         at.sidebar.button[0].click().run()
         self.assertEqual(at.exception, [])
