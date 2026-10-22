@@ -6,6 +6,22 @@ fields, …) from what is known about the sensors: their datasheets. A *world* h
 and a *gate* derived from the spec checks every file. Sensors, quantities, worlds, events and
 scenarios are YAML files; adding one needs no Python.
 
+## Handover checklist
+
+- [ ] **Install:** `python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt` (Python ≥ 3.10).
+- [ ] **Check:** `python3 -m unittest discover -s tests` (about 2 min, all pass).
+- [ ] **Generate (one command):** `python3 cli/generate.py --scenario worker_collapse --seed 42 --out out/collapse`
+      → CSV, labels, manifest and gate per device; `--list` shows the scenarios.
+- [ ] **All scenarios + gate summary:** `python3 validation/run_all_scenarios.py` → `docs/GATE_RESULTS.md`.
+- [ ] **UI:** `streamlit run ui/app.py --server.address 127.0.0.1` (`docs/UI.md`).
+- [ ] **Add a sensor:** a part file from the datasheet, then a device file → `docs/HOW_TO_ADD_A_SENSOR.md`
+      (first draft with an LLM: `docs/prompts/DATASHEET_TO_PART.md`; check every page it cites).
+- [ ] **Add a world:** signals and drivers from primitives → `docs/HOW_TO_ADD_A_WORLD.md`.
+- [ ] **Add an event or scenario:** effects on world nodes, the body or a device → `docs/HOW_TO_ADD_AN_EVENT.md`.
+- [ ] **Overview:** `docs/ARCHITECTURE.md` (one page).
+- [ ] **Open decisions (owner):** merging `feature/lego-generator` into `main`; what happens to the XDK
+      data and code (kept unchanged until then); values marked `[USER TO VERIFY]` in `configs/parts/`.
+
 ## Install
 ```bash
 pip install -r requirements.txt        # Python >= 3.10
