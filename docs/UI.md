@@ -12,7 +12,7 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 ## Three ways in
 
 **Start from columns** (the default; pre-sales, `docs/PRESALES.md`).
-1. Pick the columns the client logs, grouped by domain, each with its unit.
+1. Pick the columns the sensor logs, grouped by domain, each with its unit.
 2. Pick the situation: only worlds that provide every chosen column.
 3. Per column: "Generic (default): <class>" or a part from a datasheet that measures it; a part's
    other quantities are not logged ("also measures X (not logged)").

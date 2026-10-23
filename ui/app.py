@@ -4,7 +4,7 @@ Streamlit UI for the sensor-agnostic generator. Run from the repository root:
     streamlit run ui/app.py --server.address 127.0.0.1
 
 Three ways in:
-- Start from columns (default, pre-sales): pick what the client logs, the situation, then per column a
+- Start from columns (default, pre-sales): pick what the sensor logs, the situation, then per column a
   generic sensor or a named part; sampling, resolution and noise can be changed.
 - Build a device: from parts, named, with a world and the events it can see.
 - A scenario (marked in progress).
@@ -241,7 +241,7 @@ if mode == SCENARIO:
         st.session_state["took"] = time.time() - t0
 
 elif mode == COLUMNS:
-    st.markdown("#### 1. What does the client log?")
+    st.markdown("#### 1. What does the sensor log?")
     st.caption("Pick the columns, grouped by domain. A vector quantity is three columns (x, y, z).")
     domains = {}
     for q in CATALOG:
