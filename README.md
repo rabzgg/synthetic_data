@@ -24,10 +24,9 @@ scenarios are YAML files; adding one needs no Python.
 - [ ] **Overview:** `docs/ARCHITECTURE.md` (one page).
 - [ ] **Open decisions (owner):** merging `feature/lego-generator` into `main`; what happens to the XDK
       data and code (kept unchanged until then).
-- [ ] **Parts still `[USER TO VERIFY]`:** `configs/parts/bosch_bmg160.yaml` and `configs/parts/maxim_max44009.yaml`
-      were written without their datasheets (search snippets and distributor listings only). Each needs the
-      datasheet PDF and a pass with `docs/prompts/DATASHEET_TO_PART.md`, then a check of every cited page.
-      No preset device uses them.
+- [ ] **Part still `[USER TO VERIFY]`:** `configs/parts/maxim_max44009.yaml` was written without its
+      datasheet (search snippets and distributor listings only). It needs the datasheet PDF and a pass with
+      `docs/prompts/DATASHEET_TO_PART.md`, then a check of every cited page. No preset device uses it.
 
 ## Install
 ```bash

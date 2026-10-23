@@ -91,16 +91,30 @@ class PartUse:
         return self.part.models(self.effective_overrides())
 
     def follow_sample_rate(self, interval_s: float):
-        """Sensors whose ODR can be set (odr_choices_hz from a datasheet, odr_range_hz for a generic class)
-        run at the device's sample rate: the first setting at or above 1 / interval, or that rate clamped
-        to the range. Not when the device pins odr_hz or bandwidth_hz, nor for a quantity it does not log
-        (measured only for logic, e.g. a fall detector's accelerometer, which runs at its own rate)."""
+        """Sensors whose ODR can be set run at the device's sample rate: odr_settings_hz (ODR and filter
+        bandwidth pairs from a datasheet) and odr_choices_hz (ODRs, bandwidth = ODR / 2): the first ODR at
+        or above 1 / interval, with the wider bandwidth where one ODR has two; odr_range_hz (a generic
+        class): that rate clamped to the range. Not when the device pins odr_hz or bandwidth_hz, nor for
+        a quantity it does not log (measured only for logic, e.g. a fall detector's accelerometer, which
+        runs at its own rate)."""
         from core.quantities.units import convert
         want = 1.0 / interval_s
         self.rate = {}
         for q, p in self.part.measures.items():
             pinned = {"odr_hz", "bandwidth_hz"} & set(self.user_overrides().get(q, {}))
-            if pinned or not self.logged(q) or "bandwidth_hz" in p:
+            if pinned or not self.logged(q):
+                continue
+            if "odr_settings_hz" in p:
+                c = p["odr_settings_hz"]
+                pairs = sorted((float(o), float(b)) for o, b in convert(c["value"], c["unit"], "Hz"))
+                odr = next((o for o, _ in pairs if o >= want * (1 - 1e-9)), pairs[-1][0])
+                bw = max(b for o, b in pairs if o == odr)
+                self.rate[q] = {k: {"value": x, "unit": "Hz", "source": f"ASSUMPTION: follows the sample rate {want:g} "
+                                    f"Hz (1 / {interval_s:g} s): the first datasheet ODR at or above it, with the wider "
+                                    f"bandwidth where that ODR has two ({c['source']})"}
+                                for k, x in (("odr_hz", odr), ("bandwidth_hz", bw))}
+                continue
+            if "bandwidth_hz" in p:                           # a fixed filter from the datasheet
                 continue
             if "odr_choices_hz" in p:
                 c = p["odr_choices_hz"]

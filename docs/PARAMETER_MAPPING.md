@@ -46,6 +46,7 @@ Every parameter in a part file is `{value, unit, source}`; `source` starts with 
 | `bandwidth_hz` | Hz | — | cutoff of the first-order low-pass on the signal; also sets noise_sd from noise_density |
 | `odr_hz` | Hz | — | output data rate; when bandwidth_hz is not given, bandwidth = ODR / 2 (ASSUMPTION) |
 | `odr_choices_hz` | Hz | — | the ODR settings the sensor offers; a device sets the ODR to the first one at or above its sample rate (1 / sample interval) unless odr_hz is pinned |
+| `odr_settings_hz` | Hz | — | [[ODR, bandwidth], ...]: the datasheet's rate and filter pairs; a device takes the first ODR at or above its sample rate, with the wider bandwidth where one ODR has two, unless odr_hz or bandwidth_hz is pinned |
 | `odr_range_hz` | Hz | — | [low, high]: any ODR in between (a generic class); a device sets the ODR to its sample rate, clamped to this range, unless odr_hz is pinned |
 | `t90_s` | s | 0.0 | time to reach 90 % of a step; 0 = instant |
 | `t90_up_s` | s | — | t90 for a rising input (default t90_s) |

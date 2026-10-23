@@ -54,7 +54,11 @@ class TestGenericParts(unittest.TestCase):
             ms = [Part.load(s).models()[q] for s in others]
             with self.subTest(q):
                 self.assertGreaterEqual(g.resolution, min(m.resolution for m in ms) - 1e-12)
-                self.assertGreaterEqual(g.noise_sd, min(m.noise_sd for m in ms) - 1e-12)
+                if all("noise_density" in Part.load(s).measures[q] for s in others):     # same bandwidth: compare densities
+                    dens = lambda s: Part.load(s).models()[q].noise_sd / np.sqrt(Part.load(s).models()[q].bandwidth_hz)
+                    self.assertGreaterEqual(dens(slug), min(dens(s) for s in others) - 1e-12)
+                else:
+                    self.assertGreaterEqual(g.noise_sd, min(m.noise_sd for m in ms) - 1e-12)
                 for rising in (True, False):
                     self.assertGreaterEqual(g.t90(rising), min(m.t90(rising) for m in ms))
                 lo = max(float(np.max(m.bounds[0])) for m in ms + [g])
@@ -173,6 +177,13 @@ class TestNoiseFollowsTheSampleRate(unittest.TestCase):
                                      overrides={"body.accel_g": {"odr_hz": {"value": 100, "unit": "Hz"}}})
         self.assertEqual(pinned.reading_models()["accel_x_g"].odr_hz, 100)
         from core.devices import Device
+        for interval, odr, bw in ((1, 100, 32), (0.04, 100, 32), (0.006, 200, 64), (0.002, 1000, 116), (0.0005, 2000, 523)):
+            m = device_from_columns({"body.gyro_dps": "bosch_bmg160"}, name="G",
+                                    sample_interval_s=interval).reading_models()["gyro_x_dps"]
+            self.assertEqual((m.odr_hz, m.bandwidth_hz), (odr, bw))            # register 0x10, the wider bandwidth
+            self.assertAlmostEqual(m.noise_sd, 0.014 * np.sqrt(bw))
+        mag = device_from_columns({"body.mag_ut": "bosch_bmm150"}, name="M", sample_interval_s=0.04)
+        self.assertEqual(mag.reading_models()["mag_x_ut"].odr_hz, 25)          # Table 17 p.27
         g7c = Device.load("blackline_g7c")                                     # log: false keeps its own rate
         self.assertEqual([m.odr_hz for u, q, m in g7c.models() if q == "body.accel_g"], [2000])
 

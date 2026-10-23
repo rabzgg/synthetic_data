@@ -74,6 +74,9 @@ PARAMETERS = {
     "odr_hz": Param("Hz", None, "output data rate; when bandwidth_hz is not given, bandwidth = ODR / 2 (ASSUMPTION)"),
     "odr_choices_hz": Param("Hz", None, "the ODR settings the sensor offers; a device sets the ODR to the first one at "
                                         "or above its sample rate (1 / sample interval) unless odr_hz is pinned"),
+    "odr_settings_hz": Param("Hz", None, "[[ODR, bandwidth], ...]: the datasheet's rate and filter pairs; a device "
+                                         "takes the first ODR at or above its sample rate, with the wider bandwidth "
+                                         "where one ODR has two, unless odr_hz or bandwidth_hz is pinned"),
     "odr_range_hz": Param("Hz", None, "[low, high]: any ODR in between (a generic class); a device sets the ODR to its "
                                       "sample rate, clamped to this range, unless odr_hz is pinned"),
     "t90_s": Param("s", 0.0, "time to reach 90 % of a step; 0 = instant"),
@@ -142,6 +145,7 @@ class MeasurementModel:
     bandwidth_hz: Optional[float] = None
     odr_hz: Optional[float] = None
     odr_choices_hz: Optional[tuple] = None
+    odr_settings_hz: Optional[tuple] = None
     odr_range_hz: Optional[tuple] = None
     t90_s: float = 0.0
     t90_up_s: Optional[float] = None
@@ -179,6 +183,9 @@ class MeasurementModel:
                 raise ParamError(f"{qid}: {k} must be > 0")
         if self.odr_choices_hz is not None and (not len(self.odr_choices_hz) or min(self.odr_choices_hz) <= 0):
             raise ParamError(f"{qid}: odr_choices_hz must be a list of rates > 0")
+        if self.odr_settings_hz is not None and not all(len(p) == 2 and p[0] > 0 and p[1] > 0
+                                                         for p in self.odr_settings_hz):
+            raise ParamError(f"{qid}: odr_settings_hz must be [[ODR, bandwidth], ...] with rates > 0")
         if self.odr_range_hz is not None and not (len(self.odr_range_hz) == 2 and 0 < self.odr_range_hz[0]
                                                   <= self.odr_range_hz[1]):
             raise ParamError(f"{qid}: odr_range_hz must be [low, high] with 0 < low <= high")
@@ -235,6 +242,8 @@ class MeasurementModel:
         for k in ("odr_choices_hz", "odr_range_hz"):
             if kw.get(k) is not None:
                 kw[k] = tuple(sorted(float(x) for x in kw[k]))
+        if kw.get("odr_settings_hz") is not None:
+            kw["odr_settings_hz"] = tuple(sorted((float(o), float(b)) for o, b in kw["odr_settings_hz"]))
         if kw.get("mounting_orientation") is not None:
             kw["mounting_orientation"] = tuple(kw["mounting_orientation"])
         return cls(quantity=q, sources=sources, kinds=kinds, **kw)

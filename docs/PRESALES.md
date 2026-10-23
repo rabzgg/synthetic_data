@@ -37,8 +37,9 @@ dev = device_from_columns({"temperature_c": "bosch_bme280", "co2_ppm": "generic"
 
 A sensor whose output data rate (ODR) can be set runs at the device's sample rate, as a real device
 logging at 25 Hz would configure it: the ODR is 1 / sample interval (a generic class: clamped to its
-`odr_range_hz`; a datasheet part: the first of its `odr_choices_hz` at or above the rate), the
-bandwidth is ODR / 2, and a noise given as a density (`noise_density`) gives noise sd = density ×
+`odr_range_hz`; a datasheet part: the first of its `odr_choices_hz` or `odr_settings_hz` at or above
+the rate), the bandwidth is ODR / 2 (or the datasheet's filter for that ODR, the wider one where an
+ODR has two: BMG160 register 0x10), and a noise given as a density (`noise_density`) gives noise sd = density ×
 √bandwidth. A generic accelerometer has 4 mg RMS at 100 Hz and 2 mg at 25 Hz. Not when:
 
 - the device pins `odr_hz` (or `bandwidth_hz`) in its overrides, or the user changes the ODR in the UI;
@@ -74,7 +75,7 @@ the plot and in the manifest (`device.generic_columns`, `parts[].generic`).
 | `air.voc_ppm` | `voc_ppm` | `generic_voc_pid` | photoionisation (PID) VOC sensor, 0-1000 ppm isobutylene | 0 … 1000 ppm | 0.1 ppm | 0.2 ppm | 15 s (down 45) | 1 Hz (fixed) | ±10 % of reading | not better than `msa_altair_pid_voc` |
 | `air.co2_ppm` | `co2_ppm` | `generic_co2_ndir` | low-cost NDIR CO2 module, 0-5000 ppm, ±(50 ppm + 3 %) | 0 … 5000 ppm | 1 ppm | 10 ppm | 120 s | 0.5 Hz (fixed) | ±50 ppm + ±3 % of reading | class typical (no datasheet part in the repo) |
 | `body.accel_g` | `accel_{x,y,z}_g` | `generic_accelerometer` | consumer MEMS accelerometer ±8 g, 12 bit | -8 … 8 g | 0.003906 g | 0.004 g | 0 s | 100 Hz, follows the sample rate within 1 … 1000 Hz | ±0.06 g (1σ) | not better than `bosch_bma280` |
-| `body.gyro_dps` | `gyro_{x,y,z}_dps` | `generic_gyroscope` | consumer MEMS gyroscope ±2000 °/s | -2000 … 2000 °/s | 0.1 °/s | 0.1 °/s | 0 s | 100 Hz, follows the sample rate within 10 … 1000 Hz | ±1 °/s (1σ) | not better than `bosch_bmg160` (itself `[USER TO VERIFY]`) |
+| `body.gyro_dps` | `gyro_{x,y,z}_dps` | `generic_gyroscope` | consumer MEMS gyroscope ±2000 °/s | -2000 … 2000 °/s | 0.1 °/s | 0.1 °/s | 0 s | 100 Hz, follows the sample rate within 10 … 1000 Hz | ±1 °/s (1σ) + ±1 % of reading (1σ) | not better than `bosch_bmg160` |
 | `body.mag_ut` | `mag_{x,y,z}_ut` | `generic_magnetometer` | consumer 3-axis magnetometer ±1200 µT, uncalibrated | -1200 … 1200 µT | 0.3 µT | 0.8 µT | 0 s | 10 Hz, follows the sample rate within 2 … 30 Hz | ±40 µT (1σ) + ±5 % of reading | not better than `bosch_bmm150` |
 | `electrical.current_a` | `current_a` | `generic_current_clamp_5a` | split-core current clamp 0-5 A on a logger input | 0 … 5 A | 0.01 A | 0.005 A | 2 s | 1 Hz (fixed) | ±0.02 A + ±2 % of reading | class typical (no datasheet part in the repo) |
 | `electrical.energy_kwh` | `energy_kwh` | `generic_energy_meter` | kWh meter with a pulse or Modbus output, accuracy class 1 | 0 … 999999 kWh | 0.01 kWh | 0 kWh | 0 s | 1 Hz (fixed) | ±1 % of reading | class typical (no datasheet part in the repo) |

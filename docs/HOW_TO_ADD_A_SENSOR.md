@@ -32,7 +32,7 @@ Find, for each quantity the sensor measures, with the **page number**:
 | noise (RMS, peak-to-peak, density) | `noise_sd` | p-p ÷ 6.6; density × √bandwidth |
 | response time T90 / T63 / τ / T50, recovery time | `t90_s`, `t90_down_s` | the rules convert T63 and T50 |
 | bandwidth, ODR | `bandwidth_hz`, `odr_hz` | without a bandwidth: ODR / 2 (ASSUMPTION) |
-| selectable data rates | `odr_choices_hz` | a device that logs the quantity runs at the first one at or above its sample rate (see `docs/PRESALES.md`) |
+| selectable data rates (and filters) | `odr_choices_hz` (bandwidth = ODR / 2) or `odr_settings_hz` ([ODR, bandwidth] pairs) | a device that logs the quantity runs at the first one at or above its sample rate (see `docs/PRESALES.md`) |
 | hysteresis (±X or full width) | `hysteresis` | ±X → band 2X |
 | long-term stability / drift per year | `drift_per_hour` | via the unit `…/year` |
 | cross-sensitivity, temperature coefficient | `cross_sensitivity` | |

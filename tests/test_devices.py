@@ -40,7 +40,7 @@ class TestParts(unittest.TestCase):
                 p.models()
 
     def test_parts_without_datasheet_are_flagged(self):
-        for slug in ("bosch_bmg160", "maxim_max44009"):
+        for slug in ("maxim_max44009",):
             for params in Part.load(slug).measures.values():
                 for k, prm in params.items():
                     self.assertIn("[USER TO VERIFY]", prm["source"], f"{slug}.{k}")
