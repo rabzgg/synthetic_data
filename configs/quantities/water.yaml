@@ -1,0 +1,7 @@
+domain: water
+quantities:
+  - {id: water.temperature_c, name: Water temperature, unit: "°C", column: water_temperature_c, lower: -2, upper: 100,
+     note: "Liquid water at about 1 atm (salt water freezes a little below 0 °C)."}
+  - {id: water.ph, name: pH, unit: pH, column: water_ph, lower: 0, upper: 14}
+  - {id: water.level_pct, name: Water level, unit: "%", column: water_level_pct, lower: 0, upper: 100,
+     note: "Filling of a tank or basin: 0 = empty, 100 = full."}

@@ -1,0 +1,13 @@
+kind: irrigation
+name: Irrigation
+description: "The field is watered: water flows into the soil while it runs; the soil then drains and dries back down by itself. Needs a world whose soil moisture integrates an irrigation inflow signal."
+probe_world: field_day
+params:
+  duration_s: {value: 1800, unit: s, source: "ASSUMPTION: half an hour of watering"}
+  added_pct: {value: 12, unit: "%VWC", source: "ASSUMPTION: about 25 mm of water into the top 20 cm"}
+label: "+{added_pct} %VWC"
+effects:
+  - target: irrigation
+    op: add
+    shape: {constant: "$added_pct / ($duration_s / 3600)"}
+    after: revert

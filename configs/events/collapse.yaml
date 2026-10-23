@@ -1,0 +1,20 @@
+kind: collapse
+name: Collapse
+description: "A gas release makes the wearer collapse: the gas rises, the wearer falls, moves a little, then lies without moving until rescued."
+params:
+  gas: {value: h2s, unit: "-", source: "ASSUMPTION: default gas", choices: [lel, co, h2s, voc, co2]}
+  level: {value: 20, unit: "gas unit", source: "ASSUMPTION: a level that crosses typical alarm setpoints"}
+  duration_s: {value: 600, unit: s, source: "ASSUMPTION: time the gas stays at the level"}
+  ramp_s: {value: 30, unit: s, source: "ASSUMPTION: the gas builds up and clears over half a minute"}
+  fall_after_s: {value: 60, unit: s, source: "ASSUMPTION: time in the gas before collapsing"}
+  fall_s: {value: 1.5, unit: s, source: "ASSUMPTION: from losing balance to lying at rest"}
+  no_motion_after_s: {value: 20, unit: s, source: "ASSUMPTION: the wearer still moves a little after the fall"}
+  no_motion_s: {value: 600, unit: s, source: "ASSUMPTION: lies without moving until rescued"}
+  rise_s: {value: 5, unit: s, source: "ASSUMPTION: lifted up by the rescuers"}
+label: "{gas.upper} {level} {gas.unit}"
+steps:
+  - {event: gas_release, at: 0, params: {gas: $gas, level: $level, duration_s: $duration_s, ramp_s: $ramp_s}, label: gas_release}
+  - {event: fall_down, at: $fall_after_s, params: {fall_s: $fall_s}, label: fall}
+  - {event: stir, after: 0, params: {duration_s: $no_motion_after_s}, label: stir}
+  - {event: no_motion, after: 0, params: {duration_s: $no_motion_s}, label: no_motion}
+  - {event: rise, after: 0, params: {rise_s: $rise_s}, label: rescue}

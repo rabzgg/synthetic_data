@@ -1,0 +1,17 @@
+# Default pH sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic pH probe
+generic_for: water.ph
+class: "glass pH electrode with a transmitter, ±0.1 pH after calibration"
+datasheet: "none: a generic glass pH electrode (all values ASSUMPTION)"
+measures:
+  - quantity: water.ph
+    params:
+      range: {value: [0, 14], unit: pH, source: "ASSUMPTION: the full pH scale"}
+      resolution: {value: 0.01, unit: pH, source: "ASSUMPTION: 0.01 pH output step"}
+      noise_density: {value: 0.0141421356237309, unit: "pH/√Hz", source: "ASSUMPTION: about one step; written as a density (0.01 pH at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 30, unit: s, source: "ASSUMPTION: a glass electrode settles within half a minute"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: one reading a second"}
+    from_datasheet:
+      - {rule: accuracy, value: 0.1, unit: pH, kind: max, source: "ASSUMPTION: ±0.1 pH after a two-point calibration, typical for this class"}
+      - {rule: drift, value: 0.1, unit: "pH/month", kind: max, source: "ASSUMPTION: about 0.1 pH a month without recalibration, typical for glass electrodes"}

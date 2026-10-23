@@ -1,0 +1,17 @@
+# Default VOC sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic VOC (PID) sensor
+generic_for: air.voc_ppm
+class: "photoionisation (PID) VOC sensor, 0-1000 ppm isobutylene"
+datasheet: "none: a generic PID sensor (all values ASSUMPTION)"
+measures:
+  - quantity: air.voc_ppm
+    params:
+      range: {value: [0, 1000], unit: ppm, source: "ASSUMPTION: 0-1000 ppm; narrower than the PID in this repo (0-4000 ppm)"}
+      resolution: {value: 0.1, unit: ppm, source: "ASSUMPTION: 0.1 ppm, as the PID in this repo"}
+      noise_density: {value: 0.282842712474619, unit: "ppm/√Hz", source: "ASSUMPTION: not below the PID in this repo (0.1 ppm); written as a density (0.2 ppm at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 15, unit: s, source: "ASSUMPTION: t90 15 s, as the PID in this repo"}
+      t90_down_s: {value: 45, unit: s, source: "ASSUMPTION: falls three times slower than it rises, as the PID in this repo"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: portable detectors update once a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 10, unit: "%", kind: max, source: "ASSUMPTION: ±10 % of reading for isobutylene; the PID in this repo states no accuracy"}

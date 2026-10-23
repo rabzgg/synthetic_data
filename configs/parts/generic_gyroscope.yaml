@@ -1,0 +1,18 @@
+# Default gyroscope when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic gyroscope
+generic_for: body.gyro_dps
+class: "consumer MEMS gyroscope ±2000 °/s"
+datasheet: "none: a generic MEMS gyroscope (all values ASSUMPTION)"
+measures:
+  - quantity: body.gyro_dps
+    params:
+      resolution: {value: 0.1, unit: "°/s", source: "ASSUMPTION: 0.1 °/s output step; coarser than the BMG160 in this repo (0.061 °/s)"}
+      noise_density: {value: 0.014142135623731, unit: "°/s/√Hz", source: "ASSUMPTION: 0.1 °/s RMS; not below the BMG160 in this repo (0.014 °/s/√Hz); written as a density (0.1 °/s at ODR 100 Hz, bandwidth 50 Hz) so the noise follows the ODR"}
+      t90_s: {value: 0, unit: s, source: "ASSUMPTION: no lag beyond the low-pass set by the ODR (bandwidth = ODR / 2)"}
+      odr_hz: {value: 100, unit: Hz, source: "ASSUMPTION: default when no device sets it; 100 Hz, a common setting for motion tracking"}
+      odr_range_hz: {value: [10, 1000], unit: Hz, source: "ASSUMPTION: consumer MEMS gyroscopes offer about 10 to 1000 Hz"}
+    from_datasheet:
+      - {rule: range_symmetric, value: 2000, unit: "°/s", source: "ASSUMPTION: ±2000 °/s, the widest common setting"}
+      - {rule: accuracy_pct_reading, value: 1, unit: "%", kind: typical, source: "ASSUMPTION: sensitivity error 1 % typical (1σ), the same as the BMG160 in this repo"}
+      - {rule: accuracy_typical, value: 1, unit: "°/s", source: "ASSUMPTION: zero-rate offset 1 °/s typical (1σ); the same as the BMG160 in this repo"}

@@ -1,0 +1,4 @@
+domain: soil
+quantities:
+  - {id: soil.moisture_pct, name: Soil moisture, unit: "%VWC", column: soil_moisture_pct_vwc, lower: 0, upper: 100,
+     note: "Volumetric water content; a saturated mineral soil holds roughly 40-50 %VWC."}

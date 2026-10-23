@@ -1,0 +1,10 @@
+kind: rise
+name: Get up
+building_block: true
+description: "The wearer gets up from lying to standing."
+params:
+  rise_s: {value: 3, unit: s, source: "ASSUMPTION: getting up takes a few seconds"}
+duration: $rise_s
+effects:
+  - target: motion
+    segments: [{kind: rise, duration: $rise_s}]

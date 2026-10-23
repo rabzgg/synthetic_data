@@ -1,0 +1,32 @@
+# Scenario: Normal shift. Rewritten from the gas detector engine (configs/gas/assumptions.json).
+name: gas_normal_shift
+title: "Normal shift"
+description: "A bump test at the start, 1-3 short gas exposures, connection gaps; SOS on devices that have it."
+realism: ASSUMPTION
+world: indoor_worker_walking
+duration: 8h
+seed: 42
+devices:
+  - {device: blackline_g7c, mount: body}
+events:
+  - bump_test: {at: "00:02:00", applied_s: 60}
+  - gas_release:
+      count: {random_int: [1, 3], source: "ASSUMPTION: Brief: 1-3 exposures per shift. Drawn uniformly."}
+      at: {random: ["00:17:00", "07:15:00"], source: "ASSUMPTION: after the bump test and 15 min, ending 45 min before the shift ends (gas engine placement)"}
+      spacing_s: 1800
+      gas: {choice_measured: [lel, co, h2s, voc], source: "ASSUMPTION: Combustible and toxic gases (VOC on io6 only); O2 deficiency events are not modelled."}
+      level:
+        by_gas: {lel: {random: [5, 25]}, co: {random: [20, 150]}, h2s: {random: [3, 20]}, voc: {random: [20, 200]}}
+        source: "ASSUMPTION: Peak levels drawn uniformly; ranges chosen so that some exposures cross the alarm setpoints."
+      duration_s: {random: [120, 600], source: "ASSUMPTION: Duration at the peak level, drawn uniformly."}
+      ramp_s: {value: 0, unit: s, source: "ASSUMPTION: as the gas detector engine: the gas steps, the sensor's t90 shapes the reading"}
+  - connection_loss:
+      count: {random_int: [1, 3]}
+      at: {random: ["00:10:00", "07:55:00"], source: "ASSUMPTION: not in the first 10 min (configs/gas/assumptions.json connection_gaps)"}
+      spacing_s: 1
+      duration_s: {random: [30, 300], source: "ASSUMPTION: Periods without rows, as from a lost connection. Each gap is announced on the next row so that the gate can tell an intended gap from a row lost to a bug. No gap during the bump test."}
+      optional: true
+  - sos:
+      at: {random: ["00:00:00", "07:55:00"]}
+      duration_s: {random: [60, 300], source: "ASSUMPTION: Brief: one SOS on the G8 in every shift. Independent of the gas readings."}
+      optional: true

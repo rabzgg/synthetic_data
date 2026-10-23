@@ -1,0 +1,10 @@
+kind: fall_down
+name: Fall down
+building_block: true
+description: "The wearer falls from standing to lying on the ground (free fall, impact, a quarter turn forward)."
+params:
+  fall_s: {value: 1.5, unit: s, source: "ASSUMPTION: from losing balance to lying at rest"}
+duration: $fall_s
+effects:
+  - target: motion
+    segments: [{kind: fall, duration: $fall_s, needs: upright}]

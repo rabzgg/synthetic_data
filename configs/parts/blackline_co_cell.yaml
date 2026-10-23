@@ -1,0 +1,28 @@
+# Blackline carbon monoxide cell: written from configs/gas spec.json + assumptions.json (same numbers as the gas detector engine)
+name: Blackline carbon monoxide cell
+datasheet: Blackline G7c datasheet R28
+measures:
+- quantity: air.co_ppm
+  params:
+    range:
+      value:
+      - 0
+      - 500
+      unit: ppm
+      source: datasheet Blackline G7c datasheet R28 (page not recorded); same value in Blackline G7x datasheet R21, Blackline G8 spec sheet R1
+    resolution:
+      value: 1
+      unit: ppm
+      source: datasheet Blackline G7c datasheet R28 (page not recorded); same value in Blackline G7x datasheet R21, Blackline G8 spec sheet R1
+    t90_s:
+      value: 30
+      unit: s
+      source: 'ASSUMPTION: No response times given. Sensor response is modelled as first order with time constant T90 / ln(10).'
+    t90_down_s:
+      value: 90.0
+      unit: s
+      source: 'ASSUMPTION: Brief: the value falls more slowly than it rises. Fall time constant = 3 x rise time constant. (= 3 × t90)'
+    noise_sd:
+      value: 0.3
+      unit: ppm
+      source: 'ASSUMPTION: No noise specification given. Small Gaussian noise so clean air reads at or next to the baseline at the stated resolution. Not a field noise model.'

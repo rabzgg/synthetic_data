@@ -1,0 +1,10 @@
+kind: leak
+name: Leak
+description: "A tank leaks: an extra outflow while the leak lasts; afterwards the level recovers by its normal inflow. Needs a world with a leak outflow signal."
+probe_world: water_tank
+params:
+  duration_s: {value: 10800, unit: s, source: "ASSUMPTION: three hours until it is found"}
+  rate_pct_per_h: {value: 25, unit: "%/h", source: "ASSUMPTION: a large leak, more than the normal use"}
+label: "{rate_pct_per_h} %/h"
+effects:
+  - {target: leak, op: add, shape: {constant: $rate_pct_per_h}, after: revert}

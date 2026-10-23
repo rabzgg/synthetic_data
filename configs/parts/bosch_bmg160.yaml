@@ -1,0 +1,22 @@
+# Bosch BMG160: triaxial gyroscope, 16 bit.
+# Values and pages from BST-BMG160-DS000-09 (revision 1.2, 06 May 2014; Mouser copy).
+name: Bosch BMG160
+datasheet: "BST-BMG160-DS000-09, revision 1.2"
+measures:
+  - quantity: body.gyro_dps
+    params:
+      noise_density: {value: 0.014, unit: "°/s/√Hz", source: "datasheet BST-BMG160-DS000-09 p.9 (rate noise density)"}
+      odr_settings_hz: {value: [[2000, 523], [2000, 230], [1000, 116], [400, 47], [200, 23], [100, 12], [200, 64], [100, 32]], unit: Hz, source: "datasheet BST-BMG160-DS000-09 p.44 (register 0x10: ODR / filter bandwidth; 2000 Hz / 523 Hz is unfiltered); where one ODR has two bandwidths the wider is used (ASSUMPTION: the default behaviour)"}
+      odr_hz: {value: 100, unit: Hz, source: "ASSUMPTION: default when no device sets the rate: the lowest ODR of register 0x10 (p.44)"}
+      bandwidth_hz: {value: 32, unit: Hz, source: "ASSUMPTION: default when no device sets the rate: the wider of the two bandwidths at 100 Hz (register 0x10, p.44)"}
+    from_datasheet:
+      - {rule: range_symmetric, value: 2000, unit: "°/s", source: "datasheet BST-BMG160-DS000-09 p.7-8 (Table 2: ±125 / 250 / 500 / 1000 / 2000 °/s selectable; widest here, a device picks its own)"}
+      - {rule: sensitivity_lsb, value: 16.4, unit: "LSB/°/s", source: "datasheet BST-BMG160-DS000-09 p.7-8 (Table 2, ±2000 °/s range; 16 bit, p.2 and Table 8 p.17)"}
+      - {rule: accuracy_typical, value: 1, unit: "°/s", source: "datasheet BST-BMG160-DS000-09 p.9 (zero-rate offset ±1 °/s at 25 °C, read as a 1σ value: min/max are ±3σ, p.7)"}
+      - {rule: accuracy_pct_reading, value: 1, unit: "%", kind: typical, source: "datasheet BST-BMG160-DS000-09 p.8 (sensitivity tolerance ±1 %, read as a 1σ value: min/max are ±3σ, p.7)"}
+      - {rule: cross_axis, value: 1, unit: "%", kind: typical, source: "datasheet BST-BMG160-DS000-09 p.9 (cross-axis sensitivity ±1 %)"}
+notes:
+  - "p.7: min/max values are ±3σ, as for the BMA280; offset, sensitivity tolerance and cross-axis are read as typical (1σ) values."
+  - "Noise check: 0.1 °/s RMS at a 47 Hz bandwidth (p.9) agrees with 0.014 °/s/√Hz × √47 = 0.096 °/s."
+  - "A device that logs the gyroscope runs at the first ODR of register 0x10 (p.44) at or above its sample rate, with the wider bandwidth where that ODR has two (100 Hz: 32 Hz, 200 Hz: 64 Hz); the noise follows the bandwidth."
+  - "Not modelled: temperature coefficient of the sensitivity ±0.03 %/K (p.8) and of the zero-rate offset ±0.015 °/s/K (-40 … 85 °C, p.9), whose sign varies per unit; nonlinearity ±0.05 %FS (p.9). Ranges other than ±2000 °/s: set range and resolution in the device (Table 2, p.7-8)."

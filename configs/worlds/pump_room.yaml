@@ -1,0 +1,37 @@
+# World: a pump room; the pump runs on the shift schedule. Grid, time and motion: defaults.
+title: "Pump room"
+realism: ASSUMPTION
+description: "A pump that runs during the day shift (06:00-22:00): vibration, current and energy follow the schedule, the room warms while it runs. No real recording behind it."
+signals:
+  running:
+    smooth:
+      of: {schedule: {segments: {value: [[6, 22, 1]], unit: "h, h, -", source: "ASSUMPTION: pump runs during the two day shifts"}, default: {value: 0, unit: "-", source: "ASSUMPTION: off at night"}}}
+      window_s: {value: 20, unit: s, source: "ASSUMPTION: run-up and run-down of the motor"}
+  pump_vibration:
+    product:
+      - {ref: running}
+      - random_walk: {mean: {value: 2.2, unit: mm/s, source: "ASSUMPTION: a healthy pump, ISO 10816 zone A/B"}, sd: {value: 0.2, unit: mm/s, source: "ASSUMPTION: load variation"}, tau_s: {value: 120, unit: s, source: "ASSUMPTION"}}
+drivers:
+  machine.vibration_mm_s:
+    sum:
+      - constant: {value: 0.1, unit: mm/s, source: "ASSUMPTION: background from other machines"}
+      - {ref: pump_vibration}
+  electrical.current_a:
+    product:
+      - {ref: running}
+      - random_walk: {mean: {value: 14, unit: A, source: "ASSUMPTION: 7.5 kW pump motor at 400 V"}, sd: {value: 0.4, unit: A, source: "ASSUMPTION: load variation"}, tau_s: {value: 300, unit: s, source: "ASSUMPTION"}}
+  electrical.energy_kwh:
+    integrate:
+      start: {value: 0, unit: kWh, source: "ASSUMPTION: meter read from the start of the run"}
+      inflow:
+        - product: [{ref: electrical.current_a}, {constant: {value: 0.589, unit: "kW/A", source: "ASSUMPTION: three-phase 400 V, cos φ 0.85: √3 × 400 V × 0.85 / 1000"}}]
+      per: {value: h, unit: "-", source: "ASSUMPTION: power in kW, energy in kWh"}
+      lower: {value: 0, unit: kWh, source: "ASSUMPTION: a meter does not run backwards"}
+  air.temperature_c:
+    sum:
+      - random_walk: {mean: {value: 18, unit: "°C", source: "ASSUMPTION: unheated plant room"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION"}, tau_s: {value: 7200, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 600, unit: s, source: "ASSUMPTION"}}
+      - product:
+          - constant: {value: 6, unit: "°C", source: "ASSUMPTION: motor heat warms the room"}
+          - lowpass: {of: {ref: running}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION: the room warms over an hour"}, start: {value: 0, unit: "-", source: "ASSUMPTION: the world starts as the pump starts, after the night"}}
+  air.vapour_pressure_hpa:
+    vapour_from_rh: {rh_pct: {value: 55, unit: "%RH", source: "ASSUMPTION: plant room"}, temperature_c: {value: 20, unit: "°C", source: "ASSUMPTION: mean temperature"}}

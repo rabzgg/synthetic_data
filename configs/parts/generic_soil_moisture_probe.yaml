@@ -1,0 +1,16 @@
+# A capacitive soil moisture probe reporting volumetric water content.
+# No particular product: every value is an ASSUMPTION of a typical probe with the generic soil calibration.
+name: Generic capacitive soil moisture probe
+generic_for: soil.moisture_pct
+class: "capacitive soil moisture probe (VWC), ±3 %VWC"
+datasheet: "none: a generic capacitive VWC probe (all values ASSUMPTION)"
+measures:
+  - quantity: soil.moisture_pct
+    params:
+      range: {value: [0, 60], unit: "%VWC", source: "ASSUMPTION: mineral soils up to saturation"}
+      resolution: {value: 0.1, unit: "%VWC", source: "ASSUMPTION: output step"}
+      noise_density: {value: 0.14142135623731, unit: "%VWC/√Hz", source: "ASSUMPTION; written as a density (0.1 %VWC at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 60, unit: s, source: "ASSUMPTION: water reaches the sensing volume within a minute"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the probe can be read once a second"}
+    from_datasheet:
+      - {rule: accuracy, value: 3, unit: "%VWC", kind: max, source: "ASSUMPTION: ±3 %VWC with a generic soil calibration, typical for this class"}

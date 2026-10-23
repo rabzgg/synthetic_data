@@ -1,0 +1,18 @@
+# Bosch BMM150: triaxial geomagnetic sensor.
+# Values and pages from BST-BMM150-DS001-05 (revision 1.4, April 2020).
+name: Bosch BMM150
+datasheet: "BST-BMM150-DS001-05, revision 1.4"
+measures:
+  - quantity: body.mag_ut
+    params:
+      range: {value: [[-1200, 1200], [-1200, 1200], [-2000, 2000]], unit: "µT", source: "datasheet BST-BMM150-DS001-05 p.6 (full linear range, minimum; typical ±1300 / ±2500 µT)"}
+      resolution: {value: 0.3, unit: "µT", source: "datasheet BST-BMM150-DS001-05 p.7 (device resolution)"}
+      odr_choices_hz: {value: [2, 6, 8, 10, 15, 20, 25, 30], unit: Hz, source: "datasheet BST-BMM150-DS001-05 p.27 (Table 17: normal-mode output data rates, 10 Hz default)"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 40, unit: "µT", source: "datasheet BST-BMM150-DS001-05 p.7 (zero-B offset, typical, uncalibrated)"}
+      - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "datasheet BST-BMM150-DS001-05 p.7 (gain error after API compensation, max; typical ±2 %)"}
+      - {rule: noise_rms, value: 0.6, unit: "µT", source: "datasheet BST-BMM150-DS001-05 p.8 (regular preset)"}
+      - {rule: odr, value: 10, unit: "Hz", source: "datasheet BST-BMM150-DS001-05 p.8 (regular preset, normal mode)"}
+notes:
+  - "A device that logs the magnetometer sets the ODR to the first data rate at or above its sample rate (the bandwidth follows, ODR / 2). The noise stays: the datasheet gives it per repetition preset (p.8, Table 3 p.13), not as a density. Forced mode reaches up to 100 Hz with the regular preset (p.8); not modelled."
+  - "Zero-B offset after calibration with Bosch eCompass software: ±2 µT (p.8); the uncalibrated ±40 µT is used here."

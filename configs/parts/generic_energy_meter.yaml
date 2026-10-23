@@ -1,0 +1,16 @@
+# Default energy meter when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical meter of this class.
+name: Generic energy meter
+generic_for: electrical.energy_kwh
+class: "kWh meter with a pulse or Modbus output, accuracy class 1"
+datasheet: "none: a generic electricity meter (all values ASSUMPTION)"
+measures:
+  - quantity: electrical.energy_kwh
+    params:
+      range: {value: [0, 999999], unit: kWh, source: "ASSUMPTION: a six-digit register"}
+      resolution: {value: 0.01, unit: kWh, source: "ASSUMPTION: 10 Wh per count"}
+      noise_density: {value: 0, unit: "kWh/√Hz", source: "ASSUMPTION: a counter has no noise; its error is the accuracy class; written as a density (0 kWh at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 0, unit: s, source: "ASSUMPTION: a counter has no lag"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the register can be read once a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 1, unit: "%", kind: max, source: "ASSUMPTION: ±1 % of reading, accuracy class 1"}
