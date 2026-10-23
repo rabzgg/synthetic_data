@@ -11,6 +11,8 @@ import json
 import numpy as np
 import pandas as pd
 
+LABEL_TEXT = {"event": str, "detail": str, "scope": str}       # text columns of a labels file
+
 GAP = "#f4d03f"
 PALETTE = ["#8ecae6", "#c77dff", "#90be6d", "#f28482", "#5e60ce", "#84a59d", "#b5838d", "#4ea8de", "#e07a5f"]
 
@@ -37,7 +39,7 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     from matplotlib.patches import Patch
     from matplotlib.lines import Line2D
     df = pd.read_csv(csv_path)
-    lab = pd.read_csv(labels_path).fillna("")
+    lab = pd.read_csv(labels_path, dtype=LABEL_TEXT).fillna({c: "" for c in LABEL_TEXT})
     with open(manifest_path) as fh:
         man = json.load(fh)
     start = pd.Timestamp(man["world"]["start_utc"].replace("Z", ""))

@@ -151,7 +151,8 @@ class TestGateCatchesFaults(unittest.TestCase):
 
     def broken(self, edit, dev="blackline_g7c"):
         d = pd.read_csv(self.files[dev][0], dtype=str)
-        edit(d)
+        out = edit(d)                                        # an edit changes d, or returns a new frame
+        d = d if out is None else out
         p = os.path.join(self.tmp.name, "broken.csv")
         d.to_csv(p, index=False)
         return failed(check_gas_file(p, dev, 46))
@@ -168,14 +169,15 @@ class TestGateCatchesFaults(unittest.TestCase):
 
     def test_unannounced_missing_row_fails(self):
         i = self.quiet_row()
-        self.assertIn("timestamps", self.broken(lambda d: d.drop(index=i, inplace=True)))
+        self.assertIn("timestamps", self.broken(lambda d: d.drop(index=i)))
 
     def test_announced_gap_passes_timestamps(self):
         i = self.quiet_row()
 
         def e(d):
-            d.drop(index=range(i, i + 6), inplace=True)
+            d = d.drop(index=range(i, i + 6))
             d.loc[i + 6, "gap_before_s"] = "60"
+            return d
         f = self.broken(e)
         self.assertNotIn("timestamps", f)
         self.assertNotIn("stel_formula", f)
@@ -185,8 +187,9 @@ class TestGateCatchesFaults(unittest.TestCase):
         i = self.quiet_row()
 
         def e(d):
-            d.drop(index=range(i, i + 6), inplace=True)
+            d = d.drop(index=range(i, i + 6))
             d.loc[i + 6, "gap_before_s"] = "50"
+            return d
         self.assertIn("timestamps", self.broken(e))
 
     def test_alarm_flag_flipped(self):

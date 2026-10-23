@@ -33,6 +33,8 @@ import sys
 import numpy as np
 import pandas as pd
 
+LABEL_TEXT = {"event": str, "detail": str, "scope": str}       # text columns of a labels file
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
@@ -98,7 +100,7 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
     with open(manifest_path) as fh:
         man = json.load(fh)
     df = pd.read_csv(csv_path)
-    lab = pd.read_csv(labels_path).fillna("")
+    lab = pd.read_csv(labels_path, dtype=LABEL_TEXT).fillna({c: "" for c in LABEL_TEXT})
     dev = man["device"]
     R = Report(dev["slug"])
     interval = float(_v(dev["features"].get("sample_interval_s", {"value": 1})))
