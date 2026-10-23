@@ -31,11 +31,15 @@ from core.world import list_presets, load_preset  # noqa: E402
 
 TWEAKABLE = ("accuracy", "noise_sd", "noise_density", "t90_s", "resolution", "odr_hz")
 st.set_page_config(page_title="Synthetic sensor data", layout="wide")
-# selected parts show their whole label instead of a cut-off chip
+# long labels stay readable: an open dropdown list shows each option whole and scrolls sideways when it
+# is wider than the list
 st.markdown("""<style>
-[data-baseweb="tag"] {max-width: none !important; height: auto !important;}
-[data-baseweb="tag"] span {max-width: none !important; overflow: visible !important; text-overflow: clip !important;
-                           white-space: normal !important;}
+[data-testid$="Dropdown"] [role="listbox"] {overflow-x: auto !important;}
+[data-testid$="Dropdown"] [role="listbox"] > [role="presentation"] > [role="presentation"],
+[data-testid$="Dropdown"] [role="option"] {width: max-content !important; min-width: 100% !important;
+                                           contain: none !important;}
+[data-testid$="Dropdown"] [role="option"] * {white-space: nowrap !important; overflow: visible !important;
+                                             text-overflow: clip !important; max-width: none !important;}
 </style>""", unsafe_allow_html=True)
 st.title("Synthetic sensor data")
 st.caption("Every world is labelled realism: ASSUMPTION: built from datasheets and stated assumptions, "
@@ -247,9 +251,9 @@ elif mode == COLUMNS:
     for q in CATALOG:
         domains.setdefault(q.split(".")[0], []).append(q)
     picked = []
-    grid = st.columns(4)
+    grid = st.columns(2)                                  # two wide boxes a row: the chosen columns stay readable
     for i, (dom, qs) in enumerate(domains.items()):
-        picked += grid[i % 4].multiselect(dom, qs, key=f"cols/{dom}",
+        picked += grid[i % 2].multiselect(dom, qs, key=f"cols/{dom}",
                                           format_func=lambda q: f"{column_label(q)} ({CATALOG[q].unit}) · {CATALOG[q].name}")
     if not picked:
         st.info("Pick at least one column above.")
