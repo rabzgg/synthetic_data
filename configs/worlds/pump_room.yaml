@@ -1,7 +1,7 @@
 # World: a pump room; the pump runs on the shift schedule. Grid, time and motion: defaults.
 title: "Pump room"
 realism: ASSUMPTION
-description: "A pump that runs during the day shift (06:00-22:00): vibration, current and energy follow the schedule, the room warms while it runs. No real recording behind it."
+description: "A pump runs during the day shift (06:00-22:00). Vibration, current and energy follow that schedule, and the room warms while the pump runs."
 signals:
   running:
     smooth:

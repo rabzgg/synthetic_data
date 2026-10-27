@@ -1,8 +1,8 @@
 # World preset: a device lying still on a shelf indoors.
 name: static_shelf
-title: "Device on a shelf"
+title: "Shelf indoors"
 realism: ASSUMPTION
-description: "A device lying still on a shelf indoors: stable room climate, lights on during working hours, clean air. No real recording behind it."
+description: "A device lying still on a shelf indoors. Stable room climate, lights on during working hours, clean air."
 grid:
   air_dt_s: {value: 1, unit: s, source: "ASSUMPTION: air changes over seconds; the fastest gas sensor t90 is 15 s"}
   body_dt_s: {value: 0.04, unit: s, source: "ASSUMPTION: 25 Hz resolves steps (about 2 Hz) and a fall impact (about 0.1 s)"}

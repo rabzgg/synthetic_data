@@ -8,7 +8,7 @@ An event changes the world (its drivers or the body's motion; the world then der
 
 ### `ac_failure`: AC failure
 
-The air conditioner stops: the room warms towards where the racks' heat would take it, until the AC runs again.
+The air conditioner stops. The room warms towards the temperature the racks' heat would reach, until the AC runs again.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `ac`
@@ -20,7 +20,7 @@ The air conditioner stops: the room warms towards where the racks' heat would ta
 
 ### `battery_drain`: Battery drain
 
-The battery drains faster than normal for a while, e.g. from a weak signal or a faulty cell.
+The battery drains faster than normal for a while, for example from a weak signal or a faulty cell.
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `battery`
@@ -33,7 +33,7 @@ The battery drains faster than normal for a while, e.g. from a weak signal or a 
 
 ### `bearing_wear`: Bearing wear
 
-A pump bearing wears: while the pump runs, its vibration grows slowly to a multiple of the healthy level and stays there. Needs a world with a pump_vibration signal.
+A pump bearing wears. While the pump runs, its vibration grows slowly to a multiple of the healthy level and stays there. Needs an environment with a running pump.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `pump_vibration`
@@ -60,7 +60,7 @@ Test gas is applied to the detector's inlet for a minute to check that every sen
 
 ### `collapse`: Collapse
 
-A gas release makes the wearer collapse: the gas rises, the wearer falls, moves a little, then lies without moving until rescued.
+A gas release makes the wearer collapse. The gas rises, the wearer falls, moves a little, then lies without moving until rescued.
 
 - Composite: `gas_release` → `fall_down` → `stir` → `no_motion` → `rise`.
 - Changes: the world; reaches devices worn on the body.
@@ -80,7 +80,7 @@ A gas release makes the wearer collapse: the gas rises, the wearer falls, moves 
 
 ### `compressor_failure`: Compressor failure
 
-The fridge's compressor stops: no current is drawn for it and the inside warms towards the room temperature.
+The fridge's compressor stops. It draws no current and the inside warms towards room temperature.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `compressor`
@@ -92,7 +92,7 @@ The fridge's compressor stops: no current is drawn for it and the inside warms t
 
 ### `connection_loss`: Connection loss
 
-The device loses its connection: it keeps measuring, but no rows reach the log until it is back.
+The device loses its connection. It keeps measuring, but no rows reach the log until it is back.
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `connectivity`
@@ -104,7 +104,7 @@ The device loses its connection: it keeps measuring, but no rows reach the log u
 
 ### `door_open`: Door open
 
-A door to the outside stays open: the air inside mixes towards the outside temperature, humidity and CO2, and light comes in.
+A door to the outside stays open. The air inside moves towards the outside temperature, humidity and CO2, and light comes in.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `air.temperature_c`, `air.vapour_pressure_hpa`, `air.co2_ppm`, `light.lux`
@@ -151,7 +151,7 @@ A gas leaks into the air around the devices, holds at a level for a while, then 
 
 ### `irrigation`: Irrigation
 
-The field is watered: water flows into the soil while it runs; the soil then drains and dries back down by itself. Needs a world whose soil moisture integrates an irrigation inflow signal.
+The field is watered. Water flows into the soil while it runs. Afterwards the soil drains and dries back by itself. Needs an environment with watered soil.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `irrigation`
@@ -164,7 +164,7 @@ The field is watered: water flows into the soil while it runs; the soil then dra
 
 ### `leak`: Leak
 
-A tank leaks: an extra outflow while the leak lasts; afterwards the level recovers by its normal inflow. Needs a world with a leak outflow signal.
+A tank leaks. Water flows out faster while the leak lasts. Afterwards the normal inflow brings the level back. Needs an environment with a water tank.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `leak`
@@ -188,7 +188,7 @@ The wearer stops moving completely (standing or lying), as when unconscious.
 
 ### `pump_fault`: Pump fault
 
-The sampling pump stops: the pump alarm is on; the gas readings are not changed.
+The sampling pump stops. The pump alarm comes on and the gas readings do not change.
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `states.pump`
@@ -200,7 +200,7 @@ The sampling pump stops: the pump alarm is on; the gas readings are not changed.
 
 ### `sensor_fault`: Sensor fault
 
-One sensor of the device fails for a while: it sticks at its last value, reads zero, or reads off by a fixed amount.
+One sensor of the device fails for a while. It sticks at its last value, reads zero, or reads off by a fixed amount.
 
 - Changes: one device; reaches the device it is given to.
 - Affects: `air.h2s_ppm`
@@ -215,7 +215,7 @@ One sensor of the device fails for a while: it sticks at its last value, reads z
 
 ### `sos`: SOS
 
-The wearer presses the SOS button; the SOS state is on for a while.
+The wearer presses the SOS button. The SOS state stays on for a while.
 
 - Changes: one device; reaches the device it is given to.
 - Needs the device feature: `states.sos`
@@ -227,7 +227,7 @@ The wearer presses the SOS button; the SOS state is on for a while.
 
 ### `temperature_change`: Temperature change
 
-The air warms or cools by a set amount and stays there for a while; RH follows.
+The air warms or cools by a set amount and stays there for a while. RH follows.
 
 - Changes: the world; reaches every device that measures what it affects.
 - Affects: `air.temperature_c`
@@ -274,7 +274,7 @@ The wearer gets up from lying to standing.
 
 ### `stir`: Stir on the ground (building block)
 
-The wearer lies on the ground and still moves clearly, e.g. right after a fall.
+The wearer lies on the ground and still moves clearly, for example right after a fall.
 
 - Changes: the world; reaches devices worn on the body.
 - Affects: `body.accel_g`, `body.gyro_dps`

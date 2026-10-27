@@ -3,7 +3,7 @@
 # No part with a datasheet measures CO2 in this repo yet.
 name: Generic CO2 sensor (NDIR)
 generic_for: air.co2_ppm
-class: "low-cost NDIR CO2 module, 0-5000 ppm, ±(50 ppm + 3 %)"
+class: "low-cost NDIR CO2 module, 0-5000 ppm, ±50 ppm + 3 % of reading"
 datasheet: "none: a generic NDIR CO2 module (all values ASSUMPTION)"
 measures:
   - quantity: air.co2_ppm

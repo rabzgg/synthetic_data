@@ -44,7 +44,7 @@ from core.world import Mount, World
 from core.quantities import CATALOG, resolve as resolve_quantity
 from core.quantities import rotation as rot
 
-from .base import DeviceView, Label, ScenarioError, draw, has_feature, hms, parse_time, resolve
+from .base import DeviceView, Label, Reason, ScenarioError, columns_of, draw, has_feature, hms, parse_time, resolve
 from .library import EVENTS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -224,11 +224,17 @@ def world_visibility(world, run, ev) -> dict:
             if best is None or change / res > best[1] / best[2]:
                 best = (q, change, res)
         else:
-            why = "it changes nothing this device measures" if best is None or best[1] == 0 else \
-                f"the largest change it causes ({best[0]}: {best[1]:.3g}) is below the sensor resolution ({best[2]:g})"
+            if best is None or best[1] == 0:
+                why, plain = "it changes nothing this device measures", "It changes nothing this device measures."
+            else:
+                unit = CATALOG[best[0]].unit
+                why = f"the largest change it causes ({best[0]}: {best[1]:.3g}) is below the sensor resolution ({best[2]:g})"
+                plain = (f"The change is smaller than the sensor resolution ({columns_of([best[0]])} moves "
+                         f"{best[1]:.3g} {unit} at most, resolution {best[2]:g} {unit}).")
             if ev.body and m.kind == "fixed":
                 why += "; the device is fixed, the event moves the body"
-            seen[d.slug] = (False, why)
+                plain = "This event moves a person, but the device is fixed."
+            seen[d.slug] = (False, Reason(why, plain))
     return seen, labels, (n_eff, n_mot)
 
 
@@ -279,20 +285,22 @@ def expected_alerts(world, view: DeviceView) -> List[Label]:
     return expected_labels(world, view)
 
 
-def event_rows(run, world_name: str = None, at_s: float = 1800.0, duration_s: float = 7200.0) -> list:
+def event_rows(run, world_name: str = None, at_s: float = 1800.0, duration_s: float = 7200.0,
+               building_blocks: bool = False) -> list:
     """Every event (default parameters; one row per choice of a quantity parameter, e.g. the gas) with,
-    per device of the run [(Device, Mount)], whether it can see it: [{name, kind, params, defn, cells:
-    {slug: (True, "") or (False, why)}}]. World events are tried in world_name, or in each event's
-    probe_world (default indoor_worker_walking)."""
+    per device of the run [(Device, Mount)], whether it can see it: [{name, title, kind, params, defn,
+    cells: {slug: (True, "") or (False, why)}}]. World events are tried in world_name, or in each event's
+    probe_world (default indoor_worker_walking). Building blocks only when asked."""
     rows = []
     for kind, defn in EVENTS.items():
-        if defn.building_block:
+        if defn.building_block and not building_blocks:
             continue
         choice = next((k for k, p in defn.PARAMS.items() if p.get("choices") and
                        all(_is_quantity(c) for c in p["choices"])), None)
         variants = [(f"{kind} ({c})", {choice: {"value": c, "unit": "-", "source": "ASSUMPTION: default choice"}})
                     for c in defn.PARAMS[choice]["choices"]] if choice else [(kind, {})]
         for name, params in variants:
+            title = defn.name + (f" ({params[choice]['value'].upper()})" if choice else "")
             ev = defn(at_s, params)
             if ev.end > duration_s:
                 ev = defn(max(0.0, duration_s - ev.duration_s() - 60.0), params)
@@ -305,15 +313,17 @@ def event_rows(run, world_name: str = None, at_s: float = 1800.0, duration_s: fl
                     if qp:
                         p2[qp] = {"value": next(q for q in d.measured() if q in d.used()), "unit": "-", "source": "ASSUMPTION: first measured"}
                     cells[d.slug] = defn(ev.at, p2).device_visible(d)
-                rows.append({"name": f"{kind} (any measured quantity)" if qp else name, "kind": kind,
+                rows.append({"name": f"{kind} (any measured quantity)" if qp else name, "title": title, "kind": kind,
                              "params": params, "defn": defn, "at": ev.at, "cells": cells})
                 continue
             world = World(world_name or defn.probe_world or PROBE_WORLD, duration_s, 1)
             try:
                 seen, _, _ = world_visibility(world, run, ev)
             except ScenarioError as err:
-                seen = {d.slug: (False, str(err).split(": ", 1)[-1]) for d, _ in run}
-            rows.append({"name": name, "kind": kind, "params": params, "defn": defn, "at": ev.at, "cells": seen})
+                why = Reason(str(err).split(": ", 1)[-1], defn.missing or "This event does not fit this environment.")
+                seen = {d.slug: (False, why) for d, _ in run}
+            rows.append({"name": name, "title": title, "kind": kind, "params": params, "defn": defn, "at": ev.at,
+                         "cells": seen})
     return rows
 
 
@@ -325,15 +335,22 @@ def compatibility(devices=None, mount: str = "body", at_s: float = 1800.0, durat
     return [(r["name"], r["cells"]) for r in event_rows(run, None, at_s, duration_s)]
 
 
-def compatible_events(world_name: str, devices, duration_s: float, at_s: float = None) -> list:
+def compatible_events(world_name: str, devices, duration_s: float, at_s: float = None,
+                      building_blocks: bool = False) -> list:
     """The events a run of these devices ([(Device, Mount)] or entries as in a scenario) can see in this
-    world, for the UI: rows as event_rows, plus ok (some device sees it) and why (when none does)."""
+    world, for the UI: rows as event_rows, plus ok (some device sees it), why (a plain sentence when none
+    does, with the device name when the run has several) and detail (the technical reason, for logs)."""
     run = devices if devices and isinstance(devices[0], tuple) else device_entries({}, devices)
+    names = {d.slug: d.name for d, _ in run}
     probe = min(float(duration_s), 4 * 3600.0)
-    rows = event_rows(run, world_name, at_s if at_s is not None else probe / 3, probe)
+    rows = event_rows(run, world_name, at_s if at_s is not None else probe / 3, probe, building_blocks)
     for r in rows:
         r["ok"] = any(v for v, _ in r["cells"].values())
-        r["why"] = "" if r["ok"] else "; ".join(f"{s}: {w}" for s, (_, w) in r["cells"].items())
+        bad = [(s, w) for s, (v, w) in r["cells"].items() if not v]
+        plain = [getattr(w, "plain", w) for _, w in bad]
+        r["why"] = "" if r["ok"] else plain[0] if len(bad) == 1 else \
+            " ".join(f"{names[s]}: {p}" for (s, _), p in zip(bad, plain))
+        r["detail"] = "" if r["ok"] else "; ".join(f"{s}: {w}" for s, w in bad)
     return rows
 
 

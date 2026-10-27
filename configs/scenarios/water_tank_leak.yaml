@@ -1,7 +1,7 @@
 # Scenario: a water tank springs a leak for three hours; afterwards the pump fills it again.
 name: water_tank_leak
 title: "Water tank leak"
-description: "Normal filling and use for a day, then a leak of 25 %/h for three hours in the evening; the pump refills the tank afterwards."
+description: "Normal filling and use for a day, then a leak of 25 %/h for three hours in the evening. The pump refills the tank afterwards."
 realism: ASSUMPTION
 world: water_tank
 duration: 48h

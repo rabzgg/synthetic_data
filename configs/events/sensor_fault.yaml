@@ -1,6 +1,6 @@
 kind: sensor_fault
 name: Sensor fault
-description: "One sensor of the device fails for a while: it sticks at its last value, reads zero, or reads off by a fixed amount."
+description: "One sensor of the device fails for a while. It sticks at its last value, reads zero, or reads off by a fixed amount."
 params:
   quantity: {value: air.h2s_ppm, unit: "-", source: "ASSUMPTION: default quantity"}
   mode: {value: stuck, unit: "-", source: "ASSUMPTION: default mode", choices: [stuck, zero, offset]}

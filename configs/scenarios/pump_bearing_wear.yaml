@@ -1,7 +1,7 @@
 # Scenario: a pump on a day-shift schedule whose bearing wears over three days.
 name: pump_bearing_wear
 title: "Pump bearing wear"
-description: "The pump runs 06:00-22:00 every day; from the first hour its bearing wears and the running vibration grows 2.5-fold over three days."
+description: "The pump runs 06:00-22:00 every day. From the first hour its bearing wears, and the running vibration grows 2.5-fold over three days."
 realism: ASSUMPTION
 world: pump_room
 duration: 96h

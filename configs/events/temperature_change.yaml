@@ -1,6 +1,6 @@
 kind: temperature_change
 name: Temperature change
-description: "The air warms or cools by a set amount and stays there for a while; RH follows."
+description: "The air warms or cools by a set amount and stays there for a while. RH follows."
 params:
   delta_c: {value: 5, unit: "°C", source: "ASSUMPTION: a noticeable change"}
   ramp_s: {value: 600, unit: s, source: "ASSUMPTION: air changes temperature over ten minutes"}

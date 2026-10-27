@@ -1,6 +1,7 @@
 kind: bump_test
 name: Bump test
 description: "Test gas is applied to the detector's inlet for a minute to check that every sensor reacts and alarms."
+missing: "This device has no bump test input."
 params:
   mix: {value: {lel: 50, h2s: 25, co: 100, o2: 18}, unit: "%LEL / ppm / ppm / %vol", source: "ASSUMPTION: example mix from the task brief (configs/gas/assumptions.json bump_test.gas_mix)"}
   applied_s: {value: 60, unit: s, source: "ASSUMPTION: test gas applied for 60 s (configs/gas/assumptions.json bump_test)"}

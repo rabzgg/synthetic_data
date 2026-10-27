@@ -1,6 +1,7 @@
 kind: compressor_failure
 name: Compressor failure
-description: "The fridge's compressor stops: no current is drawn for it and the inside warms towards the room temperature."
+description: "The fridge's compressor stops. It draws no current and the inside warms towards room temperature."
+missing: "This environment has no compressor."
 probe_world: fridge
 params:
   duration_s: {value: 21600, unit: s, source: "ASSUMPTION: six hours until someone notices"}

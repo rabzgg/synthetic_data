@@ -1,6 +1,6 @@
 kind: collapse
 name: Collapse
-description: "A gas release makes the wearer collapse: the gas rises, the wearer falls, moves a little, then lies without moving until rescued."
+description: "A gas release makes the wearer collapse. The gas rises, the wearer falls, moves a little, then lies without moving until rescued."
 params:
   gas: {value: h2s, unit: "-", source: "ASSUMPTION: default gas", choices: [lel, co, h2s, voc, co2]}
   level: {value: 20, unit: "gas unit", source: "ASSUMPTION: a level that crosses typical alarm setpoints"}

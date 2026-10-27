@@ -12,38 +12,55 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 ## Three ways in
 
 **Start from columns** (the default; pre-sales, `docs/PRESALES.md`).
-1. Pick the columns the sensor logs, grouped by domain, each with its unit.
-2. Pick the situation: only worlds that provide every chosen column.
-3. Per column: "Generic (default): <class>" or a part from a datasheet that measures it; a part's
-   other quantities are not logged ("also measures X (not logged)").
-4. Sample interval, and per column resolution, noise and ODR (a change is marked "ASSUMPTION: user
-   tweak"; a sensor whose rate can be set follows the sample interval, so its noise does too);
-   optionally raw counts (integer register / ADC codes).
-5. Name, mount, duration, seed, the events it can see, Generate, Save.
+1. "What does the sensor log?": pick the columns, grouped as Air (climate and gas), IMU (motion),
+   Electrical, Light, Machine, Soil, Water. Each option reads "Accelerometer: accel_x,y,z_g in g".
+   Under the list: "Not in the list? See docs/prompts/EXTEND.md in the repo."
+2. "Where is the sensor?": the environment. Only worlds that provide every chosen column are offered.
+3. "Which sensor?": per column "Generic (<class>)" or a part from a datasheet that measures it. A part's
+   other quantities are not written ("Bosch BME280 (also measures humidity_rh and pressure_hpa, not written)").
+4. "Sampling, resolution and noise": the logging interval, and per column resolution, RMS noise and ODR.
+   A change shows "Changed noise from a to b (your value, saved as assumed)" and is stored as
+   `ASSUMPTION: user tweak`. A sensor whose ODR can be set follows the logging interval, so its noise
+   does too. The box "Write counts (LSB)" writes integers = value / resolution. These are the
+   compensated reading in LSB, not the raw ADC code of a sensor that needs compensation (BME280).
+   Next to each column: range, response time (t90, hidden when 0), bandwidth ("n/a" when none), and
+   the accuracy ("zero-g offset" for an accelerometer, "zero-rate offset" for a gyroscope).
+5. "Name the device, add events, generate" (sidebar "5. Device": name, mounting, duration, seed).
 
 **Build a device.**
-1. Pick parts (sensors from datasheets); the list shows each part with the CSV columns it writes
-   (e.g. "Bosch BME280 → temperature_c, humidity_rh, pressure_hpa"). Each part shows every parameter with its unit, source and
-   kind; accuracy, noise, t90 and resolution can be changed (a change is marked "ASSUMPTION: user
-   tweak"). A threshold alarm can be added per measured quantity.
-2. Name the device and set the logging interval. "Save" writes `configs/devices/<slug>.yaml`
+1. "Sensors (from datasheets)": each shows the CSV columns it writes ("Bosch BME280 (temperature_c,
+   humidity_rh, pressure_hpa)"). Each sensor shows every parameter with its unit, source and typical or
+   max. Accuracy, noise, t90 and resolution can be changed. A threshold alarm can be added per column.
+2. Sidebar "2. Device": name and logging interval. "Save this device" writes `configs/devices/<slug>.yaml`
    (a name that exists gets a new version; presets cannot be overwritten).
-3. Pick a world: only worlds that provide every quantity the parts measure are offered. Pick the
-   mount (worn on the body or fixed), duration and seed.
-4. The events this device can see in that world are listed with one sentence each; the others are
-   listed with the reason. Tick events and set their start.
-5. Generate.
+3. Sidebar "3. Environment": only worlds that provide every quantity the sensors measure.
+4. Sidebar "4. Run": mounting (fixed or worn), duration and seed.
+5. "Events and generate".
 
-**A scenario (in progress).** Pick one of `configs/scenarios/`, a seed, and generate. It works; its
-layout and options are still being finished, so the page is marked in progress.
+**Example scenarios (work in progress).** Pick one of `configs/scenarios/`, a seed, and generate.
+The page works, the layout is not final yet.
+
+In both device ways the events the device can show in that environment are listed by name with one
+sentence each. The building blocks of composite events (fall down, lie, stir, rise) sit under
+"Building blocks (advanced)". The events it cannot show are listed with a plain reason ("This
+environment has no air conditioner."). The event file's `missing` key holds that sentence. The
+technical reason stays in `compatible_events(...)["detail"]`, in scenario errors and in the run notes.
+
+## Words on screen
+
+The screen uses plain words for the code's terms: world = environment, gate = checks, part = sensor,
+`ASSUMPTION` = assumed. Slugs, dotted ids (`air.temperature_c`) and repo paths are not shown, except
+the pointer to `docs/prompts/EXTEND.md`. An error shows a short sentence, with the original message
+under "Details".
 
 ## Results
 
-Per device: the gate verdict and every check, a figure (one panel per column, events shaded, gaps
-yellow, expected device responses hatched, generic columns marked "(generic)"), the **data summary**
-(per column: rows, sample rate, bits per sample, min, max, noise / resolution, ODR and bandwidth,
-generic or not), the labels, the first rows of the CSV, and one ZIP with the CSV, labels, manifest,
-gate and summary of every device.
+Per device: "<device name>: checks passed" (or failed) and every check, a figure titled "<device> in
+<environment> (seed n)" (one panel per column, events shaded and named, gaps yellow, expected device
+responses hatched, generic columns marked "(generic)"), the **data summary** (per column: rows, sample
+rate, bits per sample, min, max, noise vs resolution, ODR and bandwidth, generic or not), the event
+labels, the first 20 rows of the CSV, and one ZIP with the CSV, event labels, settings (manifest),
+checks (gate) and summary of every device.
 
 ## Not in the UI (do it in the files)
 

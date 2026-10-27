@@ -1,6 +1,7 @@
 kind: leak
 name: Leak
-description: "A tank leaks: an extra outflow while the leak lasts; afterwards the level recovers by its normal inflow. Needs a world with a leak outflow signal."
+description: "A tank leaks. Water flows out faster while the leak lasts. Afterwards the normal inflow brings the level back. Needs an environment with a water tank."
+missing: "This environment has no water tank."
 probe_world: water_tank
 params:
   duration_s: {value: 10800, unit: s, source: "ASSUMPTION: three hours until it is found"}

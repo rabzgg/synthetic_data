@@ -2,7 +2,7 @@
 # No particular product: every value is an ASSUMPTION of a typical transmitter of this class.
 name: Generic level transmitter
 generic_for: water.level_pct
-class: "hydrostatic level transmitter (4-20 mA), 0-100 %"
+class: "hydrostatic level transmitter, 4-20 mA, 0-100 %"
 datasheet: "none: a generic hydrostatic level transmitter (all values ASSUMPTION)"
 measures:
   - quantity: water.level_pct

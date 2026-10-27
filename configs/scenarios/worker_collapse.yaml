@@ -1,7 +1,7 @@
 # Scenario: a worker collapses in H2S; the G7c should raise fall and no-motion alerts.
 name: worker_collapse
 title: "Worker collapse in H2S"
-description: "H2S rises to 100 ppm, the worker falls after a minute, moves a little, then lies still for 10 min until rescued; one connection gap."
+description: "H2S rises to 100 ppm and the worker falls after a minute. The worker moves a little, then lies still for 10 min until rescued. One connection gap."
 realism: ASSUMPTION
 world: indoor_worker_walking
 duration: 2h

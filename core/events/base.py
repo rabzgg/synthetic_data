@@ -20,6 +20,23 @@ class ScenarioError(ValueError):
     pass
 
 
+class Reason(str):
+    """Why an event does not fit: the string itself is the technical reason (logs, errors, docs/EVENTS.md),
+    .plain is one sentence for the UI."""
+    def __new__(cls, text: str, plain: str = ""):
+        r = super().__new__(cls, text)
+        r.plain = plain or text
+        return r
+
+
+def columns_of(quantities) -> str:
+    """CSV columns of quantity ids in plain words: 'temperature_c and accel_x,y,z_g'."""
+    from core.quantities import CATALOG
+    cols = [CATALOG[q].column.replace("{axis}", ",".join(CATALOG[q].axes)) if CATALOG[q].vector else CATALOG[q].column
+            for q in quantities]
+    return cols[0] if len(cols) == 1 else ", ".join(cols[:-1]) + " and " + cols[-1]
+
+
 def parse_time(x) -> float:
     """Seconds from a number, "HH:MM[:SS]", or "90s" / "20min" / "8h"."""
     if isinstance(x, (int, float)):

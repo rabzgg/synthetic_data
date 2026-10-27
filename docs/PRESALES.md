@@ -14,16 +14,19 @@ information arrives in this order, and the app follows it:
 
 ## The flow in the UI
 
-1. **Columns.** Grouped by domain (air, body, electrical, …), each with its unit.
-2. **Situation.** Only the worlds that provide every chosen column (`configs/worlds/`).
-3. **Sensor per column.** "Generic (default): <class>" or a part from a datasheet that measures it.
-   One part chosen for several columns is one part (a BME280 for temperature and humidity); what it
-   also measures but nobody chose is not logged and not simulated ("also measures X (not logged)").
-4. **Sampling.** The sample interval, and per column resolution, noise and ODR, shown and editable; a
-   change is written as "ASSUMPTION: user tweak". A box writes the readings as **raw counts**: the
-   integer register or ADC code, round(reading / resolution), signed where the range goes below zero.
-5. **Name, events, generate.** Events the device can see in that situation, then plots, the gate,
-   the labels, the **data summary**, a ZIP, and "Save" (a device file in `configs/devices/`).
+1. **Columns.** Grouped as Air (climate and gas), IMU (motion), Electrical, Light, Machine, Soil, Water,
+   each with its column and unit.
+2. **Environment.** Only the worlds that provide every chosen column (`configs/worlds/`).
+3. **Sensor per column.** "Generic (<class>)" or a part from a datasheet that measures it.
+   One part chosen for several columns is one part (a BME280 for temperature and humidity). What it
+   also measures but nobody chose is not written and not simulated ("also measures X, not written").
+4. **Sampling.** The logging interval, and per column resolution, RMS noise and ODR, shown and editable.
+   A change is written as "ASSUMPTION: user tweak" (on screen: "saved as assumed"). A box writes the
+   readings as **counts (LSB)**: round(reading / resolution) as an integer, signed where the range goes
+   below zero. That is the compensated reading in LSB, not the raw ADC code of a sensor that needs
+   compensation formulas (the BME280's raw ADC values are uncompensated 20-bit codes).
+5. **Name, events, generate.** Events the device can show in that environment, then plots, the checks,
+   the event labels, the **data summary**, a ZIP, and "Save this device" (a file in `configs/devices/`).
 
 The same in Python:
 
@@ -72,19 +75,19 @@ the plot and in the manifest (`device.generic_columns`, `parts[].generic`).
 | `air.co_ppm` | `co_ppm` | `generic_co_cell` | electrochemical CO cell of a portable gas detector, 0-500 ppm | 0 … 500 ppm | 1 ppm | 0.5 ppm | 30 s (down 90) | 1 Hz (fixed) | ±5 % of reading | not better than `blackline_co_cell`, `msa_altair_co_cell` |
 | `air.h2s_ppm` | `h2s_ppm` | `generic_h2s_cell` | electrochemical H2S cell of a portable gas detector, 0-100 ppm | 0 … 100 ppm | 0.1 ppm | 0.1 ppm | 30 s (down 90) | 1 Hz (fixed) | ±5 % of reading | not better than `blackline_h2s_cell`, `msa_altair_h2s_cell` |
 | `air.lel_pct` | `lel_pct_lel` | `generic_lel_sensor` | catalytic bead LEL sensor of a portable gas detector, 0-100 %LEL | 0 … 100 %LEL | 1 %LEL | 0.5 %LEL | 20 s (down 60) | 1 Hz (fixed) | ±5 % of reading | not better than `blackline_g7_lel`, `blackline_g8_lel_mps`, `msa_altair_lel` |
-| `air.voc_ppm` | `voc_ppm` | `generic_voc_pid` | photoionisation (PID) VOC sensor, 0-1000 ppm isobutylene | 0 … 1000 ppm | 0.1 ppm | 0.2 ppm | 15 s (down 45) | 1 Hz (fixed) | ±10 % of reading | not better than `msa_altair_pid_voc` |
-| `air.co2_ppm` | `co2_ppm` | `generic_co2_ndir` | low-cost NDIR CO2 module, 0-5000 ppm, ±(50 ppm + 3 %) | 0 … 5000 ppm | 1 ppm | 10 ppm | 120 s | 0.5 Hz (fixed) | ±50 ppm + ±3 % of reading | class typical (no datasheet part in the repo) |
+| `air.voc_ppm` | `voc_ppm` | `generic_voc_pid` | photoionisation VOC sensor, 0-1000 ppm isobutylene | 0 … 1000 ppm | 0.1 ppm | 0.2 ppm | 15 s (down 45) | 1 Hz (fixed) | ±10 % of reading | not better than `msa_altair_pid_voc` |
+| `air.co2_ppm` | `co2_ppm` | `generic_co2_ndir` | low-cost NDIR CO2 module, 0-5000 ppm, ±50 ppm + 3 % of reading | 0 … 5000 ppm | 1 ppm | 10 ppm | 120 s | 0.5 Hz (fixed) | ±50 ppm + ±3 % of reading | class typical (no datasheet part in the repo) |
 | `body.accel_g` | `accel_{x,y,z}_g` | `generic_accelerometer` | consumer MEMS accelerometer ±8 g, 12 bit | -8 … 8 g | 0.003906 g | 0.004 g | 0 s | 100 Hz, follows the sample rate within 1 … 1000 Hz | ±0.06 g (1σ) | not better than `bosch_bma280` |
 | `body.gyro_dps` | `gyro_{x,y,z}_dps` | `generic_gyroscope` | consumer MEMS gyroscope ±2000 °/s | -2000 … 2000 °/s | 0.1 °/s | 0.1 °/s | 0 s | 100 Hz, follows the sample rate within 10 … 1000 Hz | ±1 °/s (1σ) + ±1 % of reading (1σ) | not better than `bosch_bmg160` |
 | `body.mag_ut` | `mag_{x,y,z}_ut` | `generic_magnetometer` | consumer 3-axis magnetometer ±1200 µT, uncalibrated | -1200 … 1200 µT | 0.3 µT | 0.8 µT | 0 s | 10 Hz, follows the sample rate within 2 … 30 Hz | ±40 µT (1σ) + ±5 % of reading | not better than `bosch_bmm150` |
 | `electrical.current_a` | `current_a` | `generic_current_clamp_5a` | split-core current clamp 0-5 A on a logger input | 0 … 5 A | 0.01 A | 0.005 A | 2 s | 1 Hz (fixed) | ±0.02 A + ±2 % of reading | class typical (no datasheet part in the repo) |
 | `electrical.energy_kwh` | `energy_kwh` | `generic_energy_meter` | kWh meter with a pulse or Modbus output, accuracy class 1 | 0 … 999999 kWh | 0.01 kWh | 0 kWh | 0 s | 1 Hz (fixed) | ±1 % of reading | class typical (no datasheet part in the repo) |
 | `light.lux` | `light_lux` | `generic_light_sensor` | digital ambient light sensor, 0-100 000 lx, 1 lx step | 0 … 100000 lx | 1 lx | 1 lx | 0.1 s | 1 Hz, follows the sample rate within 1 … 10 Hz | ±20 % of reading | not better than `maxim_max44009` (itself `[USER TO VERIFY]`) |
-| `machine.vibration_mm_s` | `vibration_mm_s` | `generic_vibration_transmitter` | RMS velocity vibration transmitter 0-25 mm/s (ISO 10816 style) | 0 … 25 mm/s | 0.01 mm/s | 0.02 mm/s | 5 s | 1 Hz (fixed) | ±5 % of reading | class typical (no datasheet part in the repo) |
-| `soil.moisture_pct` | `soil_moisture_pct_vwc` | `generic_soil_moisture_probe` | capacitive soil moisture probe (VWC), ±3 %VWC | 0 … 60 %VWC | 0.1 %VWC | 0.1 %VWC | 60 s | 1 Hz (fixed) | ±3 %VWC | class typical (no datasheet part in the repo) |
+| `machine.vibration_mm_s` | `vibration_mm_s` | `generic_vibration_transmitter` | RMS velocity vibration transmitter, 0-25 mm/s, ISO 10816 style | 0 … 25 mm/s | 0.01 mm/s | 0.02 mm/s | 5 s | 1 Hz (fixed) | ±5 % of reading | class typical (no datasheet part in the repo) |
+| `soil.moisture_pct` | `soil_moisture_pct_vwc` | `generic_soil_moisture_probe` | capacitive soil moisture probe, ±3 %VWC | 0 … 60 %VWC | 0.1 %VWC | 0.1 %VWC | 60 s | 1 Hz (fixed) | ±3 %VWC | class typical (no datasheet part in the repo) |
 | `water.temperature_c` | `water_temperature_c` | `generic_water_temperature` | waterproof stainless-steel digital temperature probe, ±0.5 °C | -10 … 85 °C | 0.0625 °C | 0.03 °C | 30 s | 1 Hz (fixed) | ±0.5 °C | class typical (no datasheet part in the repo) |
 | `water.ph` | `water_ph` | `generic_ph_probe` | glass pH electrode with a transmitter, ±0.1 pH after calibration | 0 … 14 pH | 0.01 pH | 0.01 pH | 30 s | 1 Hz (fixed) | ±0.1 pH | class typical (no datasheet part in the repo) |
-| `water.level_pct` | `water_level_pct` | `generic_level_transmitter` | hydrostatic level transmitter (4-20 mA), 0-100 % | 0 … 100 % | 0.1 % | 0.1 % | 5 s | 1 Hz (fixed) | ±0.5 % | class typical (no datasheet part in the repo) |
+| `water.level_pct` | `water_level_pct` | `generic_level_transmitter` | hydrostatic level transmitter, 4-20 mA, 0-100 % | 0 … 100 % | 0.1 % | 0.1 % | 5 s | 1 Hz (fixed) | ±0.5 % | class typical (no datasheet part in the repo) |
 
 "1σ" marks a typical value (normal spread, cut at 3σ); the others are hard bounds. Error bounds and
 t90 follow `docs/PARAMETER_MAPPING.md`.

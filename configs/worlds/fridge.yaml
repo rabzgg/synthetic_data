@@ -1,7 +1,7 @@
 # World: the air inside a household fridge, driven by its compressor. Grid, time and motion: defaults.
-title: "Inside a fridge"
+title: "Fridge"
 realism: ASSUMPTION
-description: "The compressor runs about 40 % of the time in cycles of about half an hour; the inside swings around 5 °C with it and the compressor current follows the same cycle. Dark inside. No real recording behind it."
+description: "The compressor runs about 40 % of the time in cycles of about half an hour. The inside swings around 5 °C with it, and the compressor current follows the same cycle. Dark inside."
 signals:
   compressor:
     duty_cycle: {period_s: {value: 1800, unit: s, source: "ASSUMPTION: a household fridge cycles about twice per hour"}, duty: {value: 0.4, unit: "-", source: "ASSUMPTION: compressor runs about 40 % of the time"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION: on"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION: off"}, transition_s: {value: 5, unit: s, source: "ASSUMPTION: start-up of the motor"}, jitter: {value: 0.15, unit: "-", source: "ASSUMPTION: cycles vary with load and door use"}}

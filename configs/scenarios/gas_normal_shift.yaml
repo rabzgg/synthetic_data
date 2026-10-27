@@ -1,7 +1,7 @@
 # Scenario: Normal shift. Rewritten from the gas detector engine (configs/gas/assumptions.json).
 name: gas_normal_shift
 title: "Normal shift"
-description: "A bump test at the start, 1-3 short gas exposures, connection gaps; SOS on devices that have it."
+description: "A bump test at the start, 1-3 short gas exposures and connection gaps. SOS on devices that have it."
 realism: ASSUMPTION
 world: indoor_worker_walking
 duration: 8h

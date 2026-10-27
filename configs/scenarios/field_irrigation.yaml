@@ -1,7 +1,7 @@
 # Scenario: a field dries for a day and is watered early the next morning.
 name: field_irrigation
 title: "Field irrigation"
-description: "The soil dries slowly; on the second morning it is watered for half an hour."
+description: "The soil dries slowly. On the second morning it is watered for half an hour."
 realism: ASSUMPTION
 world: field_day
 duration: 72h

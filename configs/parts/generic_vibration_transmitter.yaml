@@ -2,7 +2,7 @@
 # No particular product: every value is an ASSUMPTION of a typical transmitter of this class.
 name: Generic vibration transmitter 25 mm/s
 generic_for: machine.vibration_mm_s
-class: "RMS velocity vibration transmitter 0-25 mm/s (ISO 10816 style)"
+class: "RMS velocity vibration transmitter, 0-25 mm/s, ISO 10816 style"
 datasheet: "none: a generic RMS velocity transmitter (all values ASSUMPTION)"
 measures:
   - quantity: machine.vibration_mm_s

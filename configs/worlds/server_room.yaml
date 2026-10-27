@@ -1,7 +1,7 @@
 # World: a small server room cooled by an air conditioner that cycles on and off. Grid, time and motion: defaults.
 title: "Server room"
 realism: ASSUMPTION
-description: "Racks give off a steady heat; the AC cycles every two and a half minutes and holds the air near 22 °C with a small ripple. Without the AC the room heads for about 40 °C. No real recording behind it."
+description: "Racks give off a steady heat. The AC cycles every two and a half minutes and holds the air near 22 °C with a small ripple. Without the AC the room heads for about 40 °C."
 signals:
   ac:
     duty_cycle: {period_s: {value: 150, unit: s, source: "ASSUMPTION: a split AC cycling its compressor every 2.5 min"}, duty: {value: 0.5, unit: "-", source: "ASSUMPTION: half the time on at this heat load"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION: on"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION: off"}, transition_s: {value: 5, unit: s, source: "ASSUMPTION: compressor start"}, jitter: {value: 0.05, unit: "-", source: "ASSUMPTION: small variation of the cycle"}}

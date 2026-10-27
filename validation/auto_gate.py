@@ -141,7 +141,7 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
         lo, hi = m.bounds
         lo, hi = (np.atleast_1d(lo)[k if k is not None and np.ndim(lo) else 0], np.atleast_1d(hi)[k if k is not None and np.ndim(hi) else 0])
         R.add("range", c, np.isfinite(x).all() and (x >= lo - 1e-9).all() and (x <= hi + 1e-9).all(),
-              f"{np.nanmin(x):g}..{np.nanmax(x):g}", f"{lo:g}..{hi:g}")
+              f"{np.nanmin(x):g} to {np.nanmax(x):g}", f"{lo:g} to {hi:g}")
         on_grid = np.abs(x / m.resolution - np.round(x / m.resolution)) < 1e-6 + 1e-9 * np.abs(x) / m.resolution
         on_grid |= (x == lo) | (x == hi)
         R.add("resolution", c, bool(on_grid.all()), int((~on_grid).sum()), f"multiples of {m.resolution:g}")
@@ -165,7 +165,7 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
         if b.kind == "orientation_quat":
             qc = [c for c in df.columns if c.startswith(spec.get("prefix", "orientation") + "_")]
             xyz = df[[c for c in qc if not c.endswith("_w")]].to_numpy(float)
-            R.add("orientation", ",".join(qc), bool((np.sum(xyz ** 2, axis=1) <= 1 + 1e-3).all()), "", "|xyz| <= 1")
+            R.add("orientation", ",".join(qc), bool((np.sum(xyz ** 2, axis=1) <= 1 + 1e-3).all()), "", "length of x, y, z at most 1")
             continue
         if out not in df:
             continue
@@ -265,13 +265,13 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
                     pct = pct - _v(e["params"]["extra_pct_per_h"]) * np.clip(np.minimum(t, e["end_s"]) - e["at_s"], 0, None) / 3600
             exp = np.clip(np.floor(pct), 0, 100)
             bad = int(np.sum(exp != y.astype(float)))
-            R.add("battery", out, bad == 0, bad, "floor(start - 100 t / runtime - extra drain)")
+            R.add("battery", out, bad == 0, bad, "start level minus normal and extra drain, rounded down to whole %")
         elif b.kind == "signal":
             lo, hi = b.p("range_dbm")
             steps = np.abs(np.diff(y.astype(float)))
             allow = SIGNAL_SD_STEPS * b.p("step_sd_db") * np.sqrt(np.maximum(np.diff(row_idx), 1))
             ok = (y.astype(float) == np.round(y.astype(float))).all() and (y >= lo).all() and (y <= hi).all() and (steps <= allow).all()
-            R.add("signal", out, bool(ok), f"{y.min()}..{y.max()}", f"{lo}..{hi} dBm, steps <= {SIGNAL_SD_STEPS:g} sd")
+            R.add("signal", out, bool(ok), f"{y.min()} to {y.max()}", f"{lo} to {hi} dBm, steps at most {SIGNAL_SD_STEPS:g} sd")
         elif b.kind == "constant":
             R.add("constant", out, bool((y.astype(str) == str(_v(spec["value"]))).all()), "", str(_v(spec["value"])))
         elif b.kind == "random_state":
@@ -287,7 +287,7 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
                             for r in ex.itertuples() if r.event.endswith("_alert") and r.end_s - r.start_s > 2 * tol)
             R.add(b.kind, out, match.mean() >= MOTION_AGREE and alerts_ok,
                   f"{match.mean() * 100:.1f} % rows agree, alerts {'reported' if alerts_ok else 'missed'}",
-                  f">= {MOTION_AGREE * 100:g} % agree (± {tol:g} s), every expected alert reported")
+                  f"at least {MOTION_AGREE * 100:g} % agree within ± {tol:g} s, every expected alert reported")
 
     # input response (bump test)
     for e in man["events"]:
@@ -305,7 +305,7 @@ def check_device(csv_path, labels_path, manifest_path) -> dict:
             if not len(pre) or not len(win):
                 continue
             moved = (win - pre[-1]) / (val - pre[-1]) if val != pre[-1] else np.ones(1)
-            R.add("input_response", c, moved.max() >= 0.5, f"{moved.max() * 100:.0f} % of the way", ">= 50 % towards the test value")
+            R.add("input_response", c, moved.max() >= 0.5, f"{moved.max() * 100:.0f} % of the way", "at least 50 % towards the test value")
 
     # two parts on one quantity
     for q, lst in models.items():

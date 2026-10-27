@@ -2,7 +2,7 @@
 # No particular product: every value is an ASSUMPTION of a typical sensor of this class.
 name: Generic VOC (PID) sensor
 generic_for: air.voc_ppm
-class: "photoionisation (PID) VOC sensor, 0-1000 ppm isobutylene"
+class: "photoionisation VOC sensor, 0-1000 ppm isobutylene"
 datasheet: "none: a generic PID sensor (all values ASSUMPTION)"
 measures:
   - quantity: air.voc_ppm

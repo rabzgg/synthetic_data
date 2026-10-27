@@ -2,7 +2,7 @@
 # No particular product: every value is an ASSUMPTION of a typical probe with the generic soil calibration.
 name: Generic capacitive soil moisture probe
 generic_for: soil.moisture_pct
-class: "capacitive soil moisture probe (VWC), ±3 %VWC"
+class: "capacitive soil moisture probe, ±3 %VWC"
 datasheet: "none: a generic capacitive VWC probe (all values ASSUMPTION)"
 measures:
   - quantity: soil.moisture_pct

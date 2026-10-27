@@ -38,6 +38,8 @@ Effects on a device (scope: device; requires: [device features]):
 A composite event has steps instead of effects: [{event, at or after, params, label}]; at = offset from
 the start, after = gap after the previous step's end; params are expressions of the composite's own.
 building_block: true marks a small event meant for composites (left out of lists and tables).
+missing: the sentence the UI shows when the environment or the device lacks what the event needs
+    ("This environment has no air conditioner.", "This device has no sampling pump.").
 probe_world: the world to try a world event in when no run is given (compatibility tables).
 """
 import glob
@@ -51,12 +53,12 @@ from core.quantities import CATALOG, resolve as resolve_quantity
 from core.quantities.measurement import check_source
 from core.world.primitives import SpecError, value as pvalue
 
-from .base import Label, ScenarioError, has_feature
+from .base import Label, Reason, ScenarioError, columns_of, has_feature
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EVENTS_DIR = os.path.join(ROOT, "configs", "events")
 KEYS = {"kind", "name", "description", "scope", "params", "duration", "label", "effects", "steps", "requires",
-        "probe_world", "building_block"}
+        "probe_world", "building_block", "missing"}
 DEVICE_TARGETS = ("device.input", "device.gap", "device.state", "device.battery")
 
 
@@ -80,6 +82,7 @@ class EventDef:
         self.label_tpl = d.get("label", "")
         self.probe_world = d.get("probe_world")
         self.building_block = bool(d.get("building_block", False))     # used inside composites, not on its own
+        self.missing = d.get("missing", "")                            # UI sentence when a world or device lacks it
         self.path = path
 
     def __call__(self, at_s=0.0, params=None, index=0):
@@ -229,10 +232,12 @@ class Instance:
         """For device events: the device has the features and measures what it is given."""
         missing = [r for r in self.requires() if not has_feature(device, r)]
         if missing:
-            return False, f"it needs the device feature {', '.join(missing)}"
+            return False, Reason(f"it needs the device feature {', '.join(missing)}",
+                                 self.defn.missing or "This device does not have what this event needs.")
         ins = self.inputs()
         if ins and not set(ins) & set(device.measured()):
-            return False, f"the device measures none of {', '.join(ins)}"
+            return False, Reason(f"the device measures none of {', '.join(ins)}",
+                                 f"This device does not measure {columns_of(ins)}.")
         return True, ""
 
     # applying

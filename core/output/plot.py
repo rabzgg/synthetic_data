@@ -17,6 +17,14 @@ GAP = "#f4d03f"
 PALETTE = ["#8ecae6", "#c77dff", "#90be6d", "#f28482", "#5e60ce", "#84a59d", "#b5838d", "#4ea8de", "#e07a5f"]
 
 
+def event_name(kind: str) -> str:
+    """The event's name for people ("Compressor failure"), or the label as it is for anything else."""
+    from core.events import EVENTS
+    k, _, step = kind.partition(":")
+    name = EVENTS[k].name if k in EVENTS else k.replace("_", " ")
+    return f"{name}, {step.replace('_', ' ')}" if step else name
+
+
 def _panels(df):
     vals, alarms, states = [], [], []
     for c in df.columns[2:]:
@@ -94,11 +102,11 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     axes[-1].set_xlabel("Time (UTC)")
     for a in axes:
         a.grid(alpha=0.3)
-    handles = [Line2D([], [], color="black", lw=1, label="reading" + (" ((generic) = generic part, all values "
-                                                                       "ASSUMPTION)" if generic else ""))]
+    handles = [Line2D([], [], color="black", lw=1, label="reading" + (" (generic = typical sensor, values assumed)"
+                                                                       if generic else ""))]
     if alarms:
         handles.append(Line2D([], [], color="#c1121f", lw=1, label="alarm (0/1)"))
-    handles += [Patch(facecolor=colour[k], alpha=0.5, label=k) for k in kinds]
+    handles += [Patch(facecolor=colour[k], alpha=0.5, label=event_name(k)) for k in kinds]
     if (lab.event == "connection_loss").any():
         handles.append(Patch(facecolor=GAP, alpha=0.6, label="connection gap (no rows)"))
     if (lab.scope == "expected").any():
@@ -106,8 +114,8 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     fig.legend(handles=handles, loc="upper center", ncol=min(len(handles), 6), fontsize=8, frameon=False,
                bbox_to_anchor=(0.5, 1 - 0.55 / fig.get_size_inches()[1]))
     d = man["device"]
-    fig.suptitle(title or f"{d['name']} · {man['scenario']['name']} · seed {man['seed']} · {man['world']['title']} "
-                 f"(realism: {man['world']['realism']})", fontsize=11, y=1 - 0.1 / fig.get_size_inches()[1])
+    fig.suptitle(title or f"{d['name']} in {man['world']['title']} (seed {man['seed']})", fontsize=11,
+                 y=1 - 0.1 / fig.get_size_inches()[1])
     fig.tight_layout(rect=(0, 0, 0.9 if states else 1, 1 - 0.85 / fig.get_size_inches()[1]))
     return fig
 

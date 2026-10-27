@@ -2,7 +2,7 @@
 # Grid, time and motion: defaults.
 title: "Water tank"
 realism: ASSUMPTION
-description: "A 10 m³ tank: a fill pump runs a third of the time at 36 %/h, use follows the day (most in the evening), the level stops at full and at empty. The leak signal is 0 until a leak event opens it. No real recording behind it."
+description: "A 10 m³ tank. A fill pump runs a third of the time at 36 %/h. Use follows the day, with most in the evening. The level stops at full and at empty. Nothing leaks unless a leak event is added."
 signals:
   pump:
     duty_cycle: {period_s: {value: 7200, unit: s, source: "ASSUMPTION: the fill pump runs every two hours"}, duty: {value: 0.35, unit: "-", source: "ASSUMPTION: 42 min of every two hours"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION"}, transition_s: {value: 5, unit: s, source: "ASSUMPTION: motor start"}, jitter: {value: 0.1, unit: "-", source: "ASSUMPTION"}}

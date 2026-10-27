@@ -1,7 +1,7 @@
 # Scenario: Test: pump fault. Rewritten from the gas detector engine (configs/gas/assumptions.json).
 name: gas_pump_fault
 title: "Test: pump fault"
-description: "The sampling pump fails for a while; the readings are not changed. Plus 1-3 short exposures."
+description: "The sampling pump fails for a while. The readings do not change. Plus 1-3 short exposures."
 realism: ASSUMPTION
 world: indoor_worker_walking
 duration: 8h

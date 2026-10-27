@@ -1,8 +1,8 @@
 # World: a field outdoors: the outdoor day plus the soil, which dries and drains. Grid and motion: defaults.
 name: field_day
-title: "Field, one day"
+title: "Field"
 realism: ASSUMPTION
-description: "A field outdoors: daily temperature and light as in outdoor_day; the soil holds about 28 %VWC and dries slowly in the sun. No real recording behind it."
+description: "A field outdoors, with the daily temperature and light of an outdoor day. The soil holds about 28 %VWC and dries slowly in the sun."
 time:
   start_utc: {value: "2026-06-15T06:00:00Z", unit: "ISO 8601", source: "ASSUMPTION: a June morning"}
   utc_offset_h: {value: 0, unit: h, source: "ASSUMPTION: local time = UTC"}

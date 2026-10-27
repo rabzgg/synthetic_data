@@ -1,7 +1,7 @@
 # World: a heated freshwater aquarium with a lamp and a filter pump. Grid, time and motion: defaults.
 title: "Aquarium"
 realism: ASSUMPTION
-description: "Stable water temperature, pH that rises while the lamp is on (plants take up CO2), a filter pump that runs 45 min of every hour. No real recording behind it."
+description: "Stable water temperature. The pH rises while the lamp is on, because the plants take up CO2. A filter pump runs 45 min of every hour."
 signals:
   lamp:
     schedule: {segments: {value: [[8, 20, 1]], unit: "h, h, -", source: "ASSUMPTION: lamp on 12 h a day"}, default: {value: 0, unit: "-", source: "ASSUMPTION: off at night"}}

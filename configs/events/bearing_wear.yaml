@@ -1,6 +1,7 @@
 kind: bearing_wear
 name: Bearing wear
-description: "A pump bearing wears: while the pump runs, its vibration grows slowly to a multiple of the healthy level and stays there. Needs a world with a pump_vibration signal."
+description: "A pump bearing wears. While the pump runs, its vibration grows slowly to a multiple of the healthy level and stays there. Needs an environment with a running pump."
+missing: "This environment has no running pump."
 probe_world: pump_room
 params:
   duration_s: {value: 259200, unit: s, source: "ASSUMPTION: wear develops over three days"}
