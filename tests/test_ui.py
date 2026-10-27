@@ -24,6 +24,8 @@ class TestUi(unittest.TestCase):
     def test_scenario(self):
         at = AppTest.from_file(APP, default_timeout=300).run()
         self.assertEqual(at.sidebar.radio[0].value, "Start from columns")              # the default
+        hint = next(c.value for c in at.caption if "EXTEND.md" in c.value)          # how to add a missing column
+        self.assertTrue(os.path.exists(os.path.join(ROOT, hint.split("See ")[1].split(" in")[0])))
         at.sidebar.radio[0].set_value("A scenario (in progress)").run()
         at.sidebar.selectbox[0].set_value("fridge_compressor_failure").run()
         at.sidebar.button[0].click().run()

@@ -59,6 +59,7 @@ generate, look at plots and the gate, download a ZIP. See `docs/UI.md`.
 - `docs/ARCHITECTURE.md`: the six blocks and a run, on one page
 - `docs/HOW_TO_ADD_A_SENSOR.md`, `docs/HOW_TO_ADD_A_WORLD.md`, `docs/HOW_TO_ADD_AN_EVENT.md`
 - `docs/prompts/DATASHEET_TO_PART.md`: LLM prompt for a first draft of a part file (with page numbers)
+- `docs/prompts/EXTEND.md`: Claude Code prompt to add a missing column, sensor, environment or event (form + NO2 example)
 - `docs/PARAMETER_MAPPING.md`, `docs/EVENTS.md`: generated references
 - `configs/gas/`, `core/gas_detector.py`, `validation/gas_gate.py`: the earlier gas detector engine, kept for parity checks
 

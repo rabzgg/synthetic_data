@@ -51,4 +51,5 @@ gate and summary of every device.
 - Several devices in one run when building a device (scenarios can hold several).
 - `output_format` (other than raw counts), logic blocks other than a threshold alarm, `log: false`,
   aliases, mounting.
-- New quantities, worlds and events (`docs/HOW_TO_ADD_A_WORLD.md`, `docs/HOW_TO_ADD_AN_EVENT.md`).
+- New quantities, worlds and events (`docs/HOW_TO_ADD_A_WORLD.md`, `docs/HOW_TO_ADD_AN_EVENT.md`; a ready
+  prompt for Claude Code is `docs/prompts/EXTEND.md`, linked under the column list in step 1).

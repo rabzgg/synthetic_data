@@ -35,7 +35,7 @@ class TestDocs(unittest.TestCase):
 
     def test_referenced_files_exist(self):
         for doc in ("ARCHITECTURE.md", "HOW_TO_ADD_A_SENSOR.md", "HOW_TO_ADD_A_WORLD.md", "HOW_TO_ADD_AN_EVENT.md",
-                    "PRESALES.md", "UI.md"):
+                    "PRESALES.md", "UI.md", "prompts/EXTEND.md"):
             with open(os.path.join(ROOT, "docs", doc)) as fh:
                 text = fh.read()
             for path in set(re.findall(r"`((?:configs|core|validation|cli|docs)/[\w./-]+\.(?:py|yaml|md))`", text)):

@@ -255,6 +255,7 @@ elif mode == COLUMNS:
     for i, (dom, qs) in enumerate(domains.items()):
         picked += grid[i % 2].multiselect(dom, qs, key=f"cols/{dom}",
                                           format_func=lambda q: f"{column_label(q)} ({CATALOG[q].unit}) · {CATALOG[q].name}")
+    st.caption("Not in the list? See docs/prompts/EXTEND.md in the repo.")
     if not picked:
         st.info("Pick at least one column above.")
         st.stop()
