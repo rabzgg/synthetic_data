@@ -13,7 +13,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from core.events import EventDef
 from core.world import World
-from core.world.primitives import Context, SpecError, evaluate, value
+from core.world.primitives import Context, SpecError, _solar_elevation_deg, evaluate, value
 
 
 def ctx(n=3601, dt=1.0, hour=None, **kw):
@@ -162,6 +162,64 @@ class TestDefaults(unittest.TestCase):
         for name in ("fridge", "aquarium", "pump_room", "water_tank"):
             w = World(name, 3600, 1)
             self.assertIn("motion", w.defaults_used, name)
+
+
+def _a(v, unit="-"):
+    return {"value": v, "unit": unit, "source": "ASSUMPTION: test"}
+
+
+class TestSky(unittest.TestCase):
+    """Daylight under a clear, a partly cloudy and an overcast sky, as a fraction of the clear-sky curve."""
+    BASE = {"latitude_deg": _a(52, "°"), "clear_sky": _a(110000, "lx"), "haze_sd": _a(0.02), "haze_tau_s": _a(120, "s")}
+    PARTLY = {"shade_fraction": _a(0.3), "sun_mean_s": _a(300, "s"), "shade_mean_s": _a(180, "s"),
+              "transition_s": _a(10, "s")}
+
+    def ratio(self, sky, **extra):
+        c = ctx(n=86400)
+        lux = evaluate({"solar": dict(self.BASE, sky=_a(sky), **extra)}, c)
+        curve = 110000 * np.clip(np.sin(np.radians(_solar_elevation_deg(c.hour, c.doy, 52))), 0, None)
+        day = curve > 0.3 * 110000                              # one block around noon
+        return lux[day] / curve[day]
+
+    def test_partly_cloudy_has_two_levels(self):
+        r = self.ratio("partly_cloudy", **self.PARTLY)
+        share, edges = np.histogram(r, bins=25, range=(0, 1.25))
+        share = share / share.sum()
+        mid = (edges[:-1] + edges[1:]) / 2
+        peaks = [mid[i] for i in range(25) if share[i] > 0.05 and share[i] >= share[max(i - 1, 0)]
+                 and share[i] >= share[min(i + 1, 24)]]
+        self.assertEqual(len(peaks), 2, peaks)
+        self.assertAlmostEqual(peaks[0], 0.3, delta=0.06)              # cloud shadow
+        self.assertAlmostEqual(peaks[1], 1.0, delta=0.06)              # sun
+        self.assertLess(np.mean((r > 0.4) & (r < 0.85)), 0.05)        # little time in between: changes are quick
+        self.assertLessEqual(r.max(), 1.0)                             # never above the clear curve
+
+    def test_clear_stays_above_90_percent(self):
+        r = self.ratio("clear")
+        self.assertGreaterEqual(r.min(), 0.9)
+        self.assertLessEqual(r.max(), 1.0)
+
+    def test_overcast_is_low_and_smooth(self):
+        r = self.ratio("overcast", overcast_fraction=_a(0.22), overcast_sd=_a(0.03), overcast_tau_s=_a(1800, "s"),
+                       overcast_smooth_s=_a(600, "s"))
+        self.assertTrue(0.15 <= np.median(r) <= 0.3, np.median(r))
+        self.assertLessEqual(r.max(), 1.0)
+        self.assertLess(np.abs(np.diff(r)).max(), 0.002)               # no jumps from one second to the next
+
+    def test_cloud_edge_enhancement(self):
+        r = self.ratio("partly_cloudy", edge_enhancement=_a(1.2), edge_s=_a(20, "s"), **self.PARTLY)
+        self.assertGreater(r.max(), 1.05)
+        self.assertLessEqual(r.max(), 1.2)
+
+    def test_old_cloud_parameters_refused(self):
+        with self.assertRaises(SpecError):
+            evaluate({"solar": dict(self.BASE, cloud_mean=_a(0.7), cloud_sd=_a(0.2), cloud_tau_s=_a(600, "s"))}, ctx())
+        with self.assertRaises(SpecError):
+            self.ratio("stormy")
+
+    def test_outdoor_presets_are_partly_cloudy(self):
+        for name in ("outdoor_day", "field_day"):
+            self.assertEqual(World(name, 3600, 1).preset["drivers"]["light.lux"]["solar"]["sky"]["value"], "partly_cloudy")
 
 
 class TestEffects(unittest.TestCase):

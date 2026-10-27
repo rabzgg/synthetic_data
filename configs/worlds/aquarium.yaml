@@ -1,6 +1,7 @@
 # World: a heated freshwater aquarium with a lamp and a filter pump. Grid, time and motion: defaults.
 title: "Aquarium"
 realism: ASSUMPTION
+setting: indoor
 description: "Stable water temperature. The pH rises while the lamp is on, because the plants take up CO2. A filter pump runs 45 min of every hour."
 signals:
   lamp:

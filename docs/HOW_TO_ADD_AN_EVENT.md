@@ -98,6 +98,10 @@ events:
   `{choice_measured: [...]}` (a quantity some device measures), `{by_gas: {h2s: ..., co: ...}}`;
   each may carry its own `source`. `count`, `spacing_s` (gap between events of the same kind) and
   `devices` / `optional` (for device events) are entry keys.
+- `setting: indoor` (or `outdoor`) for an event that only happens there, with `wrong_setting`, the
+  sentence shown otherwise ("This environment is outdoors, it has no door."). `missing` is the
+  sentence shown when the environment or device lacks what the event acts on ("This environment has
+  no air conditioner."). `door_open` and `ac_failure` are indoor only.
 - An event no device can see is refused with the reason (e.g. "changes nothing this device measures",
   "the device is fixed, the event moves the body", "needs the device feature states.pump").
 

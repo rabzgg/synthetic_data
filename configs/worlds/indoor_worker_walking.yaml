@@ -2,6 +2,7 @@
 name: indoor_worker_walking
 title: "Indoor workplace"
 realism: ASSUMPTION
+setting: indoor
 description: "Clean indoor air at room temperature with slow variation. The worker alternates walking and standing. The light changes between rooms. Now and then the worker takes the stairs to another floor."
 grid:
   air_dt_s: {value: 1, unit: s, source: "ASSUMPTION: air changes over seconds; the fastest gas sensor t90 is 15 s"}

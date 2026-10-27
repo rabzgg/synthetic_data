@@ -1,6 +1,8 @@
 kind: door_open
 name: Door open
 description: "A door to the outside stays open. The air inside moves towards the outside temperature, humidity and CO2, and light comes in."
+setting: indoor
+wrong_setting: "This environment is outdoors, it has no door."
 params:
   duration_s: {value: 120, unit: s, source: "ASSUMPTION: door held open for two minutes"}
   outside_temperature_c: {value: 5, unit: "°C", source: "ASSUMPTION: a winter day"}

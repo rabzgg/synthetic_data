@@ -25,7 +25,17 @@ Primitives (time t in seconds from the start of the world, or of the event insid
     daily_cycle     mean, amplitude, peak_hour: a cosine over 24 h (local time)
     random_walk     mean, sd, tau_s, smooth_s (default 0): mean-reverting (Ornstein-Uhlenbeck), then smoothed
     schedule        segments [[from_hour, to_hour, value], ...], default: by local hour of the day
-    solar           latitude_deg, clear_sky, cloud_mean, cloud_sd, cloud_tau_s: daylight with clouds
+    solar           latitude_deg, clear_sky, sky: daylight = clear_sky × sin(sun elevation) × the sky's factor.
+                    sky clear:          haze_sd, haze_tau_s. The factor stays between 0.9 and 1.
+                    sky partly_cloudy:  haze_sd, haze_tau_s, shade_fraction, sun_mean_s, shade_mean_s,
+                                        transition_s. The light switches between sun (the clear curve) and
+                                        cloud shadow (shade_fraction of it). Sunny and shaded spells last an
+                                        exponential time with those means, and each change takes transition_s.
+                                        Optional edge_enhancement (default 1 = off) and edge_s: a short rise
+                                        up to that factor when the sun comes out at a cloud edge.
+                    sky overcast:       overcast_fraction, overcast_sd, overcast_tau_s, overcast_smooth_s: a
+                                        slow, smooth fraction of the clear curve.
+                    The light is never above the clear curve, except at a cloud edge with edge_enhancement.
     vapour_from_rh  rh_pct, temperature_c: the water vapour pressure of air at that RH and temperature
     integrate       start, inflow [specs], outflow [specs], lower, upper, per (s | min | h, the time unit of the
                     flows; default s), relax_to and relax_tau_s (optional): a stock, e.g. a tank level,
@@ -206,10 +216,51 @@ def _schedule(c, p):
     return x
 
 
+SKIES = ("clear", "partly_cloudy", "overcast")
+
+
+def _sky(c, p):
+    """The fraction of the clear-sky light that reaches the ground (see solar above)."""
+    sky = str(c.p(p, "sky"))
+    if sky not in SKIES:
+        raise SpecError(f"solar: sky must be one of {SKIES}, not {sky!r}")
+    n, dt = len(c.t), c.dt
+    if sky == "overcast":
+        x = _ou(n, dt, c.p(p, "overcast_fraction"), c.p(p, "overcast_sd"), c.p(p, "overcast_tau_s"), c.rng)
+        return np.clip(_smooth(x, int(round(c.p(p, "overcast_smooth_s") / dt))), 0.02, 1.0)
+    haze = 1.0 - np.minimum(np.abs(_ou(n, dt, 0.0, c.p(p, "haze_sd"), c.p(p, "haze_tau_s"), c.rng)), 0.1)
+    if sky == "clear":
+        return haze
+    shade, w = c.p(p, "shade_fraction"), max(1, int(round(c.p(p, "transition_s") / dt)))
+    means = {True: c.p(p, "sun_mean_s"), False: c.p(p, "shade_mean_s")}
+    state, onsets, i = np.empty(n), [], 0
+    sunny = bool(c.rng.random() < means[True] / (means[True] + means[False]))
+    while i < n:                                            # sunny and shaded spells, one after the other
+        k = max(w, int(round(c.rng.exponential(means[sunny]) / dt)))
+        state[i:i + k] = 1.0 if sunny else 0.0
+        if sunny and i:
+            onsets.append(i)
+        i, sunny = i + k, not sunny
+    f = (shade + (1.0 - shade) * _smooth(state, w)) * haze  # each change takes transition_s
+    edge = float(c.p(p, "edge_enhancement", 1.0))
+    if edge > 1.0:                                          # brighter for a moment as the sun comes out
+        tau = c.p(p, "edge_s") / dt
+        bump = np.zeros(n)
+        for o in onsets:
+            a = o + w // 2
+            k = np.arange(min(n - a, int(6 * tau) + 1))
+            bump[a:a + len(k)] = np.maximum(bump[a:a + len(k)], np.exp(-k / tau))
+        return np.minimum(f * (1.0 + (edge - 1.0) * bump), edge)
+    return np.minimum(f, 1.0)
+
+
 def _solar(c, p):
+    old = [k for k in ("cloud_mean", "cloud_sd", "cloud_tau_s") if k in p]
+    if old:
+        raise SpecError(f"solar: {old} were replaced by sky: clear | partly_cloudy | overcast "
+                        "(core/world/primitives.py)")
     el = _solar_elevation_deg(c.hour, c.doy, c.p(p, "latitude_deg"))
-    cloud = np.clip(_ou(len(c.t), c.dt, c.p(p, "cloud_mean"), c.p(p, "cloud_sd"), c.p(p, "cloud_tau_s"), c.rng), 0.05, 1.0)
-    return c.p(p, "clear_sky") * np.clip(np.sin(np.radians(el)), 0, None) * cloud
+    return c.p(p, "clear_sky") * np.clip(np.sin(np.radians(el)), 0, None) * _sky(c, p)
 
 
 def _vapour_from_rh(c, p):

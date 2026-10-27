@@ -5,6 +5,8 @@ A world is a preset file (configs/worlds/<name>.yaml) made of
     realism    ASSUMPTION or recorded (required)
     signals    named helper signals (e.g. a compressor that is on or off), not quantities
     drivers    one spec per quantity id (configs/quantities/) or relation input (below)
+    setting    indoor or outdoor (events such as a door opening only happen indoors; leave it out when
+               it does not matter)
 and optionally grid, time, earth_field_ut and motion (how the body moves, core/world/motion.py);
 what is left out gets the defaults below (DEFAULTS, each an ASSUMPTION, listed in the manifest). A
 world without people or movement only needs realism, signals and drivers.
@@ -41,8 +43,9 @@ WORLDS_DIR = os.path.join(ROOT, "configs", "worlds")
 GASES = ("air.co_ppm", "air.h2s_ppm", "air.lel_pct", "air.voc_ppm", "air.co2_ppm")
 RELATION_INPUTS = ("air.vapour_pressure_hpa", "air.sea_level_pressure_hpa", "floor_altitude_m")
 REALISM = ("ASSUMPTION", "recorded")
-TOP_KEYS = {"name", "title", "realism", "description", "grid", "time", "clean_air", "earth_field_ut", "signals",
-            "drivers", "motion"}
+SETTINGS = ("indoor", "outdoor")
+TOP_KEYS = {"name", "title", "realism", "setting", "description", "grid", "time", "clean_air", "earth_field_ut",
+            "signals", "drivers", "motion"}
 _A = lambda v, u, why: {"value": v, "unit": u, "source": f"ASSUMPTION: {why}"}
 DEFAULT_MOTION = {"model": "still", "device_height_m": _A(1.0, "m", "default: a device at rest 1 m above the floor"),
                   "lying_height_m": _A(0.15, "m", "default"), "heading_deg": _A(0, "°", "default: facing north"),
@@ -151,6 +154,8 @@ def check_preset(d: dict, name: str = ""):
         raise ValueError(f"world {name}: unknown key(s) {sorted(unknown)}")
     if d.get("realism") not in REALISM:
         raise ValueError(f"world {name}: realism must be one of {REALISM}")
+    if d.get("setting") not in SETTINGS + (None,):
+        raise ValueError(f"world {name}: setting must be one of {SETTINGS} (or left out)")
     drv = d.get("drivers") or {}
     for k in drv:
         if k not in CATALOG and k not in RELATION_INPUTS:
@@ -201,6 +206,7 @@ class World:
                         self.defaults_used[f"{key}.{k}"] = v_
         self.name = self.preset["name"]
         self.realism = self.preset["realism"]
+        self.setting = self.preset.get("setting")             # indoor | outdoor | None (not stated)
         self.duration_s, self.seed = float(duration_s), int(seed)
         start = start or v(self.preset["time"]["start_utc"])
         self.start = np.datetime64(str(start).replace("Z", ""), "s")
@@ -417,7 +423,7 @@ class World:
 
     def describe(self) -> dict:
         d = {"name": self.name, "title": self.preset.get("title", self.name), "realism": self.realism,
-             "description": self.preset.get("description", ""), "start_utc": str(self.start) + "Z",
+             "setting": self.setting, "description": self.preset.get("description", ""), "start_utc": str(self.start) + "Z",
              "duration_s": self.duration_s, "seed": self.seed, "quantities": self.quantities(),
              "defaults_used": self.defaults_used}
         if "clean_air" in self.preset:

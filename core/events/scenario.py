@@ -199,9 +199,12 @@ def _snapshot(world, run, start, end):
 def world_visibility(world, run, ev) -> dict:
     """Apply a world event and tell, per device, whether it changes something the device measures by at
     least that sensor's resolution: {slug: (True, "") or (False, why)}."""
+    n_eff, n_mot = len(world.effects), len(world.motion_effects)
+    wrong = ev.setting_reason(world)                     # a door opening in a field: nothing is applied
+    if wrong:
+        return {d.slug: (False, wrong) for d, _ in run}, [], (n_eff, n_mot)
     start, end = ev.at, min(ev.end + VISIBILITY_MARGIN_S, world.duration_s)
     before = _snapshot(world, run, start, end)
-    n_eff, n_mot = len(world.effects), len(world.motion_effects)
     labels = ev.apply_world(world)
     try:
         world.evaluate()

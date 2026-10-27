@@ -2,7 +2,8 @@
 name: field_day
 title: "Field"
 realism: ASSUMPTION
-description: "A field outdoors, with the daily temperature and light of an outdoor day. The soil holds about 28 %VWC and dries slowly in the sun."
+setting: outdoor
+description: "A field outdoors, with the daily temperature and the partly cloudy daylight of an outdoor day. The soil holds about 28 %VWC and dries slowly in the sun."
 time:
   start_utc: {value: "2026-06-15T06:00:00Z", unit: "ISO 8601", source: "ASSUMPTION: a June morning"}
   utc_offset_h: {value: 0, unit: h, source: "ASSUMPTION: local time = UTC"}
@@ -40,7 +41,17 @@ drivers:
       upper: {value: 45, unit: "%VWC", source: "ASSUMPTION: saturation of a loam"}
   floor_altitude_m: {constant: {value: 0, unit: m, source: "ASSUMPTION: at sea level"}}
   light.lux:
-    solar: {latitude_deg: {value: 52, unit: "°", source: "ASSUMPTION: north-west Europe"}, clear_sky: {value: 110000, unit: lx, source: "ASSUMPTION: direct sun at zenith, order of magnitude"}, cloud_mean: {value: 0.7, unit: "-", source: "ASSUMPTION: partly cloudy"}, cloud_sd: {value: 0.2, unit: "-", source: "ASSUMPTION"}, cloud_tau_s: {value: 600, unit: s, source: "ASSUMPTION: clouds pass in minutes"}}
+    solar:
+      latitude_deg: {value: 52, unit: "°", source: "ASSUMPTION: north-west Europe"}
+      clear_sky: {value: 110000, unit: lx, source: "ASSUMPTION: direct sun at zenith, order of magnitude"}
+      sky: {value: partly_cloudy, unit: "-", source: "ASSUMPTION: a summer day with scattered cumulus clouds"}
+      haze_sd: {value: 0.02, unit: "-", source: "ASSUMPTION: haze and thin high cloud change the sunlight by a few % over minutes"}
+      haze_tau_s: {value: 120, unit: s, source: "ASSUMPTION: haze changes over minutes"}
+      shade_fraction: {value: 0.3, unit: "-", source: "ASSUMPTION: in a cloud shadow only diffuse light is left, about 20-40 % of the clear-sky light"}
+      sun_mean_s: {value: 300, unit: s, source: "ASSUMPTION: sunny spells of a few minutes between clouds"}
+      shade_mean_s: {value: 180, unit: s, source: "ASSUMPTION: a cumulus shadow of about 1 km passes in about 3 min at 5 m/s wind"}
+      transition_s: {value: 10, unit: s, source: "ASSUMPTION: the edge of a cloud shadow passes in seconds"}
+      edge_enhancement: {value: 1.0, unit: "-", source: "ASSUMPTION: off. Brightening up to about 1.2x at cloud edges happens but is left out by default"}
   air.co2_ppm: {random_walk: {mean: {value: 420, unit: "ppm", source: "ASSUMPTION: outdoor background"}, sd: {value: 10, unit: "ppm", source: "ASSUMPTION: small variation"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room and outdoor air change smoothly over minutes"}}}
   air.co_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}
   air.h2s_ppm: {constant: {value: 0, unit: ppm, source: "ASSUMPTION: clean air"}}

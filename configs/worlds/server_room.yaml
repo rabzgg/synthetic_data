@@ -1,6 +1,7 @@
 # World: a small server room cooled by an air conditioner that cycles on and off. Grid, time and motion: defaults.
 title: "Server room"
 realism: ASSUMPTION
+setting: indoor
 description: "Racks give off a steady heat. The AC cycles every two and a half minutes and holds the air near 22 °C with a small ripple. Without the AC the room heads for about 40 °C."
 signals:
   ac:

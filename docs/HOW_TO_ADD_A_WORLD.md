@@ -16,7 +16,9 @@ drivers:
 Left out: `grid` (1 s air, 25 Hz body), `time` (2026-01-05 06:00 UTC, local = UTC), `earth_field_ut`
 and `motion` (a body at rest). The defaults are in `core/world/world.py` (`DEFAULTS`), each an
 ASSUMPTION, and every run's manifest lists which ones the world used. `realism` is never defaulted:
-`ASSUMPTION` (made up from knowledge) or `recorded` (from a recording).
+`ASSUMPTION` (made up from knowledge) or `recorded` (from a recording). Give `setting: indoor` or
+`setting: outdoor` too: an event that only happens indoors (a door opening, an AC failure) is then
+refused outdoors with a plain reason.
 
 ## Signals, drivers and references
 
@@ -48,10 +50,22 @@ Full list with parameters at the top of `core/world/primitives.py`:
 | `constant`, `step`, `ramp`, `pulse` | levels, switches, slow changes, a trapezoid |
 | `exp_rise_decay` | something that builds up and dies away |
 | `periodic`, `duty_cycle` | a sine; on/off with period, duty, transition and jitter (compressors, pumps) |
-| `daily_cycle`, `schedule`, `solar` | the day: a cosine, hours of the day, daylight with clouds |
+| `daily_cycle`, `schedule`, `solar` | the day: a cosine, hours of the day, daylight under a `sky` (below) |
 | `random_walk` | slow natural variation (mean-reverting, with `smooth_s`) |
 | `integrate` | a stock: tank level, energy, soil water: `start + ∫(inflow − outflow) dt`, stops at `lower` / `upper`, optional `relax_to` + `relax_tau_s` |
 | `vapour_from_rh` | water vapour for a given RH and temperature |
+
+`solar` needs a `sky`:
+- `clear`: the clear-sky curve with a little haze, never below 90 % of it.
+- `partly_cloudy`: the light switches between sun (the clear curve) and cloud shadow
+  (`shade_fraction` of it, about 0.2 to 0.4). Sunny and shaded spells last an exponential time
+  (`sun_mean_s`, `shade_mean_s`), and each change takes `transition_s` (seconds). Optional
+  `edge_enhancement` (for example 1.2, with `edge_s`) adds the short brightening at a cloud edge.
+  It is off by default.
+- `overcast`: a slow, smooth fraction of the clear curve (`overcast_fraction`, about 0.15 to 0.3).
+
+The light is never above the clear-sky curve, except at a cloud edge. `outdoor_day.yaml` shows every
+parameter of `partly_cloudy`.
 
 Operators: `sum`, `product`, `lowpass` (a lag, e.g. thermal mass; give `start`), `smooth`, `clip`,
 `ref`. Every number is `{value, unit, source}`; a bare number is refused.

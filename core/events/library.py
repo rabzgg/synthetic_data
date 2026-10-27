@@ -40,6 +40,9 @@ the start, after = gap after the previous step's end; params are expressions of 
 building_block: true marks a small event meant for composites (left out of lists and tables).
 missing: the sentence the UI shows when the environment or the device lacks what the event needs
     ("This environment has no air conditioner.", "This device has no sampling pump.").
+setting: indoor | outdoor, for an event that only happens there (a door opening). A world whose own
+    setting differs refuses it; wrong_setting is the sentence the UI shows then ("This environment is
+    outdoors, it has no door."). A world that does not state its setting is not checked.
 probe_world: the world to try a world event in when no run is given (compatibility tables).
 """
 import glob
@@ -58,7 +61,7 @@ from .base import Label, Reason, ScenarioError, columns_of, has_feature
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EVENTS_DIR = os.path.join(ROOT, "configs", "events")
 KEYS = {"kind", "name", "description", "scope", "params", "duration", "label", "effects", "steps", "requires",
-        "probe_world", "building_block", "missing"}
+        "probe_world", "building_block", "missing", "setting", "wrong_setting"}
 DEVICE_TARGETS = ("device.input", "device.gap", "device.state", "device.battery")
 
 
@@ -83,6 +86,9 @@ class EventDef:
         self.probe_world = d.get("probe_world")
         self.building_block = bool(d.get("building_block", False))     # used inside composites, not on its own
         self.missing = d.get("missing", "")                            # UI sentence when a world or device lacks it
+        self.setting, self.wrong_setting = d.get("setting"), d.get("wrong_setting", "")
+        if self.setting not in (None, "indoor", "outdoor"):
+            raise ScenarioError(f"event {self.kind}: setting must be indoor or outdoor (or left out)")
         self.path = path
 
     def __call__(self, at_s=0.0, params=None, index=0):
@@ -227,6 +233,15 @@ class Instance:
                 except KeyError:
                     out.append(name)
         return out + self.inputs()
+
+    def setting_reason(self, world):
+        """None when the event can happen in this world's setting, else why not (a Reason)."""
+        want, have = self.defn.setting, getattr(world, "setting", None)
+        if want is None or have is None or want == have:
+            return None
+        where = {"indoor": "indoors", "outdoor": "outdoors"}
+        return Reason(f"it happens {where[want]} only, world {world.name} is {have}",
+                      self.defn.wrong_setting or f"This environment is {where[have]}. This event only happens {where[want]}.")
 
     def device_visible(self, device) -> tuple:
         """For device events: the device has the features and measures what it is given."""

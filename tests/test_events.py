@@ -202,6 +202,23 @@ class TestCompatibility(unittest.TestCase):
         self.assertFalse(fixed["fall"]["bme280_sensor_board"][0])
         self.assertTrue(fixed["collapse (h2s)"]["msa_altair_io4"][0])     # the gas part still reaches it
 
+    def test_indoor_events_need_an_indoor_environment(self):
+        from core.events import compatible_events
+        from core.world import Mount, list_presets, load_preset
+        self.assertTrue(all(load_preset(w).get("setting") in ("indoor", "outdoor") for w in list_presets()))
+        dev = [(Device.load("bme280_sensor_board"), Mount("fixed"))]
+        field = {r["name"]: r for r in compatible_events("field_day", dev, 3600)}
+        self.assertFalse(field["door_open"]["ok"])
+        self.assertEqual(field["door_open"]["why"], "This environment is outdoors, it has no door.")
+        self.assertIn("indoors only", field["door_open"]["detail"])
+        shelf = {r["name"]: r for r in compatible_events("static_shelf", dev, 3600)}
+        self.assertTrue(shelf["door_open"]["ok"])
+        with self.assertRaises(ScenarioError) as e:
+            prepare({"name": "t", "world": "outdoor_day", "duration": "2h", "seed": 1,
+                     "devices": [{"device": "bme280_sensor_board", "mount": "fixed"}],
+                     "events": [{"door_open": {"at": "00:30:00"}}]})
+        self.assertIn("indoors only", str(e.exception))
+
     def test_doc_is_generated(self):
         with open(DOC) as fh:
             self.assertEqual(fh.read(), markdown(), "run: python3 cli/events_doc.py")

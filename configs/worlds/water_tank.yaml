@@ -2,6 +2,7 @@
 # Grid, time and motion: defaults.
 title: "Water tank"
 realism: ASSUMPTION
+setting: outdoor
 description: "A 10 m³ tank. A fill pump runs a third of the time at 36 %/h. Use follows the day, with most in the evening. The level stops at full and at empty. Nothing leaks unless a leak event is added."
 signals:
   pump:

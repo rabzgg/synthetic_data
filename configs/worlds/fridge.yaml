@@ -1,6 +1,7 @@
 # World: the air inside a household fridge, driven by its compressor. Grid, time and motion: defaults.
 title: "Fridge"
 realism: ASSUMPTION
+setting: indoor
 description: "The compressor runs about 40 % of the time in cycles of about half an hour. The inside swings around 5 °C with it, and the compressor current follows the same cycle. Dark inside."
 signals:
   compressor:
