@@ -5,16 +5,38 @@ One panel per value column (readings, STEL/TWA, rates, battery, signal), one pan
 columns and one for text states (device_mode, fall_state, ...). Every event the device saw is a
 shaded band in every panel (one colour per event kind), connection gaps are yellow, what the device
 should have done (expected labels) is hatched in the states panel. One legend for the whole figure.
+The figure uses the Bitteiler corporate design: bitteiler.mplstyle next to this file and the Rajdhani
+font from ui/static/fonts (registered here, no install step).
 """
+import glob
 import json
+import os
 
 import numpy as np
 import pandas as pd
 
 LABEL_TEXT = {"event": str, "detail": str, "scope": str}       # text columns of a labels file
 
-GAP = "#f4d03f"
-PALETTE = ["#8ecae6", "#c77dff", "#90be6d", "#f28482", "#5e60ce", "#84a59d", "#b5838d", "#4ea8de", "#e07a5f"]
+HERE = os.path.dirname(os.path.abspath(__file__))
+STYLE = os.path.join(HERE, "bitteiler.mplstyle")
+FONTS = os.path.join(os.path.dirname(os.path.dirname(HERE)), "ui", "static", "fonts")
+INK, ALARM, STATE = "#1C3661", "#FF3399", "#336699"             # CD dark blue, pink, blue-mid
+GAP = "#f4d03f"                                                 # connection gaps stay warning yellow
+PALETTE = ["#1999CC", "#339999", "#66CC66", "#82C5FF", "#336699", "#8D9AB0", "#4A7BA7", "#FF3399"]   # CD palette
+
+
+def _register_fonts():
+    """Rajdhani for matplotlib, from the repository (once per process)."""
+    import logging
+    from matplotlib import font_manager
+    # DejaVu Sans, the fallback for glyphs Rajdhani lacks, has no semibold: matplotlib warns on every label
+    logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+    known = {f.fname for f in font_manager.fontManager.ttflist}
+    new = [f for f in glob.glob(os.path.join(FONTS, "*.ttf")) if f not in known]
+    for f in new:
+        font_manager.fontManager.addfont(f)
+    if new and hasattr(font_manager.fontManager, "_findfont_cached"):   # earlier lookups fell back to DejaVu
+        font_manager.fontManager._findfont_cached.cache_clear()
 
 
 def event_name(kind: str) -> str:
@@ -42,6 +64,15 @@ def _panels(df):
 def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     import matplotlib
     matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    _register_fonts()
+    # the family by name, not "sans-serif": text picks its font file when the figure is saved, after the
+    # style is gone (Streamlit saves it later); DejaVu Sans covers what Rajdhani lacks (µ, ², √, σ)
+    with plt.style.context([STYLE, {"font.family": ["Rajdhani", "DejaVu Sans"]}]):
+        return _plot_run(csv_path, labels_path, manifest_path, title)
+
+
+def _plot_run(csv_path, labels_path, manifest_path, title):
     import matplotlib.dates as mdates
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
@@ -71,16 +102,16 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
     generic = set(man["device"].get("generic_columns", []))
     for c in vals:
         a = axes[i]
-        a.plot(t, df[c], color="black", lw=0.8, zorder=2)
-        a.set_ylabel(c + ("\n(generic)" if c in generic else ""), fontsize=8)
+        a.plot(t, df[c], color=INK, lw=0.8, zorder=2)
+        a.set_ylabel(c + ("\n(generic)" if c in generic else ""), fontsize=11)
         shade(a)
         i += 1
     if alarms:
         a = axes[i]
         for k, c in enumerate(alarms):
-            a.step(t, df[c] * 0.8 + k, where="post", lw=1, color="#c1121f")
+            a.step(t, df[c] * 0.8 + k, where="post", lw=1, color=ALARM)
         a.set_yticks(np.arange(len(alarms)) + 0.4)
-        a.set_yticklabels(alarms, fontsize=7)
+        a.set_yticklabels(alarms, fontsize=10)
         a.set_ylim(-0.2, len(alarms))
         shade(a)
         i += 1
@@ -89,32 +120,33 @@ def plot_run(csv_path, labels_path, manifest_path, title: str = None):
         for k, c in enumerate(states):
             cats = list(dict.fromkeys(df[c].astype(str)))
             code = df[c].astype(str).map({v: j for j, v in enumerate(cats)})
-            a.step(t, k + 0.8 * code / max(len(cats) - 1, 1), where="post", lw=1, color="#1d3557")
-            a.text(1.002, (k + 0.4) / len(states), f"{c}: {' / '.join(cats)}", transform=a.transAxes, fontsize=7,
+            a.step(t, k + 0.8 * code / max(len(cats) - 1, 1), where="post", lw=1, color=STATE)
+            a.text(1.002, (k + 0.4) / len(states), f"{c}: {' / '.join(cats)}", transform=a.transAxes, fontsize=10,
                    va="center")
         for r in lab[lab.scope == "expected"].itertuples():
-            a.axvspan(at(r.start_s), at(r.end_s), facecolor="none", edgecolor="#e63946", hatch="///", lw=0, zorder=1)
+            a.axvspan(at(r.start_s), at(r.end_s), facecolor="none", edgecolor=ALARM, hatch="///", lw=0, zorder=1)
         a.set_yticks([])
         a.set_ylim(-0.2, len(states))
-        a.set_ylabel("states", fontsize=8)
+        a.set_ylabel("states", fontsize=11)
         shade(a)
     axes[-1].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     axes[-1].set_xlabel("Time (UTC)")
     for a in axes:
         a.grid(alpha=0.3)
-    handles = [Line2D([], [], color="black", lw=1, label="reading" + (" (generic = typical sensor, values assumed)"
+        a.tick_params(labelsize=11)
+    handles = [Line2D([], [], color=INK, lw=1, label="reading" + (" (generic = typical sensor, values assumed)"
                                                                        if generic else ""))]
     if alarms:
-        handles.append(Line2D([], [], color="#c1121f", lw=1, label="alarm (0/1)"))
+        handles.append(Line2D([], [], color=ALARM, lw=1, label="alarm (0/1)"))
     handles += [Patch(facecolor=colour[k], alpha=0.5, label=event_name(k)) for k in kinds]
     if (lab.event == "connection_loss").any():
         handles.append(Patch(facecolor=GAP, alpha=0.6, label="connection gap (no rows)"))
     if (lab.scope == "expected").any():
-        handles.append(Patch(facecolor="none", edgecolor="#e63946", hatch="///", label="expected device response"))
-    fig.legend(handles=handles, loc="upper center", ncol=min(len(handles), 6), fontsize=8, frameon=False,
+        handles.append(Patch(facecolor="none", edgecolor=ALARM, hatch="///", label="expected device response"))
+    fig.legend(handles=handles, loc="upper center", ncol=min(len(handles), 6), fontsize=11, frameon=False,
                bbox_to_anchor=(0.5, 1 - 0.55 / fig.get_size_inches()[1]))
     d = man["device"]
-    fig.suptitle(title or f"{d['name']} in {man['world']['title']} (seed {man['seed']})", fontsize=11,
+    fig.suptitle(title or f"{d['name']} in {man['world']['title']} (seed {man['seed']})", fontsize=15, color=INK,
                  y=1 - 0.1 / fig.get_size_inches()[1])
     fig.tight_layout(rect=(0, 0, 0.9 if states else 1, 1 - 0.85 / fig.get_size_inches()[1]))
     return fig

@@ -46,6 +46,15 @@ sentence each. The building blocks of composite events (fall down, lie, stir, ri
 environment has no air conditioner."). The event file's `missing` key holds that sentence. The
 technical reason stays in `compatible_events(...)["detail"]`, in scenario errors and in the run notes.
 
+## Design
+
+The Bitteiler corporate design: the Rajdhani font and the CD colours (dark blue `#1C3661`, light
+blue `#1999CC`). `.streamlit/config.toml` sets the theme and serves the font from `ui/static/fonts`
+(self-hosted, so the visitor's browser makes no request to Google). The figures use
+`core/output/bitteiler.mplstyle` (from bitteiler_plotstyle 0.2.0) with the same font. Rajdhani has no
+µ, ², ³, √ or σ, and those characters fall back to the default font. Rajdhani is under the SIL Open
+Font License (`ui/static/fonts/OFL.txt`).
+
 ## Words on screen
 
 The screen uses plain words for the code's terms: world = environment, gate = checks, part = sensor,

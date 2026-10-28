@@ -1,0 +1,40 @@
+# Bitteiler corporate design for the UI (ui/app.py): Rajdhani, served from ui/static/fonts (no Google
+# request from the visitor's browser), and the CD colours of bitteiler_plotstyle 0.2.0.
+[server]
+enableStaticServing = true
+
+[theme]
+base = "light"
+primaryColor = "#1C3661"
+textColor = "#1C3661"
+linkColor = "#1999CC"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F5"
+borderColor = "#D2D7DF"
+font = "Rajdhani, sans-serif"
+headingFont = "Rajdhani, sans-serif"
+
+[[theme.fontFaces]]
+family = "Rajdhani"
+url = "app/static/fonts/Rajdhani-Light.ttf"
+weight = 300
+
+[[theme.fontFaces]]
+family = "Rajdhani"
+url = "app/static/fonts/Rajdhani-Regular.ttf"
+weight = 400
+
+[[theme.fontFaces]]
+family = "Rajdhani"
+url = "app/static/fonts/Rajdhani-Medium.ttf"
+weight = 500
+
+[[theme.fontFaces]]
+family = "Rajdhani"
+url = "app/static/fonts/Rajdhani-SemiBold.ttf"
+weight = 600
+
+[[theme.fontFaces]]
+family = "Rajdhani"
+url = "app/static/fonts/Rajdhani-Bold.ttf"
+weight = 700
