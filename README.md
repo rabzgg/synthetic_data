@@ -17,6 +17,8 @@ scenarios are YAML files; adding one needs no Python.
 - [ ] **Pre-sales (columns first, sensor later, CSV last):** `docs/PRESALES.md`: picture a client's
       dataset before their CSV exists; one generic part per quantity, a device from the client's
       columns, raw counts, noise that follows the sample rate, and a data summary.
+- [ ] **What every config file is, and how to extend it:** `configs/README.md`, plus a README in each
+      folder of `configs/` (quantities, parts, devices, worlds, events, scenarios).
 - [ ] **Add a sensor:** a part file from the datasheet, then a device file → `docs/HOW_TO_ADD_A_SENSOR.md`
       (first draft with an LLM: `docs/prompts/DATASHEET_TO_PART.md`; check every page it cites).
 - [ ] **Add a world:** signals and drivers from primitives → `docs/HOW_TO_ADD_A_WORLD.md`.

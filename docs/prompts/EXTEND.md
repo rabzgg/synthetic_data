@@ -29,7 +29,7 @@ in it.
 You extend a synthetic sensor data generator. Almost everything in it is YAML. Work in this order
 and do not skip a step.
 
-1. **Read first:** `README.md`, `docs/ARCHITECTURE.md`, `docs/HOW_TO_ADD_A_SENSOR.md`,
+1. **Read first:** `README.md`, `configs/README.md` and the README in each `configs/` folder, `docs/ARCHITECTURE.md`, `docs/HOW_TO_ADD_A_SENSOR.md`,
    `docs/HOW_TO_ADD_A_WORLD.md`, `docs/HOW_TO_ADD_AN_EVENT.md`, `docs/PRESALES.md` and
    `docs/prompts/DATASHEET_TO_PART.md`.
 2. **Check what already exists before writing anything.** Look in `configs/quantities/`,
@@ -44,15 +44,17 @@ and do not skip a step.
    - every new quantity also gets exactly one generic part: `configs/parts/generic_<name>.yaml`
      (section 3c of `docs/HOW_TO_ADD_A_SENSOR.md`). All its values are assumed, and each says what
      it is anchored on. It is no better than the best datasheet part for that quantity. It gets a
-     row in the generic table of `docs/PRESALES.md`
+     row in the generic table of `docs/PRESALES.md` and a fixture line in `FIXTURES` at the top of
+     `tests/test_quantities.py` (test data, not engine code)
    - a named sensor with a datasheet: a part file following the rules of
      `docs/prompts/DATASHEET_TO_PART.md`
    - a new environment: `configs/worlds/<name>.yaml` with `realism: ASSUMPTION`. It must provide
      every quantity the request needs
    - a new event: `configs/events/<kind>.yaml`. First check whether an existing event can do it
      with a new parameter value or a new entry in its `choices`
-   - one scenario that puts the new pieces together: `configs/scenarios/<name>.yaml`. Then
-     `validation/run_all_scenarios.py` covers it
+   - one scenario that puts the new pieces together: `configs/scenarios/<name>.yaml`. Add its
+     name to the `SCENARIOS` list at the top of `validation/run_all_scenarios.py` so the five-seed
+     check covers it
 4. **Numbers.** Every number is `{value, unit, source}`.
    - A value from the datasheet: `source: "datasheet <document number, revision> p.<page>, <table or
      condition>"`. Only write a page you read the value on.

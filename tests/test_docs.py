@@ -1,6 +1,7 @@
 """
 The handover docs stay true: their YAML examples load and run, and the files they point to exist.
 """
+import glob
 import os
 import re
 import sys
@@ -34,9 +35,12 @@ class TestDocs(unittest.TestCase):
         self.assertEqual([e.kind for e in p.events], ["leak"])
 
     def test_referenced_files_exist(self):
-        for doc in ("ARCHITECTURE.md", "HOW_TO_ADD_A_SENSOR.md", "HOW_TO_ADD_A_WORLD.md", "HOW_TO_ADD_AN_EVENT.md",
-                    "PRESALES.md", "UI.md", "prompts/EXTEND.md"):
-            with open(os.path.join(ROOT, "docs", doc)) as fh:
+        docs = [os.path.join("docs", d) for d in ("ARCHITECTURE.md", "HOW_TO_ADD_A_SENSOR.md", "HOW_TO_ADD_A_WORLD.md",
+                                                   "HOW_TO_ADD_AN_EVENT.md", "PRESALES.md", "UI.md", "prompts/EXTEND.md")]
+        docs += sorted(os.path.relpath(p, ROOT) for p in glob.glob(os.path.join(ROOT, "configs", "**", "README.md"),
+                                                                     recursive=True))
+        for doc in docs:
+            with open(os.path.join(ROOT, doc)) as fh:
                 text = fh.read()
             for path in set(re.findall(r"`((?:configs|core|validation|cli|docs)/[\w./-]+\.(?:py|yaml|md))`", text)):
                 with self.subTest(doc=doc, path=path):
