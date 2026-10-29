@@ -1,0 +1,15 @@
+kind: gas_release
+name: Gas release
+description: "A gas leaks into the air around the devices, holds at a level for a while, then clears."
+params:
+  gas: {value: h2s, unit: "-", source: "ASSUMPTION: default gas", choices: [lel, co, h2s, voc, co2]}
+  level: {value: 20, unit: "gas unit", source: "ASSUMPTION: a level that crosses typical alarm setpoints"}
+  duration_s: {value: 600, unit: s, source: "ASSUMPTION: time at the level"}
+  ramp_s: {value: 30, unit: s, source: "ASSUMPTION: the gas builds up and clears over half a minute"}
+duration: "$duration_s + 2 * $ramp_s"
+label: "{gas.upper} {level} {gas.unit}"
+effects:
+  - target: $gas
+    op: add
+    shape: {pulse: {duration_s: $duration_s, ramp_s: $ramp_s, level: $level}}
+    after: revert

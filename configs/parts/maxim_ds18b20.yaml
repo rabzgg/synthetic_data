@@ -1,0 +1,17 @@
+# Maxim (Analog Devices) DS18B20: 1-Wire digital thermometer, often used in fridge, freezer and rack loggers.
+# Values and pages from data sheet 19-7487 Rev 6 (7/19).
+name: Maxim DS18B20
+datasheet: "DS18B20 Programmable Resolution 1-Wire Digital Thermometer, 19-7487 Rev 6 (7/19)"
+measures:
+  - quantity: air.temperature_c
+    params:
+      range: {value: [-55, 125], unit: "°C", source: "datasheet DS18B20 19-7487 Rev 6 p.1 (measures -55 °C to +125 °C)"}
+      resolution: {value: 0.0625, unit: "°C", source: "datasheet DS18B20 19-7487 Rev 6 p.5 (12-bit resolution; 9/10/11 bit give 0.5/0.25/0.125 °C)"}
+      bias_distribution: {value: normal, unit: "-", source: "datasheet DS18B20 19-7487 Rev 6 p.2, DC Electrical Characteristics, Note 3: the limits are 3-sigma values, so normal with sd = limit / 3"}
+      t90_s: {value: 120, unit: s, source: "ASSUMPTION: TO-92 probe in still air; the data sheet gives no response time (750 ms on p.3 is the conversion time)"}
+    from_datasheet:
+      - {rule: accuracy, value: 0.5, unit: "°C", kind: max, source: "datasheet DS18B20 19-7487 Rev 6 p.2, DC Electrical Characteristics (±0.5 °C from -10 °C to +85 °C; 3-sigma limit, Note 3)"}
+      - {rule: noise_rms, value: 0.03, unit: "°C", source: "ASSUMPTION: about half a step of the 12-bit output; the data sheet gives no noise figure"}
+notes:
+  - "Accuracy widens outside -10..+85 °C: ±1 °C from -30 to +100 °C and ±2 °C from -55 to +125 °C (p.2). The model has one bound and uses ±0.5 °C, valid for the fridge and server-room worlds; for colder or hotter worlds set accuracy to 1 or 2 °C in the device (override)."
+  - "Conversion time 750 ms at 12 bit (p.3): do not log faster than about 1 Hz."

@@ -1,0 +1,12 @@
+# Scenario: the AC of a server room fails for 45 minutes.
+name: server_room_ac_failure
+title: "Server room AC failure"
+description: "A normal day of AC cycling, then the AC stops for 45 minutes and runs again."
+realism: ASSUMPTION
+world: server_room
+duration: 24h
+seed: 42
+devices:
+  - {device: rack_monitor, mount: fixed, height_m: 1.5}
+events:
+  - ac_failure: {at: "04:00:00", duration_min: 45}

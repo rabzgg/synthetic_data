@@ -1,0 +1,71 @@
+# Unit spellings and linear conversions to the canonical units of the quantity catalog.
+# Add a spelling under aliases, a scaled unit under factors (value_in_canonical = value × factor).
+# Only linear factors (no offsets): temperatures in kelvin or °F are not accepted.
+aliases:
+  "C": "°C"
+  "degC": "°C"
+  "deg C": "°C"
+  "℃": "°C"
+  "%rh": "%RH"
+  "% RH": "%RH"
+  "RH%": "%RH"
+  "% vol": "%vol"
+  "%v/v": "%vol"
+  "% LEL": "%LEL"
+  "%lel": "%LEL"
+  "lux": "lx"
+  "dps": "°/s"
+  "deg/s": "°/s"
+  "º/s": "°/s"
+  "uT": "µT"
+  "μT": "µT"
+  "sec": "s"
+  "Hertz": "Hz"
+  "sqrt(Hz)": "√Hz"
+  "rtHz": "√Hz"
+  "amp": "A"
+  "VWC%": "%VWC"
+  "% VWC": "%VWC"
+  "degF": "°F"
+  "F": "°F"
+  "kelvin": "K"
+factors:
+  "Pa": ["hPa", 0.01]
+  "kPa": ["hPa", 10.0]
+  "mbar": ["hPa", 1.0]
+  "mg": ["g", 0.001]
+  "µg": ["g", 0.000001]
+  "ug": ["g", 0.000001]
+  "m/s²": ["g", 0.10197162129779283]
+  "m/s^2": ["g", 0.10197162129779283]
+  "mdps": ["°/s", 0.001]
+  "rad/s": ["°/s", 57.29577951308232]
+  "G": ["µT", 100.0]
+  "mG": ["µT", 0.1]
+  "nT": ["µT", 0.001]
+  "ppb": ["ppm", 0.001]
+  "ms": ["s", 0.001]
+  "min": ["s", 60.0]
+  "h": ["s", 3600.0]
+  "mA": ["A", 0.001]
+  "in/s": ["mm/s", 25.4]
+  "µm/s": ["mm/s", 0.001]
+# time units for "per time" values such as drift per year
+hours:
+  "s": 0.0002777777777777778
+  "min": 0.016666666666666666
+  "h": 1.0
+  "hour": 1.0
+  "day": 24.0
+  "d": 24.0
+  "week": 168.0
+  "month": 730.0
+  "year": 8760.0
+  "yr": 8760.0
+# units with an offset, for output only (output_format): canonical = (value + offset) × scale.
+# Parameters of parts (accuracy, noise, ...) are differences and never use these.
+affine:
+  "°F": {to: "°C", scale: 0.5555555555555556, offset: -32}
+  "K": {to: "°C", scale: 1.0, offset: -273.15}
+# units that also accept a bare "%"
+percent_units: ["%RH", "%vol", "%LEL", "%VWC"]

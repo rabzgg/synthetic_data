@@ -1,0 +1,4 @@
+domain: machine
+quantities:
+  - {id: machine.vibration_mm_s, name: Vibration velocity, unit: mm/s, column: vibration_mm_s, lower: 0, upper: null,
+     note: "RMS vibration velocity, as in ISO 10816 / 20816 machine condition monitoring."}

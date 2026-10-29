@@ -1,0 +1,17 @@
+# Default carbon monoxide sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic carbon monoxide cell
+generic_for: air.co_ppm
+class: "electrochemical CO cell of a portable gas detector, 0-500 ppm"
+datasheet: "none: a generic electrochemical CO cell (all values ASSUMPTION)"
+measures:
+  - quantity: air.co_ppm
+    params:
+      range: {value: [0, 500], unit: ppm, source: "ASSUMPTION: 0-500 ppm, the range of the Blackline CO cell in this repo"}
+      resolution: {value: 1, unit: ppm, source: "ASSUMPTION: 1 ppm, as the CO cells in this repo"}
+      noise_density: {value: 0.707106781186547, unit: "ppm/√Hz", source: "ASSUMPTION: not below the CO cells in this repo (0.3 ppm); written as a density (0.5 ppm at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 30, unit: s, source: "ASSUMPTION: t90 30 s, as the CO cells in this repo"}
+      t90_down_s: {value: 90, unit: s, source: "ASSUMPTION: falls three times slower than it rises, as the CO cells in this repo"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: portable detectors update once a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "ASSUMPTION: ±5 % of reading, zeroed in clean air; the CO cells in this repo state no accuracy"}

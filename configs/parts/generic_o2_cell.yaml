@@ -1,0 +1,17 @@
+# Default oxygen sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic oxygen cell
+generic_for: air.o2_pct
+class: "electrochemical O2 cell of a portable gas detector, 0-25 %vol"
+datasheet: "none: a generic electrochemical O2 cell (all values ASSUMPTION)"
+measures:
+  - quantity: air.o2_pct
+    params:
+      range: {value: [0, 25], unit: "%vol", source: "ASSUMPTION: 0-25 %vol, the range of the Blackline O2 cell in this repo"}
+      resolution: {value: 0.1, unit: "%vol", source: "ASSUMPTION: 0.1 %vol, as the O2 cells in this repo"}
+      noise_density: {value: 0.0707106781186548, unit: "%vol/√Hz", source: "ASSUMPTION: not below the O2 cells in this repo (0.03 %vol); written as a density (0.05 %vol at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 15, unit: s, source: "ASSUMPTION: t90 15 s, as the O2 cells in this repo"}
+      t90_up_s: {value: 45, unit: s, source: "ASSUMPTION: an exposure lowers O2, so the recovery is the rise and three times slower, as the O2 cells in this repo"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: portable detectors update once a second"}
+    from_datasheet:
+      - {rule: accuracy, value: 0.3, unit: "%vol", kind: max, source: "ASSUMPTION: ±0.3 %vol after a fresh-air calibration; the O2 cells in this repo state no accuracy"}

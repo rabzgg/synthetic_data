@@ -1,0 +1,17 @@
+# Default combustible gas sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic combustible gas (LEL) sensor
+generic_for: air.lel_pct
+class: "catalytic bead LEL sensor of a portable gas detector, 0-100 %LEL"
+datasheet: "none: a generic catalytic LEL sensor (all values ASSUMPTION)"
+measures:
+  - quantity: air.lel_pct
+    params:
+      range: {value: [0, 100], unit: "%LEL", source: "ASSUMPTION: 0-100 %LEL, as the LEL sensors in this repo"}
+      resolution: {value: 1, unit: "%LEL", source: "ASSUMPTION: 1 %LEL, as the LEL sensors in this repo"}
+      noise_density: {value: 0.707106781186547, unit: "%LEL/√Hz", source: "ASSUMPTION: not below the LEL sensors in this repo (0.3 %LEL); written as a density (0.5 %LEL at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 20, unit: s, source: "ASSUMPTION: t90 20 s, as the LEL sensors in this repo"}
+      t90_down_s: {value: 60, unit: s, source: "ASSUMPTION: falls three times slower than it rises, as the LEL sensors in this repo"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: portable detectors update once a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "ASSUMPTION: ±5 % of reading for the calibration gas; the LEL sensors in this repo state no accuracy"}

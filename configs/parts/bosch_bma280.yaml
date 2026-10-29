@@ -1,0 +1,19 @@
+# Bosch BMA280: triaxial accelerometer, 14 bit.
+# Values and pages from BST-BMA280-DS000-11 (revision 1.8, August 2014).
+name: Bosch BMA280
+datasheet: "BST-BMA280-DS000-11, revision 1.8"
+measures:
+  - quantity: body.accel_g
+    params:
+      noise_density: {value: 120, unit: "µg/√Hz", source: "datasheet BST-BMA280-DS000-11 p.10 (output noise density)"}
+      odr_hz: {value: 2000, unit: Hz, source: "datasheet BST-BMA280-DS000-11 p.9 (unfiltered data, 2000 Hz)"}
+      odr_choices_hz: {value: [15.63, 31.25, 62.5, 125, 250, 500, 1000, 2000], unit: Hz, source: "datasheet BST-BMA280-DS000-11 p.18 (Table 4: filter bandwidth 7.81 / 15.63 / 31.25 / 62.5 / 125 / 250 / 500 Hz, data rate = 2 × bandwidth, unfiltered 2000 Hz; register 0x10 PMU_BW, p.62)"}
+    from_datasheet:
+      - {rule: range_symmetric, value: 16, unit: "g", source: "datasheet BST-BMA280-DS000-11 p.8 (selectable ±2 / ±4 / ±8 / ±16 g; widest here, a device picks its own)"}
+      - {rule: sensitivity_lsb, value: 512, unit: "LSB/g", source: "datasheet BST-BMA280-DS000-11 p.9 (±16 g range)"}
+      - {rule: accuracy_typical, value: 50, unit: "mg", source: "datasheet BST-BMA280-DS000-11 p.9 (zero-g offset over lifetime, typical)"}
+      - {rule: cross_axis, value: 1, unit: "%", kind: typical, source: "datasheet BST-BMA280-DS000-11 p.10 (cross-axis sensitivity)"}
+      - {rule: misalignment, value: 0.5, unit: "°", kind: typical, source: "datasheet BST-BMA280-DS000-11 p.10 (alignment error relative to the package)"}
+notes:
+  - "p.8: min/max values are ±3σ; offset, cross-axis and alignment are Typ-column values (kind: typical)."
+  - "Bandwidth is selectable (8 … 500 Hz, p.9; Table 4, p.18): filtered data come at twice the bandwidth (p.18), so bandwidth = ODR / 2; for the unfiltered 2000 Hz stream ODR / 2 is an ASSUMPTION. A device that logs the accelerometer sets the ODR to the first setting at or above its sample rate, so the noise follows the rate; a device that only uses it for logic (log: false) keeps 2000 Hz."

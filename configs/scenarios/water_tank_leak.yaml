@@ -1,0 +1,12 @@
+# Scenario: a water tank springs a leak for three hours; afterwards the pump fills it again.
+name: water_tank_leak
+title: "Water tank leak"
+description: "Normal filling and use for a day, then a leak of 25 %/h for three hours in the evening. The pump refills the tank afterwards."
+realism: ASSUMPTION
+world: water_tank
+duration: 48h
+seed: 42
+devices:
+  - {device: water_tank_monitor, mount: fixed, height_m: 3.0}
+events:
+  - leak: {at: "12:00:00", duration_h: 3, rate_pct_per_h: 25}

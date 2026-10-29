@@ -1,0 +1,32 @@
+# World: a heated freshwater aquarium with a lamp and a filter pump. Grid, time and motion: defaults.
+title: "Aquarium"
+realism: ASSUMPTION
+setting: indoor
+description: "Stable water temperature. The pH rises while the lamp is on, because the plants take up CO2. A filter pump runs 45 min of every hour."
+signals:
+  lamp:
+    schedule: {segments: {value: [[8, 20, 1]], unit: "h, h, -", source: "ASSUMPTION: lamp on 12 h a day"}, default: {value: 0, unit: "-", source: "ASSUMPTION: off at night"}}
+  pump:
+    duty_cycle: {period_s: {value: 3600, unit: s, source: "ASSUMPTION: filter pump on a timer, every hour"}, duty: {value: 0.75, unit: "-", source: "ASSUMPTION: 45 min on"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION"}, transition_s: {value: 2, unit: s, source: "ASSUMPTION: motor start"}}
+drivers:
+  water.temperature_c:
+    random_walk: {mean: {value: 25, unit: "°C", source: "ASSUMPTION: heater set to 25 °C"}, sd: {value: 0.1, unit: "°C", source: "ASSUMPTION: heater thermostat band"}, tau_s: {value: 1800, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 600, unit: s, source: "ASSUMPTION: water changes temperature slowly"}}
+  water.ph:
+    sum:
+      - constant: {value: 7.0, unit: pH, source: "ASSUMPTION: neutral freshwater tank at night"}
+      - product:
+          - constant: {value: 0.3, unit: pH, source: "ASSUMPTION: pH rise while plants photosynthesise"}
+          - lowpass: {of: {ref: lamp}, tau_s: {value: 7200, unit: s, source: "ASSUMPTION: CO2 uptake builds up over hours"}, start: {value: 0, unit: "-", source: "ASSUMPTION: the world starts in the night, lamp off for hours"}}
+  electrical.current_a:
+    sum:
+      - constant: {value: 0.02, unit: A, source: "ASSUMPTION: standby"}
+      - product: [{constant: {value: 0.15, unit: A, source: "ASSUMPTION: small filter pump at 230 V"}}, {ref: pump}]
+      - product: [{constant: {value: 0.25, unit: A, source: "ASSUMPTION: LED lamp at 230 V"}}, {ref: lamp}]
+  machine.vibration_mm_s:
+    sum:
+      - constant: {value: 0.02, unit: mm/s, source: "ASSUMPTION: background"}
+      - product: [{constant: {value: 0.4, unit: mm/s, source: "ASSUMPTION: a small pump on the tank"}}, {ref: pump}]
+  light.lux:
+    product: [{constant: {value: 2500, unit: lx, source: "ASSUMPTION: aquarium lamp at the water surface"}}, {ref: lamp}]
+  air.temperature_c:
+    random_walk: {mean: {value: 21, unit: "°C", source: "ASSUMPTION: living room"}, sd: {value: 0.5, unit: "°C", source: "ASSUMPTION: heating cycles"}, tau_s: {value: 3600, unit: s, source: "ASSUMPTION"}, smooth_s: {value: 300, unit: s, source: "ASSUMPTION: room air changes smoothly"}}

@@ -1,0 +1,18 @@
+# Quantities of the air. Fields: id (<domain>.<name>_<unit>), name, unit (canonical; every parameter is
+# converted to it, see configs/units.yaml), column (CSV column), lower / upper (physical bounds,
+# null = none), alias (short name used in scenarios, optional), note.
+# Relations between air quantities (RH from temperature and vapour, O2 from gas, pressure from
+# altitude) live in the world (core/world/physics.py), not here.
+domain: air
+quantities:
+  - {id: air.temperature_c, name: Air temperature, unit: "°C", column: temperature_c, lower: -273.15, upper: null}
+  - {id: air.humidity_rh, name: Relative humidity, unit: "%RH", column: humidity_rh, lower: 0, upper: 100,
+     note: "Relative to saturation at the current air temperature."}
+  - {id: air.pressure_hpa, name: Air pressure, unit: hPa, column: pressure_hpa, lower: 0, upper: null}
+  - {id: air.o2_pct, name: Oxygen, unit: "%vol", column: o2_pct_vol, lower: 0, upper: 100, alias: o2}
+  - {id: air.co_ppm, name: Carbon monoxide, unit: ppm, column: co_ppm, lower: 0, upper: 1000000, alias: co}
+  - {id: air.h2s_ppm, name: Hydrogen sulfide, unit: ppm, column: h2s_ppm, lower: 0, upper: 1000000, alias: h2s}
+  - {id: air.lel_pct, name: Combustible gas, unit: "%LEL", column: lel_pct_lel, lower: 0, upper: null, alias: lel,
+     note: "Percent of the lower explosive limit; above 100 %LEL the air is explosive (no upper bound)."}
+  - {id: air.voc_ppm, name: Volatile organic compounds, unit: ppm, column: voc_ppm, lower: 0, upper: 1000000, alias: voc}
+  - {id: air.co2_ppm, name: Carbon dioxide, unit: ppm, column: co2_ppm, lower: 0, upper: 1000000, alias: co2}

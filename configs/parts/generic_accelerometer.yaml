@@ -1,0 +1,19 @@
+# Default accelerometer when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic accelerometer
+generic_for: body.accel_g
+class: "consumer MEMS accelerometer ±8 g, 12 bit"
+datasheet: "none: a generic MEMS accelerometer (all values ASSUMPTION)"
+measures:
+  - quantity: body.accel_g
+    params:
+      noise_density: {value: 0.565685424949238, unit: "mg/√Hz", source: "ASSUMPTION: 4 mg RMS; not below the BMA280 in this repo (3.8 mg at its full bandwidth); written as a density (4 mg at ODR 100 Hz, bandwidth 50 Hz) so the noise follows the ODR"}
+      t90_s: {value: 0, unit: s, source: "ASSUMPTION: no lag beyond the low-pass set by the ODR (bandwidth = ODR / 2)"}
+      odr_hz: {value: 100, unit: Hz, source: "ASSUMPTION: default when no device sets it; 100 Hz, a common setting for activity and fall detection"}
+      odr_range_hz: {value: [1, 1000], unit: Hz, source: "ASSUMPTION: consumer MEMS accelerometers offer about 1 to 1000 Hz"}
+    from_datasheet:
+      - {rule: range_symmetric, value: 8, unit: g, source: "ASSUMPTION: ±8 g; within the ±16 g of the BMA280 in this repo"}
+      - {rule: bits, value: 12, unit: g, span: [-8, 8], source: "ASSUMPTION: 12 bit over ±8 g (3.9 mg); coarser than the BMA280 in this repo (1.95 mg)"}
+      - {rule: accuracy_typical, value: 60, unit: mg, source: "ASSUMPTION: zero-g offset 60 mg typical (1σ); not below the BMA280 in this repo (50 mg)"}
+      - {rule: cross_axis, value: 1, unit: "%", kind: typical, source: "ASSUMPTION: 1 % typical, as the BMA280 in this repo"}
+      - {rule: misalignment, value: 0.5, unit: "°", kind: typical, source: "ASSUMPTION: 0.5° typical, as the BMA280 in this repo"}

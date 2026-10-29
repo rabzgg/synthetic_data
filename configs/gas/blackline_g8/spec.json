@@ -1,0 +1,103 @@
+{
+  "device": "blackline_g8",
+  "engine": "gas_detector",
+  "model": "Blackline G8",
+  "source_document": "Blackline G8 spec sheet R1",
+  "sensor_configuration": {
+    "value": "LEL-MPS, H2S, CO, O2",
+    "unit": "-",
+    "source": "Blackline G8 spec sheet R1"
+  },
+  "channels": {
+    "lel": {
+      "name": "Combustible gas",
+      "column": "lel_pct_lel",
+      "range_min": {
+        "value": 0,
+        "unit": "%LEL",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "%LEL",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "%LEL",
+        "source": "Blackline G8 spec sheet R1"
+      }
+    },
+    "o2": {
+      "name": "Oxygen",
+      "column": "o2_pct_vol",
+      "range_min": {
+        "value": 0,
+        "unit": "%vol",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "range_max": {
+        "value": 25,
+        "unit": "%vol",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "%vol",
+        "source": "Blackline G8 spec sheet R1"
+      }
+    },
+    "co": {
+      "name": "Carbon monoxide",
+      "column": "co_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "range_max": {
+        "value": 500,
+        "unit": "ppm",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "Blackline G8 spec sheet R1"
+      }
+    },
+    "h2s": {
+      "name": "Hydrogen sulfide",
+      "column": "h2s_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "ppm",
+        "source": "Blackline G8 spec sheet R1"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "ppm",
+        "source": "Blackline G8 spec sheet R1"
+      }
+    }
+  },
+  "state_columns": {
+    "sos_state": {
+      "feature": {
+        "value": "SOS",
+        "unit": "-",
+        "source": "Blackline G8 spec sheet R1"
+      }
+    }
+  },
+  "battery_runtime_h": {
+    "value": 18,
+    "unit": "h",
+    "source": "Blackline G8 spec sheet R1"
+  }
+}

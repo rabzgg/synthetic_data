@@ -1,0 +1,229 @@
+# Preset: Blackline G7x with G7 Bridge, rebuilt from parts with the numbers of configs/gas/blackline_g7x_bridge/spec.json
+name: Blackline G7x Bridge
+slug: blackline_g7x_bridge
+device_id_prefix: BLACKLINE_G7X_BRIDGE
+description: 'Blackline G7x with G7 Bridge: 4-gas wearable that reports through a Bridge (cellular or satellite link).'
+created: '2026-10-15'
+version: 1
+preset: true
+datasheet: Blackline G7x datasheet R21
+parts:
+- part: blackline_g7_lel
+- part: blackline_o2_cell
+- part: blackline_co_cell
+- part: blackline_h2s_cell
+features:
+  sample_interval_s:
+    value: 10
+    unit: s
+    source: 'ASSUMPTION: Datasheets give no logging interval; 10 s as set in the task brief.'
+  connectivity:
+    value: cellular
+    unit: '-'
+    source: 'ASSUMPTION: No signal specification given. Bounded random walk, one step per logging interval. Reported by every device.'
+logic:
+- block: constant
+  output: bridge_id
+  position: first
+  value: BRIDGE-0001
+- block: random_state
+  output: bridge_link
+  position: first
+  values:
+  - cellular
+  - satellite
+  default: cellular
+  periods:
+    value:
+    - 1
+    - 2
+    unit: per shift
+    source: 'ASSUMPTION: The G7x datasheet allows cellular and satellite links; how often a Bridge switches is not given. The link is cellular, with 1-2 satellite periods per shift.'
+  duration_s:
+    value:
+    - 600
+    - 2400
+    unit: s
+    source: 'ASSUMPTION: The G7x datasheet allows cellular and satellite links; how often a Bridge switches is not given. The link is cellular, with 1-2 satellite periods per shift.'
+- block: rolling_mean
+  input: air.co_ppm
+  output: co_stel_ppm
+  window_s:
+    value: 900
+    unit: s
+    source: 'ASSUMPTION: Brief: STEL = rolling 15-min mean. How the first 15 min are handled is not specified; zero-fill chosen.'
+- block: cumulative_dose
+  input: air.co_ppm
+  output: co_twa_ppm
+  period_s:
+    value: 28800
+    unit: s
+    source: 'ASSUMPTION: Brief: TWA = 8-h average. Computed as the accumulated dose divided by 8 h (the 8-h TWA of the shift so far), not as a mean over the elapsed time.'
+- block: rolling_mean
+  input: air.h2s_ppm
+  output: h2s_stel_ppm
+  window_s:
+    value: 900
+    unit: s
+    source: 'ASSUMPTION: Brief: STEL = rolling 15-min mean. How the first 15 min are handled is not specified; zero-fill chosen.'
+- block: cumulative_dose
+  input: air.h2s_ppm
+  output: h2s_twa_ppm
+  period_s:
+    value: 28800
+    unit: s
+    source: 'ASSUMPTION: Brief: TWA = 8-h average. Computed as the accumulated dose divided by 8 h (the 8-h TWA of the shift so far), not as a mean over the elapsed time.'
+- block: event_mode
+  output: device_mode
+  event: bump_test
+  value: bump_test
+  default: normal
+  until_back:
+  - air.lel_pct
+  - air.o2_pct
+  - air.co_ppm
+  - air.h2s_ppm
+- block: battery
+  output: battery_pct
+  runtime_h:
+    value: 18
+    unit: h
+    source: datasheet Blackline G7x datasheet R21 (page not recorded)
+  start_pct:
+    value: 100
+    unit: '%'
+    source: 'ASSUMPTION: Datasheets give runtime only. Battery starts full and drains linearly: pct = floor(100 - 100 * t / runtime). Over an 8-h shift that is 47 % (17 h) or 44 % (18 h).'
+- block: signal
+  output: signal_strength_dbm
+  range_dbm:
+    value:
+    - -115
+    - -55
+    unit: dBm
+    source: 'ASSUMPTION: No signal specification given. Bounded random walk, one step per logging interval. Reported by every device.'
+  start_dbm:
+    value:
+    - -90
+    - -70
+    unit: dBm
+    source: 'ASSUMPTION: No signal specification given. Bounded random walk, one step per logging interval. Reported by every device.'
+  step_sd_db:
+    value: 1.0
+    unit: dB
+    source: 'ASSUMPTION: No signal specification given. Bounded random walk, one step per logging interval. Reported by every device.'
+- block: threshold_alarm
+  input: air.lel_pct
+  output: lel_alarm_low
+  level:
+    value: 10
+    unit: '%LEL'
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: air.lel_pct
+  output: lel_alarm_high
+  level:
+    value: 20
+    unit: '%LEL'
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: air.lel_pct
+  output: lel_over_range
+  level: range_max
+  when: above
+- block: threshold_alarm
+  input: air.o2_pct
+  output: o2_alarm_low
+  level:
+    value: 19.5
+    unit: '%vol'
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: below
+- block: threshold_alarm
+  input: air.o2_pct
+  output: o2_alarm_high
+  level:
+    value: 23.5
+    unit: '%vol'
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: air.o2_pct
+  output: o2_over_range
+  level: range_max
+  when: above
+- block: threshold_alarm
+  input: air.co_ppm
+  output: co_alarm_low
+  level:
+    value: 25
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: air.co_ppm
+  output: co_alarm_high
+  level:
+    value: 100
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: co_stel_ppm
+  output: co_alarm_stel
+  level:
+    value: 200
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+  when: above
+- block: threshold_alarm
+  input: co_twa_ppm
+  output: co_alarm_twa
+  level:
+    value: 25
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+  when: above
+- block: threshold_alarm
+  input: air.co_ppm
+  output: co_over_range
+  level: range_max
+  when: above
+- block: threshold_alarm
+  input: air.h2s_ppm
+  output: h2s_alarm_low
+  level:
+    value: 10
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: air.h2s_ppm
+  output: h2s_alarm_high
+  level:
+    value: 15
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device.'
+  when: above
+- block: threshold_alarm
+  input: h2s_stel_ppm
+  output: h2s_alarm_stel
+  level:
+    value: 15
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+  when: above
+- block: threshold_alarm
+  input: h2s_twa_ppm
+  output: h2s_alarm_twa
+  level:
+    value: 10
+    unit: ppm
+    source: 'ASSUMPTION: Not in the provided datasheets. Placeholder of a typical order of magnitude; replace with the setpoint configured on the real device. STEL/TWA are only computed for CO and H2S.'
+  when: above
+- block: threshold_alarm
+  input: air.h2s_ppm
+  output: h2s_over_range
+  level: range_max
+  when: above

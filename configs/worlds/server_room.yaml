@@ -1,0 +1,22 @@
+# World: a small server room cooled by an air conditioner that cycles on and off. Grid, time and motion: defaults.
+title: "Server room"
+realism: ASSUMPTION
+setting: indoor
+description: "Racks give off a steady heat. The AC cycles every two and a half minutes and holds the air near 22 °C with a small ripple. Without the AC the room heads for about 40 °C."
+signals:
+  ac:
+    duty_cycle: {period_s: {value: 150, unit: s, source: "ASSUMPTION: a split AC cycling its compressor every 2.5 min"}, duty: {value: 0.5, unit: "-", source: "ASSUMPTION: half the time on at this heat load"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION: on"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION: off"}, transition_s: {value: 5, unit: s, source: "ASSUMPTION: compressor start"}, jitter: {value: 0.05, unit: "-", source: "ASSUMPTION: small variation of the cycle"}}
+drivers:
+  air.temperature_c:
+    sum:
+      - constant: {value: 40, unit: "°C", source: "ASSUMPTION: where the room settles with the racks running and no cooling"}
+      - product:
+          - constant: {value: -36, unit: "°C", source: "ASSUMPTION: cooling at full duty; with half duty the room settles at 22 °C"}
+          - lowpass: {of: {ref: ac}, tau_s: {value: 2400, unit: s, source: "ASSUMPTION: thermal mass of the room air, racks and walls"}, start: {value: 0.5, unit: "-", source: "ASSUMPTION: settled at the AC's duty"}}
+  air.vapour_pressure_hpa:
+    vapour_from_rh: {rh_pct: {value: 45, unit: "%RH", source: "ASSUMPTION: server room humidity kept around 45 %"}, temperature_c: {value: 22, unit: "°C", source: "ASSUMPTION: the room setpoint"}}
+  electrical.current_a:
+    sum:
+      - constant: {value: 18, unit: A, source: "ASSUMPTION: racks, about 4 kW at 230 V"}
+      - product: [{constant: {value: 6, unit: A, source: "ASSUMPTION: AC compressor at 230 V"}}, {ref: ac}]
+      - random_walk: {mean: {value: 0, unit: A, source: "ASSUMPTION: around the level"}, sd: {value: 0.3, unit: A, source: "ASSUMPTION: server load varies"}, tau_s: {value: 600, unit: s, source: "ASSUMPTION"}}

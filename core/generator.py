@@ -1261,6 +1261,9 @@ class AutoFitter:
         except UnicodeDecodeError:
             self.df = pd.read_csv(filepath, encoding='latin-1')
 
+        if 'timestamp' in self.df.columns:
+            self.df['timestamp'] = self._timestamps_as_ms(self.df['timestamp'])
+
         self.filepath = filepath
         self.sensor_columns = [
             c for c in self.df.columns if c not in self.META_COLUMNS
@@ -1637,6 +1640,18 @@ class AutoFitter:
                         rate_map[state] = default_rate
 
     # TIMESTAMP ANALYSIS
+
+    @staticmethod
+    def _timestamps_as_ms(ts: pd.Series) -> pd.Series:
+        """Numeric timestamps (ms or s) are kept as they are. Text timestamps (ISO 8601, e.g.
+        2026-05-05T13:38:01.831576Z) become float milliseconds since 1970-01-01 UTC, to the
+        microsecond, so the rest of the fitter sees what it saw for numeric exports. Pandas 3 reads
+        them as dtype str and pandas 2 as object; neither can subtract them."""
+        if pd.api.types.is_numeric_dtype(ts):
+            return ts
+        dt = pd.to_datetime(ts, utc=True, format="ISO8601")
+        us = (dt - pd.Timestamp("1970-01-01", tz="UTC")) // pd.Timedelta(1, "us")
+        return us.astype("int64") / 1000.0
 
     def _analyze_timestamps(self) -> dict:
         ts = self.df['timestamp']

@@ -1,0 +1,113 @@
+## bitteiler corporate matplotlib style, copied from bitteiler_plotstyle 0.2.0 (bitteiler.mplstyle).
+## Font: Rajdhani, shipped in ui/static/fonts (SIL Open Font License, OFL.txt there) and registered
+## by core/output/plot.py, so no install step is needed.
+
+
+# ── COLOR CYCLE ─────────────────────────────────────────────
+# Full CD palette:
+#   dark blue, light blue, mint, blue-mid, blue-light,
+#   blue-pale, green, pink, gray-blue
+axes.prop_cycle: cycler('color', ['1C3661', '1999CC', '339999', '336699', '4A7BA7', '82C5FF', '66CC66', 'FF3399', '8D9AB0'])
+
+
+# ── FIGURE ──────────────────────────────────────────────────
+figure.facecolor:           white
+figure.figsize:             10, 6
+figure.dpi:                 150
+figure.titlesize:           18
+figure.titleweight:         bold
+
+
+# ── AXES ────────────────────────────────────────────────────
+axes.facecolor:             white
+axes.edgecolor:             D2D7DF
+axes.labelcolor:            1C3661
+axes.titlecolor:            1C3661
+axes.linewidth:             1.0
+axes.spines.top:            False
+axes.spines.right:          False
+axes.grid:                  True
+axes.axisbelow:             True
+axes.titlesize:             13
+axes.titleweight:           bold
+axes.titlelocation:         center
+axes.titlepad:              10
+axes.labelsize:             11
+axes.labelweight:           semibold
+axes.labelpad:              6
+
+
+# ── TICKS ────────────────────────────────────────────────────
+xtick.labelsize:            10
+ytick.labelsize:            10
+xtick.labelcolor:           1C3661
+ytick.labelcolor:           1C3661
+xtick.color:                8D9AB0
+ytick.color:                8D9AB0
+xtick.direction:            out
+ytick.direction:            out
+xtick.major.size:           4
+ytick.major.size:           4
+xtick.major.pad:            5
+ytick.major.pad:            5
+xtick.minor.visible:        False
+ytick.minor.visible:        False
+
+
+# ── GRID ─────────────────────────────────────────────────────
+grid.color:                 D2D7DF
+grid.linewidth:             0.8
+grid.linestyle:             --
+grid.alpha:                 0.7
+
+
+# ── LEGEND ───────────────────────────────────────────────────
+legend.fontsize:            10
+legend.title_fontsize:      11
+legend.frameon:             True
+legend.framealpha:          0.9
+legend.edgecolor:           D2D7DF
+legend.borderpad:           0.6
+legend.labelspacing:        0.4
+legend.handlelength:        1.5
+legend.loc:                 best
+
+
+# ── FONT ─────────────────────────────────────────────────────
+font.family:                sans-serif
+font.sans-serif:            Rajdhani, DejaVu Sans, Arial, sans-serif
+font.size:                  11
+
+
+# ── LINES ────────────────────────────────────────────────────
+lines.linewidth:            2.0
+lines.markersize:           6
+lines.solid_capstyle:       round
+lines.solid_joinstyle:      round
+
+
+# ── SCATTER ──────────────────────────────────────────────────
+scatter.marker:             o
+scatter.edgecolors:         none
+
+
+# ── PATCHES (bars, fills, etc.) ──────────────────────────────
+patch.facecolor:            1999CC
+patch.edgecolor:            white
+patch.linewidth:            0.5
+patch.antialiased:          True
+
+
+# ── ERROR BARS ───────────────────────────────────────────────
+errorbar.capsize:           3
+
+
+# ── COLOR MAPS ───────────────────────────────────────────────
+image.cmap:                 Blues
+
+
+# ── SAVE ─────────────────────────────────────────────────────
+savefig.dpi:                300
+savefig.bbox:               tight
+savefig.facecolor:          white
+savefig.pad_inches:         0.1

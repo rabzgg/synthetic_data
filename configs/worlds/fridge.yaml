@@ -1,0 +1,23 @@
+# World: the air inside a household fridge, driven by its compressor. Grid, time and motion: defaults.
+title: "Fridge"
+realism: ASSUMPTION
+setting: indoor
+description: "The compressor runs about 40 % of the time in cycles of about half an hour. The inside swings around 5 °C with it, and the compressor current follows the same cycle. Dark inside."
+signals:
+  compressor:
+    duty_cycle: {period_s: {value: 1800, unit: s, source: "ASSUMPTION: a household fridge cycles about twice per hour"}, duty: {value: 0.4, unit: "-", source: "ASSUMPTION: compressor runs about 40 % of the time"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION: on"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION: off"}, transition_s: {value: 5, unit: s, source: "ASSUMPTION: start-up of the motor"}, jitter: {value: 0.15, unit: "-", source: "ASSUMPTION: cycles vary with load and door use"}}
+drivers:
+  air.temperature_c:
+    sum:
+      - constant: {value: 21, unit: "°C", source: "ASSUMPTION: kitchen temperature, where the inside would settle without cooling"}
+      - product:
+          - constant: {value: -40, unit: "°C", source: "ASSUMPTION: cooling at full duty; with 40 % duty the inside settles near 5 °C"}
+          - lowpass: {of: {ref: compressor}, tau_s: {value: 6000, unit: s, source: "ASSUMPTION: thermal mass of the cabinet and its contents"}, start: {value: 0.4, unit: "-", source: "ASSUMPTION: the fridge has been running, settled at its duty"}}
+  air.vapour_pressure_hpa:
+    vapour_from_rh: {rh_pct: {value: 70, unit: "%RH", source: "ASSUMPTION: humid air inside a fridge"}, temperature_c: {value: 5, unit: "°C", source: "ASSUMPTION: the mean inside temperature"}}
+  electrical.current_a:
+    sum:
+      - constant: {value: 0.08, unit: A, source: "ASSUMPTION: electronics and fan while the compressor is off"}
+      - product: [{constant: {value: 0.9, unit: A, source: "ASSUMPTION: compressor current of a household fridge at 230 V"}}, {ref: compressor}]
+      - random_walk: {mean: {value: 0, unit: A, source: "ASSUMPTION: around the level"}, sd: {value: 0.01, unit: A, source: "ASSUMPTION: mains and load variation"}, tau_s: {value: 30, unit: s, source: "ASSUMPTION"}}
+  light.lux: {constant: {value: 0, unit: lx, source: "ASSUMPTION: dark with the door closed"}}

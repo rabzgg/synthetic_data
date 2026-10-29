@@ -1,0 +1,109 @@
+{
+  "device": "blackline_g7x_bridge",
+  "engine": "gas_detector",
+  "model": "Blackline G7x with G7 Bridge",
+  "source_document": "Blackline G7x datasheet R21",
+  "channels": {
+    "lel": {
+      "name": "Combustible gas",
+      "column": "lel_pct_lel",
+      "range_min": {
+        "value": 0,
+        "unit": "%LEL",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "%LEL",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "%LEL",
+        "source": "Blackline G7x datasheet R21"
+      }
+    },
+    "o2": {
+      "name": "Oxygen",
+      "column": "o2_pct_vol",
+      "range_min": {
+        "value": 0,
+        "unit": "%vol",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "range_max": {
+        "value": 25,
+        "unit": "%vol",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "%vol",
+        "source": "Blackline G7x datasheet R21"
+      }
+    },
+    "co": {
+      "name": "Carbon monoxide",
+      "column": "co_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "range_max": {
+        "value": 500,
+        "unit": "ppm",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "resolution": {
+        "value": 1,
+        "unit": "ppm",
+        "source": "Blackline G7x datasheet R21"
+      }
+    },
+    "h2s": {
+      "name": "Hydrogen sulfide",
+      "column": "h2s_ppm",
+      "range_min": {
+        "value": 0,
+        "unit": "ppm",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "range_max": {
+        "value": 100,
+        "unit": "ppm",
+        "source": "Blackline G7x datasheet R21"
+      },
+      "resolution": {
+        "value": 0.1,
+        "unit": "ppm",
+        "source": "Blackline G7x datasheet R21"
+      }
+    }
+  },
+  "state_columns": {},
+  "gateway": {
+    "columns": [
+      "bridge_id",
+      "bridge_link"
+    ],
+    "link_values": {
+      "value": [
+        "cellular",
+        "satellite"
+      ],
+      "unit": "-",
+      "source": "Blackline G7x datasheet R21"
+    },
+    "max_devices_per_bridge": {
+      "value": 5,
+      "unit": "G7x per Bridge",
+      "source": "Blackline G7x datasheet R21"
+    }
+  },
+  "battery_runtime_h": {
+    "value": 18,
+    "unit": "h",
+    "source": "Blackline G7x datasheet R21"
+  }
+}

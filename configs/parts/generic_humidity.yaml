@@ -1,0 +1,19 @@
+# Default relative humidity sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic humidity sensor
+generic_for: air.humidity_rh
+class: "capacitive RH sensor IC behind a filter cap, ±3 %RH"
+datasheet: "none: a generic capacitive humidity IC (all values ASSUMPTION)"
+measures:
+  - quantity: air.humidity_rh
+    params:
+      range: {value: [0, 100], unit: "%RH", source: "ASSUMPTION: full RH range, as the BME280 in this repo"}
+      resolution: {value: 0.1, unit: "%RH", source: "ASSUMPTION: 0.1 %RH output step; coarser than the BME280 (0.008 %RH) in this repo"}
+      noise_density: {value: 0.0707106781186548, unit: "%RH/√Hz", source: "ASSUMPTION: not below the BME280 in this repo (0.02 %RH); written as a density (0.05 %RH at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 10, unit: s, source: "ASSUMPTION: the element behind a filter cap; slower than the bare BME280 in this repo (τ63 1 s)"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: default when no device sets it; one conversion a second"}
+      odr_range_hz: {value: [1, 10], unit: Hz, source: "ASSUMPTION: a digital IC converts 1 to 10 times a second; a slower logger reads one 1 Hz conversion"}
+    from_datasheet:
+      - {rule: accuracy_typical, value: 3, unit: "%RH", source: "ASSUMPTION: ±3 %RH typical (1σ), the same as the BME280 in this repo"}
+      - {rule: hysteresis_pm, value: 1, unit: "%RH", source: "ASSUMPTION: ±1 %RH, as the BME280 in this repo"}
+      - {rule: drift, value: 0.5, unit: "%RH/year", kind: typical, source: "ASSUMPTION: 0.5 %RH a year, as the BME280 in this repo"}

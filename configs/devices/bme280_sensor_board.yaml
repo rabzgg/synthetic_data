@@ -1,0 +1,13 @@
+# Preset: a bare BME280 board (temperature, humidity, pressure), used for the cross-device check.
+name: BME280 Sensor Board
+slug: bme280_sensor_board
+device_id_prefix: BME280
+description: "One Bosch BME280 on a logger: temperature, humidity and pressure."
+created: "2026-10-15"
+version: 1
+preset: true
+datasheet: "BST-BME280-DS001-23, revision 1.23"
+parts:
+  - part: bosch_bme280
+features:
+  sample_interval_s: {value: 1, unit: "s", source: "ASSUMPTION: 1 Hz logger (BME280 forced mode supports it, p.9 supply-current condition)"}

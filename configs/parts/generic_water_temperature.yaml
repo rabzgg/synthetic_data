@@ -1,0 +1,16 @@
+# Default water temperature sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic water temperature probe
+generic_for: water.temperature_c
+class: "waterproof stainless-steel digital temperature probe, ±0.5 °C"
+datasheet: "none: a generic waterproof temperature probe (all values ASSUMPTION)"
+measures:
+  - quantity: water.temperature_c
+    params:
+      range: {value: [-10, 85], unit: "°C", source: "ASSUMPTION: what the probe's cable and sealing allow"}
+      resolution: {value: 0.0625, unit: "°C", source: "ASSUMPTION: 12-bit step, the class of the DS18B20 in this repo"}
+      noise_density: {value: 0.0424264068711928, unit: "°C/√Hz", source: "ASSUMPTION: about half a step, as the DS18B20 in this repo; written as a density (0.03 °C at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 30, unit: s, source: "ASSUMPTION: a steel sleeve in water; water couples heat faster than the still air of the DS18B20 in this repo (120 s)"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: one conversion a second (the DS18B20 class needs 750 ms per 12-bit conversion)"}
+    from_datasheet:
+      - {rule: accuracy, value: 0.5, unit: "°C", kind: max, source: "ASSUMPTION: ±0.5 °C, typical for this class"}

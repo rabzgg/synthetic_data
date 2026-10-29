@@ -1,0 +1,14 @@
+kind: irrigation
+name: Irrigation
+description: "The field is watered. Water flows into the soil while it runs. Afterwards the soil drains and dries back by itself. Needs an environment with watered soil."
+missing: "This environment has no watered soil."
+probe_world: field_day
+params:
+  duration_s: {value: 1800, unit: s, source: "ASSUMPTION: half an hour of watering"}
+  added_pct: {value: 12, unit: "%VWC", source: "ASSUMPTION: about 25 mm of water into the top 20 cm"}
+label: "+{added_pct} %VWC"
+effects:
+  - target: irrigation
+    op: add
+    shape: {constant: "$added_pct / ($duration_s / 3600)"}
+    after: revert

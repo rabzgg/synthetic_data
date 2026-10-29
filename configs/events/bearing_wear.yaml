@@ -1,0 +1,14 @@
+kind: bearing_wear
+name: Bearing wear
+description: "A pump bearing wears. While the pump runs, its vibration grows slowly to a multiple of the healthy level and stays there. Needs an environment with a running pump."
+missing: "This environment has no running pump."
+probe_world: pump_room
+params:
+  duration_s: {value: 259200, unit: s, source: "ASSUMPTION: wear develops over three days"}
+  factor: {value: 2.5, unit: "-", source: "ASSUMPTION: from about 2.2 mm/s (ISO 10816 zone A/B) to about 5.5 mm/s (zone C)"}
+label: "vibration × {factor}"
+effects:
+  - target: pump_vibration
+    op: multiply
+    shape: {ramp: {start_s: 0, duration_s: $duration_s, from: 1, to: $factor}}
+    after: hold

@@ -1,0 +1,28 @@
+# World: a water tank filled by a pump and drawn on by daily use; a leak is an extra outflow.
+# Grid, time and motion: defaults.
+title: "Water tank"
+realism: ASSUMPTION
+setting: outdoor
+description: "A 10 m³ tank. A fill pump runs a third of the time at 36 %/h. Use follows the day, with most in the evening. The level stops at full and at empty. Nothing leaks unless a leak event is added."
+signals:
+  pump:
+    duty_cycle: {period_s: {value: 7200, unit: s, source: "ASSUMPTION: the fill pump runs every two hours"}, duty: {value: 0.35, unit: "-", source: "ASSUMPTION: 42 min of every two hours"}, on_value: {value: 1, unit: "-", source: "ASSUMPTION"}, off_value: {value: 0, unit: "-", source: "ASSUMPTION"}, transition_s: {value: 5, unit: s, source: "ASSUMPTION: motor start"}, jitter: {value: 0.1, unit: "-", source: "ASSUMPTION"}}
+  fill:
+    product: [{ref: pump}, {constant: {value: 36, unit: "%/h", source: "ASSUMPTION: 3.6 m³/h into a 10 m³ tank"}}]
+  use:
+    daily_cycle: {mean: {value: 10, unit: "%/h", source: "ASSUMPTION: about 24 m³ a day"}, amplitude: {value: 6, unit: "%/h", source: "ASSUMPTION: more in the evening, little at night"}, peak_hour: {value: 19, unit: h, source: "ASSUMPTION: evening peak"}}
+  leak:
+    constant: {value: 0, unit: "%/h", source: "ASSUMPTION: no leak; the leak event adds to this outflow"}
+drivers:
+  water.level_pct:
+    integrate:
+      start: {value: 70, unit: "%", source: "ASSUMPTION: tank 70 % full at the start"}
+      inflow: [{ref: fill}]
+      outflow: [{ref: use}, {ref: leak}]
+      per: {value: h, unit: "-", source: "ASSUMPTION: flows in % of the tank per hour"}
+      lower: {value: 0, unit: "%", source: "ASSUMPTION: empty"}
+      upper: {value: 100, unit: "%", source: "ASSUMPTION: full; the overflow takes the rest"}
+  electrical.current_a:
+    sum:
+      - constant: {value: 0.05, unit: A, source: "ASSUMPTION: controller standby"}
+      - product: [{ref: pump}, {constant: {value: 3.8, unit: A, source: "ASSUMPTION: 0.75 kW single-phase pump at 230 V"}}]

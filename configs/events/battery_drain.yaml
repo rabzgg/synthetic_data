@@ -1,0 +1,11 @@
+kind: battery_drain
+name: Battery drain
+description: "The battery drains faster than normal for a while, for example from a weak signal or a faulty cell."
+missing: "This device has no battery."
+params:
+  duration_s: {value: 3600, unit: s, source: "ASSUMPTION: one hour"}
+  extra_pct_per_h: {value: 10, unit: "%/h", source: "ASSUMPTION: on top of the normal drain"}
+label: "+{extra_pct_per_h} %/h"
+requires: [battery]
+effects:
+  - {target: device.battery, extra_pct_per_h: $extra_pct_per_h}

@@ -1,0 +1,8 @@
+kind: no_motion
+name: No motion
+description: "The wearer stops moving completely (standing or lying), as when unconscious."
+params:
+  duration_s: {value: 300, unit: s, source: "ASSUMPTION: five minutes without any movement"}
+effects:
+  - target: motion
+    segments: [{kind: motionless, posture: current, duration: $duration_s}]

@@ -1,0 +1,12 @@
+# Scenario: the compressor of a fridge fails for six hours.
+name: fridge_compressor_failure
+title: "Fridge compressor failure"
+description: "A normal day in the fridge, then the compressor stops for six hours and starts again."
+realism: ASSUMPTION
+world: fridge
+duration: 24h
+seed: 42
+devices:
+  - {device: fridge_logger, mount: fixed, height_m: 0.8}
+events:
+  - compressor_failure: {at: "06:00:00", duration_h: 6}

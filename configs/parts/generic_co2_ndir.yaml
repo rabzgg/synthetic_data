@@ -1,0 +1,17 @@
+# Default CO2 sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+# No part with a datasheet measures CO2 in this repo yet.
+name: Generic CO2 sensor (NDIR)
+generic_for: air.co2_ppm
+class: "low-cost NDIR CO2 module, 0-5000 ppm, ±50 ppm + 3 % of reading"
+datasheet: "none: a generic NDIR CO2 module (all values ASSUMPTION)"
+measures:
+  - quantity: air.co2_ppm
+    params:
+      range: {value: [0, 5000], unit: ppm, source: "ASSUMPTION: 0-5000 ppm, the usual range of indoor-air NDIR modules"}
+      resolution: {value: 1, unit: ppm, source: "ASSUMPTION: 1 ppm output step"}
+      noise_density: {value: 20, unit: "ppm/√Hz", source: "ASSUMPTION: about 10 ppm RMS reading to reading, typical for low-cost NDIR; written as a density (10 ppm at ODR 0.5 Hz, bandwidth 0.25 Hz) so the noise follows the ODR"}
+      t90_s: {value: 120, unit: s, source: "ASSUMPTION: gas diffuses into the optical cell in about two minutes"}
+      odr_hz: {value: 0.5, unit: Hz, source: "ASSUMPTION: one measurement every 2 s, typical for this class"}
+    from_datasheet:
+      - {rule: accuracy_sum, value: [50, 3], unit: ppm, source: "ASSUMPTION: ±(50 ppm + 3 % of reading), typical for this class"}

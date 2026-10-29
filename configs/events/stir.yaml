@@ -1,0 +1,9 @@
+kind: stir
+name: Stir on the ground
+building_block: true
+description: "The wearer lies on the ground and still moves clearly, for example right after a fall."
+params:
+  duration_s: {value: 20, unit: s, source: "ASSUMPTION: some seconds of movement"}
+effects:
+  - target: motion
+    segments: [{kind: stir, posture: lying, duration: $duration_s}]

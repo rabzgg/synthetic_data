@@ -1,0 +1,11 @@
+kind: fall
+name: Fall
+description: "The wearer falls to the ground, lies there for a while and gets up again."
+params:
+  fall_s: {value: 1.5, unit: s, source: "ASSUMPTION: from losing balance to lying at rest"}
+  lying_s: {value: 30, unit: s, source: "ASSUMPTION: time on the ground before getting up"}
+  rise_s: {value: 3, unit: s, source: "ASSUMPTION: getting up"}
+steps:
+  - {event: fall_down, at: 0, params: {fall_s: $fall_s}, label: falling}
+  - {event: lie, after: 0, params: {duration_s: $lying_s}, label: lying}
+  - {event: rise, after: 0, params: {rise_s: $rise_s}, label: rise}

@@ -1,0 +1,12 @@
+# Scenario: a field dries for a day and is watered early the next morning.
+name: field_irrigation
+title: "Field irrigation"
+description: "The soil dries slowly. On the second morning it is watered for half an hour."
+realism: ASSUMPTION
+world: field_day
+duration: 72h
+seed: 42
+devices:
+  - {device: soil_moisture_probe, mount: fixed, height_m: 0.0}
+events:
+  - irrigation: {at: "23:00:00", duration_min: 30, added_pct: 12}

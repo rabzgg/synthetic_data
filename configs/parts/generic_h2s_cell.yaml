@@ -1,0 +1,17 @@
+# Default hydrogen sulfide sensor when the client has not named one.
+# No particular product: every value is an ASSUMPTION of a typical sensor of this class.
+name: Generic hydrogen sulfide cell
+generic_for: air.h2s_ppm
+class: "electrochemical H2S cell of a portable gas detector, 0-100 ppm"
+datasheet: "none: a generic electrochemical H2S cell (all values ASSUMPTION)"
+measures:
+  - quantity: air.h2s_ppm
+    params:
+      range: {value: [0, 100], unit: ppm, source: "ASSUMPTION: 0-100 ppm, the range of the Blackline H2S cell in this repo"}
+      resolution: {value: 0.1, unit: ppm, source: "ASSUMPTION: 0.1 ppm, as the Blackline H2S cell in this repo (MSA: 1 ppm)"}
+      noise_density: {value: 0.14142135623731, unit: "ppm/√Hz", source: "ASSUMPTION: typical electrochemical H2S cell; not below the H2S cells in this repo (0.05 ppm); written as a density (0.1 ppm at ODR 1 Hz, bandwidth 0.5 Hz) so the noise follows the ODR"}
+      t90_s: {value: 30, unit: s, source: "ASSUMPTION: t90 30 s, as the H2S cells in this repo"}
+      t90_down_s: {value: 90, unit: s, source: "ASSUMPTION: falls three times slower than it rises, as the H2S cells in this repo"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: portable detectors update once a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 5, unit: "%", kind: max, source: "ASSUMPTION: ±5 % of reading, zeroed in clean air; the H2S cells in this repo state no accuracy"}
