@@ -3,11 +3,13 @@ Streamlit UI for the sensor-agnostic generator. Run from the repository root:
 
     streamlit run ui/app.py --server.address 127.0.0.1
 
-Three ways in:
+Four ways in:
 - Start from columns (default, pre-sales): pick what the sensor logs, the environment, then per column a
   generic sensor or a named part; sampling, resolution and noise can be changed.
 - Build a device: from parts, named, with a world and the events it can see.
 - Example scenarios (marked work in progress).
+- Start from a real CSV (legacy): the older per-column statistical fit (core/generator.py, via ui/legacy.py),
+  real CSV -> fitted JSON -> synthetic CSV, plotted against the real one. Not linked by physics.
 Then generate: plots, gate, labels, a data summary and a ZIP. All logic lives in core/ and
 validation/; this file only collects choices and shows results (docs/UI.md, docs/PRESALES.md).
 On screen the code's words are translated: world = environment, gate = checks, part = sensor,
@@ -26,6 +28,7 @@ import streamlit as st
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.join(ROOT, "ui"))                 # ui/legacy.py
 from core.devices import (Device, Part, PartUse, columns_spec, generic_part, list_parts,  # noqa: E402
                           parts_measuring, save_device)
 from core.events import EVENTS, compatible_events, list_scenarios, load_scenario  # noqa: E402
@@ -58,8 +61,6 @@ st.markdown("""<style>
                                              text-overflow: clip !important; max-width: none !important;}
 </style>""", unsafe_allow_html=True)
 st.title("Synthetic sensor data")
-st.caption("The goal is to preview what a client's sensor data will look like before the real CSV exists. "
-           "Every value comes from a datasheet or a written assumption. Nothing is fitted to real recordings yet.")
 
 
 @st.cache_data(show_spinner=False)
@@ -330,8 +331,76 @@ def pick_world(needed, label):
 
 
 COLUMNS, BUILD, SCENARIO = "Start from columns", "Build a device", "Example scenarios (work in progress)"
-mode = st.sidebar.radio("Start from", [COLUMNS, BUILD, SCENARIO])
+LEGACY = "Start from a real CSV (legacy)"
+mode = st.sidebar.radio("Start from", [COLUMNS, BUILD, SCENARIO, LEGACY])
+if mode != LEGACY:
+    st.caption("The goal is to preview what a client's sensor data will look like before the real CSV exists. "
+               "Every value comes from a datasheet or a written assumption. Nothing is fitted to real recordings yet.")
 out_dir = st.session_state.setdefault("out_dir", tempfile.mkdtemp(prefix="synthetic_ui_"))
+
+
+@st.cache_data(show_spinner=False)
+def legacy_fit(raw: bytes):
+    import legacy
+    path, left_out = legacy.prepare(raw, tempfile.mkdtemp(prefix="legacy_", dir=out_dir))
+    return path, left_out, legacy.fit(path)
+
+
+if mode == LEGACY:
+    import legacy
+    st.info("Legacy statistical copy. Each column is fitted on its own, so columns are not linked by physics.  \n"
+            "For potential clients without data, use Start from columns.")
+    st.markdown("#### 1. The real CSV")
+    source = st.radio("CSV", ["Upload a CSV", "Example: robot arm sensor 1 (XDK, 10 Hz)"],
+                      key="legacy_source", label_visibility="collapsed")
+    if source == "Upload a CSV":
+        up = st.file_uploader("CSV file", type=["csv", "gz"], key="legacy_upload")
+        raw = up.getvalue() if up else None
+    else:
+        with open(legacy.EXAMPLE, "rb") as fh:
+            raw = fh.read()
+    st.caption("It needs a column named timestamp (milliseconds, seconds, or a date and time). "
+               "Columns with text are left out. Data logged slower than every 2 s is not supported.")
+    if raw is None:
+        st.stop()
+    try:
+        with st.spinner("Fitting each column"):
+            real_path, left_out, cfg = legacy_fit(raw)
+    except legacy.LegacyError as e:
+        st.error(str(e))
+        st.stop()
+    except Exception as e:
+        fail("The legacy fit failed on this CSV.", e)
+        st.stop()
+    st.markdown("#### 2. Fitted engine per column")
+    real = pd.read_csv(real_path)
+    st.caption(f"{len(real)} rows, about {cfg['frequency_hz']:g} Hz, "
+               f"{cfg['duration_s'] / 60:.0f} min recorded." +
+               (f" Left out (text): {and_join(left_out)}." if left_out else ""))
+    table(legacy.engines(cfg), {"column": 220, "what it means": 320})
+    st.download_button("Download the fitted settings (JSON)", data=json.dumps(cfg, indent=2),
+                       file_name="fitted_config.json", mime="application/json", key="legacy_json")
+    st.markdown("#### 3. Generate")
+    c1, c2 = st.columns(2)
+    minutes = c1.number_input("Duration (min)", min_value=1, max_value=1440, value=10, key="legacy_minutes")
+    seed = c2.number_input("Seed", 0, 2 ** 31 - 1, 42, key="legacy_seed",
+                           help="Same seed = same data. Change it to get another version.")
+    if st.button("Generate", type="primary", key="legacy_generate"):
+        t0 = time.time()
+        with st.spinner("Generating data"):
+            st.session_state["legacy"] = {"syn": legacy.generate(cfg, minutes, seed), "cfg": cfg, "real": real_path}
+        st.session_state["took"] = time.time() - t0
+    res = st.session_state.get("legacy")
+    if res and res["real"] == real_path:
+        syn = res["syn"]
+        st.caption(f"Generated {len(syn)} rows in {st.session_state.get('took', 0):.1f} s")
+        st.download_button("Download as ZIP (synthetic CSV, fitted settings)", data=legacy.zip_files(syn, res["cfg"]),
+                           file_name="legacy_synthetic.zip", mime="application/zip", key="legacy_zip")
+        with st.spinner("Plotting"):
+            st.pyplot(legacy.plot(real_path, syn, list(res["cfg"]["columns"])))
+        st.markdown("**First 20 rows**")
+        st.dataframe(syn.head(20), hide_index=True, width="stretch")
+    st.stop()
 
 if mode == SCENARIO:
     st.info("This page works, the layout is not final yet.")

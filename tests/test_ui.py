@@ -83,6 +83,24 @@ class TestUi(unittest.TestCase):
         self.assertEqual(list(d.columns), ["timestamp", "device_id", "temperature_c_counts"])
         self.assertTrue(pd.api.types.is_integer_dtype(d["temperature_c_counts"]))
 
+    def test_legacy_real_csv_page(self):
+        at = AppTest.from_file(APP, default_timeout=600).run()
+        at.sidebar.radio[0].set_value("Start from a real CSV (legacy)").run()
+        self.assertEqual([i.value.replace("  \n", " ") for i in at.info],
+                         ["Legacy statistical copy. Each column is fitted on its own, so columns are not linked by "
+                          "physics. For potential clients without data, use Start from columns."])
+        self.assertFalse(any("Nothing is fitted" in c.value for c in at.caption))
+        at.radio(key="legacy_source").set_value("Example: robot arm sensor 1 (XDK, 10 Hz)").run()
+        engines = at.dataframe[0].value
+        self.assertEqual(list(engines.columns), ["column", "engine", "what it means"])
+        self.assertIn("accel_x", list(engines["column"]))
+        self.assertFalse(engines["engine"].str.contains("_").any())                      # no code names on screen
+        at.number_input(key="legacy_minutes").set_value(10).run()
+        at.button(key="legacy_generate").click().run()
+        self.assertEqual(at.exception, [])
+        self.assertTrue(any(c.value.startswith("Generated 6") for c in at.caption))
+        self.assertEqual(len(at.session_state["legacy"]["syn"]), len(at.session_state["legacy"]["syn"].dropna()))
+
     def test_no_world_for_these_parts(self):
         at = AppTest.from_file(APP, default_timeout=300).run()
         at.sidebar.radio[0].set_value("Build a device").run()

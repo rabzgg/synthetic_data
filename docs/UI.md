@@ -9,7 +9,7 @@ streamlit run ui/app.py --server.address 127.0.0.1    # then open http://localho
 from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.plot_run`,
 `core.output.zip_run`) and the gate from `validation/auto_gate.py`.
 
-## Three ways in
+## Four ways in
 
 **Start from columns** (the default; pre-sales, `docs/PRESALES.md`).
 1. "What does the sensor log?": pick the columns, grouped as Air (climate and gas), IMU (motion),
@@ -39,6 +39,18 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 
 **Example scenarios (work in progress).** Pick one of `configs/scenarios/`, a seed, and generate.
 The page works, the layout is not final yet.
+
+**Start from a real CSV (legacy).** The older per-column statistical fit (`core/generator.py`, called
+through `ui/legacy.py`). A banner says: "Legacy statistical copy. Each column is fitted on its own, so
+columns are not linked by physics. For potential clients without data, use Start from columns." The top
+caption about datasheets is hidden on this page.
+1. "The real CSV": upload one, or the example (robot arm sensor 1, XDK, 10 Hz). Text columns are left out
+   and named. Data logged slower than every 2 s is refused with the interval it found.
+2. "Fitted engine per column": engine names in words (for example Constant noise, Periodic motion) and what each
+   means. "Download the fitted settings (JSON)".
+3. "Generate": duration in minutes and seed. Then a ZIP (synthetic CSV and JSON), one plot with a panel
+   per column (real dark blue, synthetic light blue, same time axis, over the synthetic duration) and the
+   first 20 rows.
 
 In both device ways the events the device can show in that environment are listed by name with one
 sentence each. The building blocks of composite events (fall down, lie, stir, rise) sit under

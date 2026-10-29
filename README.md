@@ -55,7 +55,8 @@ the datasheets and the stated rules; they are not fitted to field data.
 streamlit run ui/app.py --server.address 127.0.0.1
 ```
 Pick a scenario, or build a device from parts, name it, choose a world and the events it can see,
-generate, look at plots and the gate, download a ZIP. See `docs/UI.md`.
+generate, look at plots and the gate, download a ZIP. See `docs/UI.md`. The page "Start from a real CSV (legacy)"
+is the older per-column fit (below).
 
 ## Docs
 - `docs/ARCHITECTURE.md`: the six blocks and a run, on one page
@@ -64,6 +65,25 @@ generate, look at plots and the gate, download a ZIP. See `docs/UI.md`.
 - `docs/prompts/EXTEND.md`: Claude Code prompt to add a missing column, sensor, environment or event (form + NO2 example)
 - `docs/PARAMETER_MAPPING.md`, `docs/EVENTS.md`: generated references
 - `configs/gas/`, `core/gas_detector.py`, `validation/gas_gate.py`: the earlier gas detector engine, kept for parity checks
+
+## Legacy: fit from a real CSV
+
+The older statistical path, real CSV -> fitted JSON -> synthetic CSV, runs again (pandas 2 and 3) and has
+its own page in the UI: **Start from a real CSV (legacy)**. Upload a CSV (or use the example, robot arm
+sensor 1), see the engine fitted per column, download the JSON, pick a duration and seed, generate, and
+compare real and synthetic per column on the same time axis. The ZIP holds the synthetic CSV and the JSON.
+The engine is `core/generator.py`, only called through `ui/legacy.py`, not merged into the generator above.
+
+```bash
+python3 cli/extract_config.py --csv real.csv --output cfg.json          # fit
+python3 cli/main.py --config cfg.json --output synthetic.csv --duration 600 --seed 42
+```
+
+Limits: each column is fitted on its own, so columns are not linked by physics. Built for 10 Hz XDK
+recordings: text columns are left out (the UI does this, the CLI does not), and data logged slower than
+one row every 2 s is refused (a 1-minute fridge log fits to 0 Hz). On the example sensor the copy is
+rough (temperature becomes white noise, the arm cycle has the wrong period). For clients without data,
+use Start from columns. Tests: `tests/test_legacy.py`.
 
 ## Legacy: Bosch XDK robot arm (joint template)
 
