@@ -1,0 +1,12 @@
+# Example: a scenario that puts the pieces together. Copy to configs/scenarios/.
+name: radiation_check
+title: "Radiation source check"
+description: "Natural background outdoors, then a weak source is brought near the logger for ten minutes."
+realism: ASSUMPTION
+world: outdoor_day
+duration: 2h
+seed: 42
+devices:
+  - {device: dose_rate_logger, mount: fixed, height_m: 1.0}
+events:
+  - radiation_source: {at: "00:30:00", level: 5, duration_min: 10}

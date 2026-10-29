@@ -66,7 +66,7 @@ pip install -r requirements.txt
 python3 cli/generate.py --scenario worker_collapse --seed 42 --out out/collapse     # one run, all files
 python3 validation/run_all_scenarios.py                                            # every scenario, 5 seeds
 python3 cli/plot_world.py --preset water_tank --hours 24                           # look at a world
-python3 cli/events_doc.py && python3 cli/parameter_mapping.py                      # regenerate the docs
+python3 cli/update_docs.py                                                         # regenerate the docs
 python3 -m unittest discover -s tests
 ```
 

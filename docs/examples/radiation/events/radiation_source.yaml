@@ -1,0 +1,13 @@
+# Example: an event on the new quantity. Copy to configs/events/.
+kind: radiation_source
+name: Radiation source nearby
+description: "A radioactive source is brought near the device, stays for a while, then is taken away."
+missing: "This environment has no radiation reading."
+params:
+  level: {value: 5, unit: "µSv/h", source: "ASSUMPTION: a weak check source at about 1 m"}
+  duration_s: {value: 600, unit: s, source: "ASSUMPTION: ten minutes"}
+  ramp_s: {value: 10, unit: s, source: "ASSUMPTION: carried in and out"}
+duration: "$duration_s + 2 * $ramp_s"
+label: "{level} µSv/h"
+effects:
+  - {target: radiation.dose_rate_usv_h, op: add, shape: {pulse: {duration_s: $duration_s, ramp_s: $ramp_s, level: $level}}, after: revert}

@@ -1,0 +1,5 @@
+# Example: a new domain with one quantity, the gamma dose rate. Copy to configs/quantities/radiation.yaml.
+domain: radiation
+quantities:
+  - {id: radiation.dose_rate_usv_h, name: Gamma dose rate, unit: "µSv/h", column: dose_rate_usv_h, lower: 0, upper: null,
+     note: "Ambient dose equivalent rate. Natural background is about 0.05 to 0.3 µSv/h."}

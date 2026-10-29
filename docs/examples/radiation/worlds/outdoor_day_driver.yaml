@@ -1,0 +1,9 @@
+# Example: the true dose rate outdoors. Paste the lines below "drivers:" into configs/worlds/outdoor_day.yaml,
+# right under its own "drivers:" line, with the same two-space indent.
+drivers:
+  radiation.dose_rate_usv_h:
+    sum:
+      - constant: {value: 0.1, unit: "µSv/h", source: "ASSUMPTION: natural background outdoors"}
+      - random_walk: {mean: {value: 0, unit: "µSv/h", source: "ASSUMPTION: around the level"},
+                      sd: {value: 0.01, unit: "µSv/h", source: "ASSUMPTION: small natural variation"},
+                      tau_s: {value: 600, unit: s, source: "ASSUMPTION: changes over minutes"}}

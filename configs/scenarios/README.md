@@ -138,4 +138,4 @@ The app also draws one figure per device from these files (`core/output/plot.py`
 4. It appears in the app under "Example scenarios" by itself.
 5. To include it in the five-seed check, add its name to the `SCENARIOS` list at the top of
    `validation/run_all_scenarios.py`, then run that script. It rewrites `docs/GATE_RESULTS.md`.
-6. `python3 cli/events_doc.py` (the scenario list in `docs/EVENTS.md`), then `python3 -m pytest -q`.
+6. `python3 cli/update_docs.py` (the scenario list in `docs/EVENTS.md`), then `python3 -m pytest -q`.

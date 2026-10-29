@@ -44,8 +44,9 @@ and do not skip a step.
    - every new quantity also gets exactly one generic part: `configs/parts/generic_<name>.yaml`
      (section 3c of `docs/HOW_TO_ADD_A_SENSOR.md`). All its values are assumed, and each says what
      it is anchored on. It is no better than the best datasheet part for that quantity. It gets a
-     row in the generic table of `docs/PRESALES.md` and a fixture line in `FIXTURES` at the top of
-     `tests/test_quantities.py` (test data, not engine code)
+     row in the generic table of `docs/PRESALES.md`, written by `python3 cli/update_docs.py` (never by
+     hand). The tests take their values for it from the generic part. Ready-made example files:
+     `docs/examples/radiation/`
    - a named sensor with a datasheet: a part file following the rules of
      `docs/prompts/DATASHEET_TO_PART.md`
    - a new environment: `configs/worlds/<name>.yaml` with `realism: ASSUMPTION`. It must provide
@@ -70,7 +71,7 @@ and do not skip a step.
    - `python3 -m pytest` is green
    - `python3 validation/run_all_scenarios.py` passes everything, including the new scenario
    - `python3 cli/generate.py --scenario <new scenario> --out out/<name>`, then look at the plot
-   - `python3 cli/events_doc.py && python3 cli/parameter_mapping.py` to regenerate the docs
+   - `python3 cli/update_docs.py` to regenerate the docs
 7. **Report:**
    - every file added or changed, one line each on what it holds
    - every assumed value and what it is anchored on

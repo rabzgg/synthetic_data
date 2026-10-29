@@ -11,8 +11,8 @@ here shows up in both without any code change.
 There are two kinds of part:
 
 - **Named parts** come from a real datasheet (Bosch BME280, Maxim DS18B20). Values cite the page.
-- **Generic parts** (`generic_*.yaml`) stand for a typical sensor of a class, for when the client
-  has not named a sensor yet. Every value is an ASSUMPTION. Each quantity has exactly one.
+- **Generic parts** (`generic_*.yaml`) stand for a typical sensor of a class, for when the potential
+  client has not named a sensor yet. Every value is an ASSUMPTION. Each quantity has exactly one.
 
 ## The files
 
@@ -230,7 +230,7 @@ measures:
 A generic part must give `range`, `resolution`, `noise_density` (so the noise follows the logging
 interval), `t90_s` and `odr_hz`, and `odr_range_hz` when the class can change its rate. It must
 not be better (resolution, noise, error bound, t90) than the best named part for the same quantity.
-`tests/test_generic_parts.py` checks all of this, and that the part has a row in the generic table
-of `docs/PRESALES.md`.
+`tests/test_generic_parts.py` checks all of this. The generic table in `docs/PRESALES.md` is written
+from these files by `python3 cli/update_docs.py`, and the tests check it is up to date.
 
 Only a new quantity needs a new generic part. A new named sensor for an existing quantity does not.

@@ -223,7 +223,7 @@ the app does. The checks convert back before they compare.
 4. Try it in a scenario without writing one:
    `python3 cli/generate.py --scenario worker_collapse --devices <name>:fixed --out out/try`
    (`fixed` or `body`, see `configs/scenarios/README.md`)
-5. `python3 cli/events_doc.py` to update `docs/EVENTS.md` (which events the new device can show),
+5. `python3 cli/update_docs.py` to update `docs/EVENTS.md` (which events the new device can show),
    then `python3 -m pytest -q`.
 
 The app's "Build a device" does the same with a form and saves the result here.

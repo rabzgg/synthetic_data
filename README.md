@@ -30,6 +30,19 @@ scenarios are YAML files; adding one needs no Python.
       datasheet (search snippets and distributor listings only). It needs the datasheet PDF and a pass with
       `docs/prompts/DATASHEET_TO_PART.md`, then a check of every cited page. No preset device uses it.
 
+## Editing in the browser
+
+Small changes (a number in a YAML file, a new part file) can be made on GitHub without installing anything:
+
+1. Open the file on github.com, click the pencil (Edit), change it.
+2. "Commit changes", with a short message that says what changed.
+3. Open the commit (or the "Actions" tab) and wait about 10 minutes. A green check means every test and every
+   scenario passed. A red cross means something broke: click it, the log names the file and the check.
+
+The checks are `.github/workflows/checks.yml`: `python -m pytest -q`, then `python validation/run_all_scenarios.py`.
+A new file that changes a generated doc (a quantity, part, event, device or scenario) also needs
+`python3 cli/update_docs.py`, which the browser cannot run. The red cross then says "run: python3 cli/update_docs.py".
+
 ## Install
 ```bash
 pip install -r requirements.txt        # Python >= 3.10

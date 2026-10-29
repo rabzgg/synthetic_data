@@ -1,0 +1,14 @@
+# Example: a device that logs the new quantity with the generic part, and an alarm. Copy to configs/devices/.
+name: Dose Rate Logger
+device_id_prefix: DOSELOG
+description: "Gamma dose rate from a generic GM meter, logged every 10 s, with an alarm above 1 µSv/h."
+parts:
+  - part: generic_dose_rate_meter
+features:
+  sample_interval_s: {value: 10, unit: s, source: "ASSUMPTION: one reading every 10 s"}
+logic:
+  - block: threshold_alarm
+    input: radiation.dose_rate_usv_h
+    output: dose_rate_alarm
+    level: {value: 1, unit: "µSv/h", source: "ASSUMPTION: ten times the natural background"}
+    when: above

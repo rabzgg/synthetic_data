@@ -13,7 +13,7 @@ import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-from core.devices import Part, columns_spec, device_from_columns, generic_parts, parts_measuring  # noqa: E402
+from core.devices import Part, columns_spec, device_from_columns, generic_doc, generic_parts, parts_measuring  # noqa: E402
 from core.output import run  # noqa: E402
 from core.quantities import CATALOG  # noqa: E402
 from core.quantities.measurement import ParamError  # noqa: E402
@@ -67,9 +67,10 @@ class TestGenericParts(unittest.TestCase):
                 best = np.min([m.error_bound(x) for m in ms], axis=0)
                 self.assertTrue((g.error_bound(x) >= best - 1e-9).all())
 
-    def test_every_generic_part_is_in_the_presales_table(self):
-        with open(os.path.join(ROOT, "docs", "PRESALES.md")) as fh:
+    def test_the_presales_table_is_generated_and_up_to_date(self):
+        with open(generic_doc.DOC) as fh:
             text = fh.read()
+        self.assertEqual(text, generic_doc.markdown(text), "run: python3 cli/update_docs.py")
         for q, (slug,) in generic_parts().items():
             self.assertIn(f"| `{q}` | ", text)
             self.assertIn(f"`{slug}`", text)

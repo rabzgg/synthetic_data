@@ -109,7 +109,7 @@ events:
 
 ```bash
 python3 cli/generate.py --scenario water_tank_leak --out out/tank     # files + gate
-python3 cli/events_doc.py                                             # docs/EVENTS.md with the new event
+python3 cli/update_docs.py                                            # docs/EVENTS.md with the new event
 ```
 
 Worked examples: `compressor_failure` (set a signal), `bearing_wear` (multiply, hold), `leak` and

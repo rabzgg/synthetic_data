@@ -1,0 +1,16 @@
+# Example: the generic part of the new quantity (the "Generic" choice in step 3). Copy to configs/parts/.
+# No particular product: every value is an ASSUMPTION of a typical Geiger-Mueller dose rate meter.
+name: Generic gamma dose rate meter
+generic_for: radiation.dose_rate_usv_h
+class: "Geiger-Mueller dose rate meter, 0 to 1000 µSv/h, ±15 % of reading"
+datasheet: "none: a generic GM dose rate meter (all values ASSUMPTION)"
+measures:
+  - quantity: radiation.dose_rate_usv_h
+    params:
+      range: {value: [0, 1000], unit: "µSv/h", source: "ASSUMPTION: a handheld or fixed GM meter covers background up to about 1 mSv/h"}
+      resolution: {value: 0.01, unit: "µSv/h", source: "ASSUMPTION: the display step of such meters near background"}
+      noise_density: {value: 0.0424, unit: "µSv/h/√Hz", source: "ASSUMPTION: counting statistics, about 15 counts a minute at 0.1 µSv/h, gives about 0.03 µSv/h at ODR 1 Hz (bandwidth 0.5 Hz)"}
+      t90_s: {value: 60, unit: s, source: "ASSUMPTION: the meter averages its counts over about a minute"}
+      odr_hz: {value: 1, unit: Hz, source: "ASSUMPTION: the meter updates its reading once a second"}
+    from_datasheet:
+      - {rule: accuracy_pct_reading, value: 15, unit: "%", kind: max, source: "ASSUMPTION: ±15 % of reading, usual for GM meters calibrated on Cs-137"}

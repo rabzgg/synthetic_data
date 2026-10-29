@@ -68,15 +68,63 @@ FIXTURES = {
 N = 20000
 
 
+def generic_fixture(qid):
+    """The fixture of a quantity without a hand-written one, from its generic part (configs/parts/): its
+    range, resolution, accuracy and noise at the default ODR (at least one resolution step, so the
+    quantisation term of the noise check holds), and the middle of its range as the constant world.
+    A new quantity needs no edit here."""
+    from core.devices import Part, generic_part
+    m = Part.load(generic_part(qid)).models()[qid]
+    q = CATALOG[qid]
+    params = {"range": P([float(np.min(m.bounds[0])), float(np.max(m.bounds[1]))], q.unit),
+              "resolution": P(m.resolution, q.unit), "noise_sd": P(max(m.noise_sd, m.resolution), q.unit)}
+    for k, unit in (("accuracy", q.unit), ("accuracy_pct_reading", "%")):
+        if getattr(m, k):
+            params[k] = dict(P(getattr(m, k), unit), kind=m.kinds.get(k, "max"))
+    if m.accuracy_combine != "sum":
+        params["accuracy_combine"] = P(m.accuracy_combine, "-")
+    mid = (params["range"]["value"][0] + params["range"]["value"][1]) / 2
+    return params, [mid] * len(q.axes) if q.vector else mid
+
+
+def fixture(qid):
+    return FIXTURES[qid] if qid in FIXTURES else generic_fixture(qid)
+
+
 def model(qid, **extra):
-    params = dict(FIXTURES[qid][0]) if qid in FIXTURES else {}
+    params = dict(fixture(qid)[0])
     params.update(extra)
     return MeasurementModel.from_params(qid, params)
 
 
 def const(qid, n=N):
-    v = np.asarray(FIXTURES[qid][1], float)
+    v = np.asarray(fixture(qid)[1], float)
     return np.tile(v, (n, 1)) if v.ndim else np.full(n, float(v))
+
+
+def check_constant_world(tc, m, x0):
+    """A constant world x0: readings on the resolution grid, inside the range, biased where the unit's
+    draw puts them and within ±accuracy, with the noise level of the datasheet plus quantisation."""
+    x = np.tile(x0, (N, 1)) if x0.ndim else np.full(N, float(x0))
+    rng = np.random.default_rng(1)
+    draw = m.draw(rng)
+    r = m.measure(x, 1.0, rng, draw=draw)
+    v = r.values.reshape(N, -1)
+    xt = x.reshape(N, -1)[0]
+    res, sd = m.resolution, m.noise_sd
+    # resolution grid and range
+    tc.assertTrue(np.allclose(v / res, np.round(v / res), atol=1e-6), "not on the resolution grid")
+    lo, hi = m.bounds
+    tc.assertTrue((v >= lo).all() and (v <= hi).all())
+    tc.assertFalse(r.over_range.any() or r.under_range.any())
+    # bias: where the unit's draw puts it, and within ±accuracy
+    mean_err = v.mean(axis=0) - xt
+    tol = res / 2 + 5 * sd / np.sqrt(N)
+    np.testing.assert_allclose(mean_err, m.bias(xt, draw), atol=tol)
+    tc.assertTrue((np.abs(mean_err) <= m.error_bound(xt) + tol).all())
+    # noise: datasheet sd plus the quantisation step (res^2 / 12)
+    expect = np.sqrt(sd ** 2 + res ** 2 / 12)
+    np.testing.assert_allclose(v.std(axis=0), expect, rtol=0.05)
 
 
 class TestCatalog(unittest.TestCase):
@@ -90,7 +138,17 @@ class TestCatalog(unittest.TestCase):
         self.assertEqual(CATALOG["air.humidity_rh"].upper, 100.0)
 
     def test_every_quantity_has_a_fixture(self):
-        self.assertEqual(set(FIXTURES), set(CATALOG))
+        self.assertLessEqual(set(FIXTURES), set(CATALOG))
+        for qid in CATALOG:                                    # hand-written, or from the generic part
+            with self.subTest(qid):
+                MeasurementModel.from_params(qid, fixture(qid)[0])
+
+    def test_generic_fixtures_work_for_every_quantity(self):
+        """The derived fixture passes the constant-world check for every quantity, not only the new ones."""
+        for qid in CATALOG:
+            with self.subTest(qid):
+                params, x = generic_fixture(qid)
+                check_constant_world(self, MeasurementModel.from_params(qid, params), np.asarray(x, float))
 
 
 class TestConstantWorld(unittest.TestCase):
@@ -99,27 +157,7 @@ class TestConstantWorld(unittest.TestCase):
     def test_each_quantity(self):
         for qid in CATALOG:
             with self.subTest(qid):
-                m = model(qid)
-                x = const(qid)
-                rng = np.random.default_rng(1)
-                draw = m.draw(rng)
-                r = m.measure(x, 1.0, rng, draw=draw)
-                v = r.values.reshape(N, -1)
-                xt = x.reshape(N, -1)[0]
-                res, sd = m.resolution, m.noise_sd
-                # resolution grid and range
-                self.assertTrue(np.allclose(v / res, np.round(v / res), atol=1e-6), "not on the resolution grid")
-                lo, hi = m.bounds
-                self.assertTrue((v >= lo).all() and (v <= hi).all())
-                self.assertFalse(r.over_range.any() or r.under_range.any())
-                # bias: where the unit's draw puts it, and within ±accuracy
-                mean_err = v.mean(axis=0) - xt
-                tol = res / 2 + 5 * sd / np.sqrt(N)
-                np.testing.assert_allclose(mean_err, m.bias(xt, draw), atol=tol)
-                self.assertTrue((np.abs(mean_err) <= m.error_bound(xt) + tol).all())
-                # noise: datasheet sd plus the quantisation step (res^2 / 12)
-                expect = np.sqrt(sd ** 2 + res ** 2 / 12)
-                np.testing.assert_allclose(v.std(axis=0), expect, rtol=0.05)
+                check_constant_world(self, model(qid), np.asarray(fixture(qid)[1], float))
 
     def test_noiseless_is_constant(self):
         m = model("air.h2s_ppm", noise_sd=P(0, "ppm"))
@@ -446,7 +484,7 @@ class TestNormalize(unittest.TestCase):
 
     def test_doc_is_generated_from_code(self):
         with open(DOC) as fh:
-            self.assertEqual(fh.read(), markdown(), "run: python3 cli/parameter_mapping.py")
+            self.assertEqual(fh.read(), markdown(), "run: python3 cli/update_docs.py")
 
 
 if __name__ == "__main__":

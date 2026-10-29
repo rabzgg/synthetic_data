@@ -221,7 +221,7 @@ class TestCompatibility(unittest.TestCase):
 
     def test_doc_is_generated(self):
         with open(DOC) as fh:
-            self.assertEqual(fh.read(), markdown(), "run: python3 cli/events_doc.py")
+            self.assertEqual(fh.read(), markdown(), "run: python3 cli/update_docs.py")
 
 
 if __name__ == "__main__":

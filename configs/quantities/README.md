@@ -64,11 +64,12 @@ A new quantity is not usable until these also exist (the tests fail until they d
 
 1. its generic part in `configs/parts/` (`generic_for: <id>`), see `configs/parts/README.md`
 2. a driver for it in at least one world in `configs/worlds/`, see `configs/worlds/README.md`
-3. a row in the generic table of `docs/PRESALES.md`
-4. a fixture line in `FIXTURES` at the top of `tests/test_quantities.py`
-5. `python3 cli/parameter_mapping.py` to regenerate `docs/PARAMETER_MAPPING.md`
+3. the generated docs: `python3 cli/update_docs.py` (the generic table in `docs/PRESALES.md` and
+   `docs/PARAMETER_MAPPING.md`)
 
-The full walk-through is in `configs/README.md` ("add a new measurement").
+The tests take their test values for a new quantity from its generic part, so `tests/` needs no edit.
+The full walk-through is in `configs/README.md` ("add a new measurement"), and ready-made files are in
+`docs/examples/radiation/`.
 
 Before adding one, check that it is really new. The same physical thing in another unit or under
 another column name is not a new quantity: add the unit to `configs/units.yaml`, and rename the

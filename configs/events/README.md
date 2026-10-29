@@ -48,7 +48,7 @@ under "Events this device cannot show (and why)" with the sentence from `missing
 Building blocks (`building_block: true`) are small pieces used inside other events. The app shows
 them only under "Building blocks (advanced)".
 
-`docs/EVENTS.md` is generated from these files (`python3 cli/events_doc.py`) and has the full table
+`docs/EVENTS.md` is generated from these files (`python3 cli/update_docs.py`) and has the full table
 of which preset device can show which event.
 
 ## What one file looks like
@@ -170,7 +170,7 @@ steps:
    `description`, and a `missing` sentence for environments or devices that lack the target.
 5. Use it in a scenario (`configs/scenarios/`) and run
    `python3 cli/generate.py --scenario <name> --out out/try`.
-6. `python3 cli/events_doc.py`, then `python3 -m pytest -q`.
+6. `python3 cli/update_docs.py`, then `python3 -m pytest -q`.
 
 Example for a new measurement, a radiation source brought near the device for a while (it needs the
 quantity `radiation.dose_rate_usv_h`, see `configs/README.md`):
