@@ -55,8 +55,11 @@ class TestLegacy(unittest.TestCase):
         self.assertAlmostEqual(t[-1], 10, delta=0.1)
         self.assertTrue((np.diff(t) > 0).all())
         pd.testing.assert_frame_equal(syn, legacy.generate(cfg, 10, 42))                # same seed, same data
-        z = zipfile.ZipFile(io.BytesIO(legacy.zip_files(syn, cfg)))
-        self.assertEqual(sorted(z.namelist()), ["fitted_config.json", "synthetic.csv"])
+        base = legacy.base_name(legacy.EXAMPLE)
+        self.assertEqual(base, "sensor_1")
+        z = zipfile.ZipFile(io.BytesIO(legacy.zip_files(syn, cfg, base)))
+        self.assertEqual(sorted(z.namelist()), ["sensor_1_config.json", "sensor_1_synthetic.csv"])
+        self.assertEqual(legacy.base_name("Fridge log (May).CSV"), "Fridge_log_May")
         fig = legacy.plot(path, syn, list(cfg["columns"]))
         self.assertEqual(len(fig.axes), len(cfg["columns"]))
         self.assertEqual(set(legacy.engines(cfg)["engine"]) & {"constant_noise", "event_spike"}, set())  # plain names

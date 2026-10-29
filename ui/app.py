@@ -356,9 +356,11 @@ if mode == LEGACY:
     if source == "Upload a CSV":
         up = st.file_uploader("CSV file", type=["csv", "gz"], key="legacy_upload")
         raw = up.getvalue() if up else None
+        base = legacy.base_name(up.name) if up else "data"
     else:
         with open(legacy.EXAMPLE, "rb") as fh:
             raw = fh.read()
+        base = legacy.base_name(legacy.EXAMPLE)
     st.caption("It needs a column named timestamp (milliseconds, seconds, or a date and time). "
                "Columns with text are left out. Data logged slower than every 2 s is not supported.")
     if raw is None:
@@ -379,7 +381,7 @@ if mode == LEGACY:
                (f" Left out (text): {and_join(left_out)}." if left_out else ""))
     table(legacy.engines(cfg), {"column": 220, "what it means": 320})
     st.download_button("Download the fitted settings (JSON)", data=json.dumps(cfg, indent=2),
-                       file_name="fitted_config.json", mime="application/json", key="legacy_json")
+                       file_name=f"{base}_config.json", mime="application/json", key="legacy_json")
     st.markdown("#### 3. Generate")
     c1, c2 = st.columns(2)
     minutes = c1.number_input("Duration (min)", min_value=1, max_value=1440, value=10, key="legacy_minutes")
@@ -394,8 +396,8 @@ if mode == LEGACY:
     if res and res["real"] == real_path:
         syn = res["syn"]
         st.caption(f"Generated {len(syn)} rows in {st.session_state.get('took', 0):.1f} s")
-        st.download_button("Download as ZIP (synthetic CSV, fitted settings)", data=legacy.zip_files(syn, res["cfg"]),
-                           file_name="legacy_synthetic.zip", mime="application/zip", key="legacy_zip")
+        st.download_button("Download as ZIP (synthetic CSV, fitted settings)", data=legacy.zip_files(syn, res["cfg"], base),
+                           file_name=f"{base}_synthetic.zip", mime="application/zip", key="legacy_zip")
         with st.spinner("Plotting"):
             st.pyplot(legacy.plot(real_path, syn, list(res["cfg"]["columns"])))
         st.markdown("**First 20 rows**")

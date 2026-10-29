@@ -47,8 +47,8 @@ caption about datasheets is hidden on this page.
 1. "The real CSV": upload one, or the example (robot arm sensor 1, XDK, 10 Hz). Text columns are left out
    and named. Data logged slower than every 2 s is refused with the interval it found.
 2. "Fitted engine per column": engine names in words (for example Constant noise, Periodic motion) and what each
-   means. "Download the fitted settings (JSON)".
-3. "Generate": duration in minutes and seed. Then a ZIP (synthetic CSV and JSON), one plot with a panel
+   means. "Download the fitted settings (JSON)" as `<csv name>_config.json`.
+3. "Generate": duration in minutes and seed. Then a ZIP `<csv name>_synthetic.zip` (`<csv name>_synthetic.csv` and `<csv name>_config.json`), one plot with a panel
    per column (real dark blue, synthetic light blue, same time axis, over the synthetic duration) and the
    first 20 rows.
 

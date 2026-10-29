@@ -10,6 +10,7 @@ refused (the fitter rounds its rate to 0 Hz and cannot generate it).
 import io
 import json
 import os
+import re
 import zipfile
 
 import numpy as np
@@ -110,9 +111,19 @@ def plot(real_path: str, syn: pd.DataFrame, columns: list):
     return fig
 
 
-def zip_files(syn: pd.DataFrame, cfg: dict) -> bytes:
+def base_name(filename: str) -> str:
+    """The uploaded file's name without .csv / .gz, safe for file names: "sensor_1.csv.gz" -> "sensor_1"."""
+    stem = os.path.basename(filename or "")
+    for ext in (".gz", ".csv"):
+        if stem.lower().endswith(ext):
+            stem = stem[: -len(ext)]
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", stem).strip("._") or "data"
+
+
+def zip_files(syn: pd.DataFrame, cfg: dict, base: str) -> bytes:
+    """<base>_synthetic.csv and <base>_config.json, named after the real CSV."""
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("synthetic.csv", syn.to_csv(index=False))
-        z.writestr("fitted_config.json", json.dumps(cfg, indent=2))
+        z.writestr(f"{base}_synthetic.csv", syn.to_csv(index=False))
+        z.writestr(f"{base}_config.json", json.dumps(cfg, indent=2))
     return buf.getvalue()
