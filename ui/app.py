@@ -7,7 +7,7 @@ Four ways in:
 - Start from columns (default, pre-sales): pick what the sensor logs, the environment, then per column a
   generic sensor or a named part; sampling, resolution and noise can be changed.
 - Build a device: from parts, named, with a world and the events it can see.
-- Example scenarios (marked work in progress).
+- Example scenarios: a ready-made run from configs/scenarios/.
 - Start from a real CSV (legacy): the older per-column statistical fit (core/generator.py, via ui/legacy.py),
   real CSV -> fitted JSON -> synthetic CSV, plotted against the real one. Not linked by physics.
 Then generate: plots, gate, labels, a data summary and a ZIP. All logic lives in core/ and
@@ -330,7 +330,7 @@ def pick_world(needed, label):
     return worlds
 
 
-COLUMNS, BUILD, SCENARIO = "Start from columns", "Build a device", "Example scenarios (work in progress)"
+COLUMNS, BUILD, SCENARIO = "Start from columns", "Build a device", "Example scenarios"
 LEGACY = "Start from a real CSV (legacy)"
 mode = st.sidebar.radio("Start from", [COLUMNS, BUILD, SCENARIO, LEGACY])
 if mode != LEGACY:
@@ -405,7 +405,6 @@ if mode == LEGACY:
     st.stop()
 
 if mode == SCENARIO:
-    st.info("This page works, the layout is not final yet.")
     names = list_scenarios()
     sc = st.sidebar.selectbox("Scenario", names, format_func=lambda n: scenario_info(n).get("title", n))
     info = scenario_info(sc)

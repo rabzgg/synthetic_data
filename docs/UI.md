@@ -37,8 +37,7 @@ from `core/` (`core.output.run`, `core.events.compatible_events`, `core.output.p
 4. Sidebar "4. Run": mounting (fixed or worn), duration and seed.
 5. "Events and generate".
 
-**Example scenarios (work in progress).** Pick one of `configs/scenarios/`, a seed, and generate.
-The page works, the layout is not final yet.
+**Example scenarios.** Pick one of `configs/scenarios/`, a seed, and generate.
 
 **Start from a real CSV (legacy).** The older per-column statistical fit (`core/generator.py`, called
 through `ui/legacy.py`). A banner says: "Legacy statistical copy. Each column is fitted on its own, so
